@@ -2,9 +2,10 @@
 results/*.csv를 읽어 report_template.html의 플레이스홀더({{...}})를 실제 수치와
 그래프 이미지(base64)로 채운 뒤 report.html을 생성한다.
 
-run_all.sh / run_all.ps1의 마지막 단계에서 08_visualize_orbits.py 실행 직후 호출된다.
-CSV가 없는 항목(예: 아직 한 번도 해당 스크립트를 안 돌렸을 때)은 "-"로 표시하고 계속
-진행한다.
+run_all.sh / run_all.ps1의 마지막 단계에서 visualization/visualize_orbits.py 실행
+직후 호출된다. CSV가 없는 항목(예: 아직 한 번도 해당 스크립트를 안 돌렸을 때)은
+"-"로 표시하고 계속 진행한다. report.html/index.html 생성 후에는 README.md에
+직접 박아넣은 대표 그래프 몇 장을 docs/images/에도 동기화한다.
 """
 
 import base64
@@ -313,6 +314,35 @@ def main():
 
   print(f"[완료] report.html 생성됨 ({len(html):,}자) → {OUTPUT_PATH}")
   print(f"[완료] index.html 동기화됨 (GitHub Pages용) → {index_path}")
+
+  sync_representative_images()
+
+
+# README.md에 <img>로 직접 박아넣은 대표 그래프들 — results/는 .gitignore 대상이라
+# 저장소에 커밋되지 않으므로, README에서 깨지지 않고 보이려면 이 별도 경로에
+# 실제 파일로 커밋되어 있어야 한다. 목록은 README.md의 "주요 결과" 표와 일치시킨다.
+REPRESENTATIVE_IMAGES = [
+    "01_kepler_orbit_shape.png",
+    "06_hohmann_transfer_orbit.png",
+    "07_j2_raan_precession.png",
+    "10_constellation_plane_comparison.png",
+    "13_cw_approximation_validity.png",
+    "14_orbit_determination_observation_count.png",
+]
+
+
+def sync_representative_images():
+  docs_images_dir = os.path.join(BASE_DIR, "docs", "images")
+  os.makedirs(docs_images_dir, exist_ok=True)
+  for filename in REPRESENTATIVE_IMAGES:
+    src = os.path.join(RESULTS_DIR, filename)
+    if not os.path.exists(src):
+      print(f"[건너뜀] {src} 없음 — README 대표 그래프 동기화에서 제외")
+      continue
+    dst = os.path.join(docs_images_dir, filename)
+    with open(src, "rb") as f_src, open(dst, "wb") as f_dst:
+      f_dst.write(f_src.read())
+  print(f"[완료] README 대표 그래프 {len(REPRESENTATIVE_IMAGES)}개 동기화됨 → {docs_images_dir}")
 
 
 if __name__ == "__main__":

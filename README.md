@@ -10,6 +10,26 @@
 
 프로젝트 전체 요약은 [report.html](report.html)에서 그래프와 함께 볼 수 있습니다 — `run_all.sh`/`run_all.ps1` 실행 시 `results/*.csv`를 바탕으로 자동 재생성되며, 같은 내용이 GitHub Pages 배포용 `index.html`로도 동기화됩니다. GitHub Pages가 켜진 저장소라면 별도 클론 없이 웹에서 바로 볼 수 있습니다.
 
+## 주요 결과
+
+`results/*.png`는 실행할 때마다 새로 생성되는 산출물이라 `.gitignore`에 포함되어
+저장소에는 커밋되지 않습니다. 아래 6장은 대표 그래프를 `docs/images/`에 별도로
+복사해 저장소에 함께 커밋해 둔 것으로, 전체 그래프는 [report.html](report.html)에서
+볼 수 있습니다.
+
+<table>
+<tr>
+<td width="33%"><img src="docs/images/01_kepler_orbit_shape.png" alt="케플러 궤도 형상"><br><sub>케플러 궤도 전파: 궤도면 위 타원 궤적</sub></td>
+<td width="33%"><img src="docs/images/06_hohmann_transfer_orbit.png" alt="호만 전이 궤도"><br><sub>호만 전이: 출발궤도-전이타원-목표궤도</sub></td>
+<td width="33%"><img src="docs/images/07_j2_raan_precession.png" alt="J2 섭동 RAAN 세차"><br><sub>J2 섭동: 경사각에 따른 RAAN 세차율 부호 반전</sub></td>
+</tr>
+<tr>
+<td width="33%"><img src="docs/images/10_constellation_plane_comparison.png" alt="성좌 평면 비교"><br><sub>성좌 커버리지: 단일 평면이 다중 평면을 앞서는 반직관적 결과</sub></td>
+<td width="33%"><img src="docs/images/13_cw_approximation_validity.png" alt="CW 근사 오차"><br><sub>CW 랑데부: 초기 옵셋이 커질수록 커지는 선형화 오차</sub></td>
+<td width="33%"><img src="docs/images/14_orbit_determination_observation_count.png" alt="궤도 결정 관측 개수 안정성"><br><sub>궤도 결정: 관측 개수가 늘수록 줄어드는 평균 오차/표준편차</sub></td>
+</tr>
+</table>
+
 ## 구성
 
 스크립트는 다루는 물리 개념별로 하위 폴더에 묶여 있습니다. 각 폴더가 이미 분류
