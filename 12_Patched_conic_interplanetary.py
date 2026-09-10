@@ -110,16 +110,14 @@ def total_mission_delta_v(earth_park_radius_km, mars_park_radius_km,
                            earth_orbit_radius_km=EARTH_ORBIT_RADIUS_KM,
                            mars_orbit_radius_km=MARS_ORBIT_RADIUS_KM):
   """지구 주차궤도 탈출 + 화성 주차궤도 포획까지 전체 임무 델타-V.
-  반환: dict(transfer, v_infinity_depart, v_infinity_arrive, dv_depart, dv_capture, total_dv)."""
+  06번 호만 전이 함수가 이미 근일점/원일점에서의 궤도 속도 변화량(delta_v1, delta_v2)을
+  계산해 반환하므로, 그 값이 곧 지구/화성 궤도속도 기준 쌍곡선 초과속도(v_infinity)와
+  같다 — v_infinity를 다시 손으로 유도하지 않고 heliocentric_transfer의 결과를 그대로
+  재사용한다. 반환: dict(transfer, v_infinity_depart, v_infinity_arrive, dv_depart,
+  dv_capture, total_dv)."""
   transfer = heliocentric_transfer(earth_orbit_radius_km, mars_orbit_radius_km)
-
-  v_earth_circ = np.sqrt(SUN_MU_KM3_S2 / earth_orbit_radius_km)
-  v_transfer_at_earth = np.sqrt(SUN_MU_KM3_S2 * (2 / earth_orbit_radius_km - 1 / ((earth_orbit_radius_km + mars_orbit_radius_km) / 2)))
-  v_infinity_depart = v_transfer_at_earth - v_earth_circ
-
-  v_mars_circ = np.sqrt(SUN_MU_KM3_S2 / mars_orbit_radius_km)
-  v_transfer_at_mars = np.sqrt(SUN_MU_KM3_S2 * (2 / mars_orbit_radius_km - 1 / ((earth_orbit_radius_km + mars_orbit_radius_km) / 2)))
-  v_infinity_arrive = v_mars_circ - v_transfer_at_mars
+  v_infinity_depart = transfer["delta_v1"]
+  v_infinity_arrive = transfer["delta_v2"]
 
   dv_depart = hyperbolic_departure_delta_v(v_infinity_depart, EARTH_MU_KM3_S2, earth_park_radius_km)
   dv_capture = hyperbolic_departure_delta_v(v_infinity_arrive, MARS_MU_KM3_S2, mars_park_radius_km)
@@ -159,14 +157,15 @@ def demo_soi_radius_negligible_compared_to_transfer_distance():
           "earth_ratio_pct": earth_ratio_pct, "mars_ratio_pct": mars_ratio_pct}
 
 
-def demo_earth_to_mars_transfer_matches_known_mission_values():
+def demo_earth_to_mars_transfer_matches_known_mission_values(earth_park_altitude_km=300.0,
+                                                              mars_park_altitude_km=300.0):
   """지구->화성 호만형 전이의 총 델타-V와 전이시간이 실제 화성 임무에서 흔히
   인용되는 값(총 델타-V 약 5~6km/s, 전이시간 약 250~260일)과 근사하는지 확인한다."""
   print("\n" + "=" * 70)
   print("[2] 지구->화성 Patched Conic 임무 델타-V (실제 임무 참고값과 비교)")
   print("=" * 70)
-  earth_park_radius = EARTH_RADIUS_KM + 300.0  # LEO 주차궤도
-  mars_park_radius = MARS_RADIUS_KM + 300.0  # 화성 저궤도 주차궤도
+  earth_park_radius = EARTH_RADIUS_KM + earth_park_altitude_km
+  mars_park_radius = MARS_RADIUS_KM + mars_park_altitude_km
 
   result = total_mission_delta_v(earth_park_radius, mars_park_radius)
   transfer = result["transfer"]
@@ -230,7 +229,8 @@ def main():
   args = parse_args()
 
   soi_result = demo_soi_radius_negligible_compared_to_transfer_distance()
-  mission_result = demo_earth_to_mars_transfer_matches_known_mission_values()
+  mission_result = demo_earth_to_mars_transfer_matches_known_mission_values(
+      args.earth_park_altitude_km, args.mars_park_altitude_km)
   propagation_result = demo_soi_crossing_matches_propagated_heliocentric_position()
 
   results_dir = os.path.join(_THIS_DIR, "results")
@@ -264,9 +264,6 @@ def main():
                       f"{propagation_result['transfer_time_sec']:.2f}", f"{propagation_result['start_error_km']:.2e}",
                       f"{propagation_result['end_error_km']:.2e}"])
   print(f"[기록] 태양 중심 전파 검증 결과 저장됨 → {propagation_csv}")
-
-  print(f"\n(참고: --earth-park-altitude-km={args.earth_park_altitude_km}, "
-        f"--mars-park-altitude-km={args.mars_park_altitude_km}는 향후 CLI 파라미터화에 대비한 자리다.)")
 
 
 if __name__ == "__main__":

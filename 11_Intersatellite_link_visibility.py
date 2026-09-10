@@ -33,9 +33,9 @@
   지구 중심 근처를 지나가므로 최근접 거리가 지구 반지름보다 훨씬 작다 — 이 스크립트는
   이 자명해 보이는 경우를 실제로 계산해 기하 판정 함수 자체가 올바른지 검증한다.
 
-01번(케플러 전파), orbit_math(회전행렬)과의 관계: 01번의 propagate_orbit으로 각
-위성의 궤도면 위치를 구하고, orbit_math의 회전행렬로 ECI 위치를 만든다(05번의
-orbital_position_eci와 동일한 패턴).
+01번(케플러 전파), 05번(orbital_position_eci), orbit_math(회전행렬)과의 관계: 01번의
+propagate_orbit/mean_motion을 직접 재사용하고, 궤도면 위치를 ECI로 바꾸는 회전은
+05번의 orbital_position_eci를 그대로 import해서 쓴다(중복 재구현하지 않음).
 """
 
 import argparse
@@ -46,7 +46,7 @@ import sys
 
 import numpy as np
 
-from orbit_math import EARTH_RADIUS_KM, rotation_matrix_x, rotation_matrix_z
+from orbit_math import EARTH_RADIUS_KM
 
 if hasattr(sys.stdout, "reconfigure"):
   sys.stdout.reconfigure(encoding="utf-8")
@@ -58,17 +58,13 @@ _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)
 
+_VISIBILITY_PATH = os.path.join(_THIS_DIR, "05_Ground_station_visibility.py")
+_visibility_spec = importlib.util.spec_from_file_location("visibility_module", _VISIBILITY_PATH)
+visibility = importlib.util.module_from_spec(_visibility_spec)
+_visibility_spec.loader.exec_module(visibility)
+
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
-
-
-def orbital_position_eci(semi_major_axis_km, eccentricity, inclination_rad, raan_rad, argp_rad,
-                          mean_anomaly0_rad, time_sec, mu=EARTH_MU_KM3_S2):
-  """05번의 orbital_position_eci와 동일한 패턴: 01번 궤도면 위치에 3번 회전 적용."""
-  state = kepler.propagate_orbit(semi_major_axis_km, eccentricity, mean_anomaly0_rad, time_sec, mu)
-  x_p, y_p = state["x_p"], state["y_p"]
-  position_perifocal = np.array([x_p, y_p, 0.0])
-  rotation = rotation_matrix_z(raan_rad) @ rotation_matrix_x(inclination_rad) @ rotation_matrix_z(argp_rad)
-  return rotation @ position_perifocal
+orbital_position_eci = visibility.orbital_position_eci
 
 
 def is_line_of_sight_blocked_by_earth(position1_eci_km, position2_eci_km, earth_radius_km=EARTH_RADIUS_KM):
@@ -111,13 +107,13 @@ def compute_isl_visibility_time_series(sat1_elements, sat2_elements, duration_se
   return rows
 
 
-def demo_same_plane_satellites_mostly_visible():
+def demo_same_plane_satellites_mostly_visible(altitude_km=550.0):
   """같은 궤도면 위 두 위성(위상차만 다름)은 지구에 가려지는 구간이 짧거나
   없다는 것을 확인한다."""
   print("=" * 70)
   print("[1] 같은 궤도면 위 두 위성: ISL 가시 구간이 대부분이다")
   print("=" * 70)
-  a = EARTH_RADIUS_KM + 550.0
+  a = EARTH_RADIUS_KM + altitude_km
   inclination = np.radians(53.0)
   raan = 0.0
   duration_sec = 2 * np.pi / kepler.mean_motion(a)  # 한 궤도 주기
@@ -200,7 +196,7 @@ def parse_args():
 def main():
   args = parse_args()
 
-  same_plane_series, same_plane_fraction = demo_same_plane_satellites_mostly_visible()
+  same_plane_series, same_plane_fraction = demo_same_plane_satellites_mostly_visible(args.altitude_km)
   opposite_result = demo_opposite_side_of_earth_blocked()
   cross_plane_series, cross_plane_fraction = demo_polar_vs_equatorial_plane_crossing()
 
@@ -232,7 +228,6 @@ def main():
 
   print(f"\n(같은 평면 가려짐 비율: {same_plane_fraction * 100:.2f}%, "
         f"극-적도 평면 가려짐 비율: {cross_plane_fraction * 100:.2f}%)")
-  print(f"(참고: --altitude-km={args.altitude_km}는 향후 CLI 파라미터화에 대비한 자리다.)")
 
 
 if __name__ == "__main__":

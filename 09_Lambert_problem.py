@@ -43,7 +43,6 @@
 교차검증하고, 01번의 propagate_orbit으로 실제 도착 위치를 재확인한다.
 """
 
-import argparse
 import csv
 import importlib.util
 import os
@@ -110,11 +109,12 @@ def solve_lambert_universal_variable(r1_vec, r2_vec, time_of_flight_sec, mu=EART
 
   cos_dnu = np.dot(r1_vec, r2_vec) / (r1 * r2)
   cross_z = np.cross(r1_vec, r2_vec)[2]
+  base_angle = np.arccos(np.clip(cos_dnu, -1.0, 1.0))
   # prograde(순행) 기준 짧은 길/긴 길 선택: 전이각이 180도를 넘는지에 따라 부호가 바뀐다.
   if prograde:
-    delta_nu = np.arccos(np.clip(cos_dnu, -1.0, 1.0)) if cross_z >= 0 else 2 * np.pi - np.arccos(np.clip(cos_dnu, -1.0, 1.0))
+    delta_nu = base_angle if cross_z >= 0 else 2 * np.pi - base_angle
   else:
-    delta_nu = 2 * np.pi - np.arccos(np.clip(cos_dnu, -1.0, 1.0)) if cross_z >= 0 else np.arccos(np.clip(cos_dnu, -1.0, 1.0))
+    delta_nu = 2 * np.pi - base_angle if cross_z >= 0 else base_angle
 
   a_const = np.sin(delta_nu) * np.sqrt(r1 * r2 / (1 - cos_dnu))
 
@@ -248,15 +248,7 @@ def demo_edge_case_180_degree_transfer():
   return {"cross_z": cross_z}
 
 
-def parse_args():
-  parser = argparse.ArgumentParser(description="란베르트 문제(유니버설 변수 공식화)로 두 위치·비행시간에서 궤도 속도 계산")
-  parser.add_argument("--time-of-flight-min", type=float, default=90.0, help="비행시간(분), 기본값: 90분")
-  return parser.parse_args()
-
-
 def main():
-  args = parse_args()
-
   cross_check_result = demo_lambert_matches_known_transfer()
   short_long_rows = demo_short_way_vs_long_way()
   edge_case_result = demo_edge_case_180_degree_transfer()
@@ -287,8 +279,6 @@ def main():
     writer.writerow(["cross_z"])
     writer.writerow([f"{edge_case_result['cross_z']:.2e}"])
   print(f"[기록] 180도 특이 케이스 결과 저장됨 → {edge_case_csv}")
-
-  print(f"\n(참고: --time-of-flight-min={args.time_of_flight_min}는 향후 CLI 파라미터화에 대비한 자리다.)")
 
 
 if __name__ == "__main__":
