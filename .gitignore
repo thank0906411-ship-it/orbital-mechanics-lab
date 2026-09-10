@@ -1,0 +1,8 @@
+# 실행할 때마다 새로 생성되는 산출물 (커밋 불필요)
+results/
+__pycache__/
+.pytest_cache/
+*.pyc
+.coverage
+.ruff_cache/
+htmlcov/

@@ -1,0 +1,20 @@
+[tool.ruff]
+# 한글 print/설명 문자열이 많아 영문 기준보다 여유 있게 잡음
+line-length = 160
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+omit = ["tests/*", "08_visualize_orbits.py", "generate_report.py"]
+
+[tool.coverage.report]
+exclude_also = [
+  "if __name__ == .__main__.:",
+  "def main\\(",
+]

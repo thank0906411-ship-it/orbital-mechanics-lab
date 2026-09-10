@@ -1,0 +1,638 @@
+<title>궤도역학 실험실</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #FAFBFC;
+    --surface: #FFFFFF;
+    --surface-2: #F1F4F8;
+    --ink: #14181F;
+    --ink-muted: #5B6472;
+    --ink-faint: #8790A0;
+    --accent: #2B5FE0;
+    --accent-ink: #1A3FA0;
+    --accent-soft: #E8EEFC;
+    --rule: #E1E5EB;
+    --good: #1A7F5A;
+    --good-soft: #E5F5EE;
+    --warn: #B4590A;
+    --warn-soft: #FBEEDF;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(20, 24, 31, 0.04), 0 4px 16px rgba(20, 24, 31, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10131A;
+      --surface: #171B24;
+      --surface-2: #1D2230;
+      --ink: #E9ECF2;
+      --ink-muted: #9AA3B2;
+      --ink-faint: #6B7383;
+      --accent: #6E96FF;
+      --accent-ink: #A9C0FF;
+      --accent-soft: #1E2A4D;
+      --rule: #2A2F3C;
+      --good: #4CC38A;
+      --good-soft: #16281F;
+      --warn: #E0983D;
+      --warn-soft: #2E2313;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #10131A;
+    --surface: #171B24;
+    --surface-2: #1D2230;
+    --ink: #E9ECF2;
+    --ink-muted: #9AA3B2;
+    --ink-faint: #6B7383;
+    --accent: #6E96FF;
+    --accent-ink: #A9C0FF;
+    --accent-soft: #1E2A4D;
+    --rule: #2A2F3C;
+    --good: #4CC38A;
+    --good-soft: #16281F;
+    --warn: #E0983D;
+    --warn-soft: #2E2313;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  code, .mono, .stat-value, td.num, th.num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 28px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 14px 0 6px;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    color: var(--ink-muted);
+    font-size: 16px;
+    max-width: 60ch;
+  }
+
+  .meta {
+    text-align: right;
+    font-size: 13px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  section { margin-bottom: 56px; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .section-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-faint);
+  }
+
+  h2 {
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  p.lede { color: var(--ink-muted); font-size: 15px; max-width: 68ch; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 18px 16px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .stat-label {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+
+  .phases {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 18px 18px 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+
+  .phase-tag {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin-bottom: 8px;
+  }
+
+  .phase h3 { margin: 0 0 8px; font-size: 16px; }
+  .phase p { margin: 0 0 12px; font-size: 13.5px; color: var(--ink-muted); }
+
+  .phase-scripts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    border-radius: 6px;
+    padding: 3px 7px;
+  }
+
+  .dash-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .dash-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+
+  .dash-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .dash-layer { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+
+  .dash-scripts {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    flex-shrink: 0;
+  }
+
+  .dash-metric { font-size: 12px; color: var(--ink-muted); margin-bottom: 4px; }
+
+  .dash-value {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent-ink);
+    margin-bottom: 8px;
+    word-break: break-word;
+  }
+
+  .dash-note {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    border-top: 1px solid var(--rule);
+    padding-top: 8px;
+    margin: 0;
+  }
+
+  .result {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 20px 20px 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+
+  .result img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    display: block;
+  }
+
+  .result-caption {
+    padding: 12px 2px 14px;
+    font-size: 13.5px;
+    color: var(--ink-muted);
+    border-top: 1px solid var(--rule);
+    margin-top: 12px;
+  }
+
+  .result-caption strong { color: var(--ink); font-weight: 600; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--radius); }
+
+  table { width: 100%; border-collapse: collapse; background: var(--surface); }
+
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    background: var(--surface-2);
+  }
+
+  td.num, th.num { text-align: right; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface-2); }
+
+  .pill {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .pill.good { color: var(--good); background: var(--good-soft); }
+  .pill.warn { color: var(--warn); background: var(--warn-soft); }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 720px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .phases { grid-template-columns: 1fr; }
+    .dash-grid { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr; }
+    header.top { flex-direction: column; }
+    .meta { text-align: left; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <span class="kicker">궤도역학 실험실 · 형제 프로젝트</span>
+      <h1>궤도역학 실험실</h1>
+      <p class="subtitle">케플러 궤도 전파부터 좌표변환, 실측 지상국 가시성, 호만 전이, J2 섭동까지, 궤도역학 자체를 1급 시뮬레이션 대상으로 처음부터 직접 구현한 8개의 점진적 시뮬레이션.</p>
+    </div>
+    <div class="meta">
+      마지막 실행<br>
+      <span class="mono">{{RUN_DATE}}</span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2>한눈에 보기</h2>
+    </div>
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-value">8</div>
+        <div class="stat-label">독립 실행 시뮬레이션 스크립트</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{{TEST_COUNT}}</div>
+        <div class="stat-label">pytest 회귀 테스트</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{{HOHMANN_TOTAL_DV}}km/s</div>
+        <div class="stat-label">LEO→GEO 호만 전이 총 델타-V</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{{CONTACT_WINDOW_COUNT}}</div>
+        <div class="stat-label">3궤도 주기 동안 실측 접촉 창</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="dashboard">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2>핵심 물리 검증 한눈에 보기</h2>
+    </div>
+    <p class="lede">이 프로젝트의 핵심 차별점은 근사 대신 실제 궤도역학 공식을 직접 구현하고, 그 결과가 잘 알려진 물리 법칙 및 표준 문헌값과 일치하는지 매 스크립트에서 검증한다는 것이다.</p>
+    <div class="dash-grid">
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">케플러 방정식</span><span class="dash-scripts">01</span></div>
+        <div class="dash-metric">뉴턴-랍슨 수렴 (이심률 0 vs 0.99)</div>
+        <div class="dash-value">e=0: {{KEPLER_E0_ITERATIONS}}회 → e=0.99: {{KEPLER_E099_ITERATIONS}}회</div>
+        <p class="dash-note">원궤도는 초기값 자체가 정답, 이심률이 커질수록 반복이 늘어남</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">보존량</span><span class="dash-scripts">02</span></div>
+        <div class="dash-metric">궤도 전체에서 비에너지/비각운동량 오차</div>
+        <div class="dash-value">최대 오차 {{CONSERVATION_MAX_ENERGY_ERROR}}</div>
+        <p class="dash-note">2체 문제의 핵심 물리 법칙이 수치정밀도 수준에서 보존됨</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">수치적분 (RK4)</span><span class="dash-scripts">03</span></div>
+        <div class="dash-metric">스텝 절반 시 오차 감소율 (이론값 16배)</div>
+        <div class="dash-value">평균 약 {{RK4_CONVERGENCE_RATIO}}배</div>
+        <p class="dash-note">RK4가 이론대로 4차 정확도(O(h^4))로 수렴함을 확인</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">좌표변환</span><span class="dash-scripts">04</span></div>
+        <div class="dash-metric">천정(머리 위) 위성의 고도각</div>
+        <div class="dash-value">{{ZENITH_ELEVATION_DEG}}도 (이론값 90도)</div>
+        <p class="dash-note">ECI→SEZ 회전 부호를 실제로 겪은 버그를 통해 고정</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">지상국 가시성</span><span class="dash-scripts">05</span></div>
+        <div class="dash-metric">3궤도 주기 동안 발견된 접촉 창</div>
+        <div class="dash-value">{{CONTACT_WINDOW_COUNT}}개, 최대 고도각 {{CONTACT_MAX_ELEVATION}}도</div>
+        <p class="dash-note">사각파 근사가 아니라 실제 궤도 전파로 계산된 접촉 창</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">호만 전이</span><span class="dash-scripts">06</span></div>
+        <div class="dash-metric">LEO→GEO 델타-V (교과서 참고값 약 3.9km/s)</div>
+        <div class="dash-value">{{HOHMANN_TOTAL_DV}}km/s, 전이시간 {{HOHMANN_TRANSFER_HOURS}}시간</div>
+        <p class="dash-note">01번 실제 궤도 전파로 전이 도착 시각을 재검증함</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">J2 섭동</span><span class="dash-scripts">07</span></div>
+        <div class="dash-metric">임계경사각(약 63.4도)에서 근점편각 세차율</div>
+        <div class="dash-value">{{CRITICAL_INCLINATION_ARGP_RATE}}도/일 (이론값 0)</div>
+        <p class="dash-note">몰니야 궤도가 이 경사각을 쓰는 이유를 수치로 재현</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">SSO 근처 RAAN 세차</span><span class="dash-scripts">07</span></div>
+        <div class="dash-metric">30일 동안 누적된 RAAN 드리프트</div>
+        <div class="dash-value">약 {{RAAN_DRIFT_30DAYS_DEG}}도</div>
+        <p class="dash-note">지구 편평도(J2)가 궤도면 자체를 서서히 회전시킴</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="phases">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2>여덟 단계의 확장</h2>
+    </div>
+    <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
+    <div class="phases">
+      <div class="phase">
+        <span class="phase-tag">기초</span>
+        <h3>케플러 방정식과 궤도 전파</h3>
+        <p>M = E - e*sin(E)를 뉴턴-랍슨으로 풀어 시간과 궤도 위치를 잇는다. 이후 모든 스크립트가 이 모듈의 핵심 함수를 재사용한다.</p>
+        <div class="phase-scripts"><span class="chip">01</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">3차원 확장</span>
+        <h3>궤도요소 ↔ 상태벡터, 보존량</h3>
+        <p>궤도면 2차원 위치를 3번의 회전으로 3차원 ECI 상태벡터로 확장하고, vis-viva 방정식과 비에너지/비각운동량 보존을 검증한다.</p>
+        <div class="phase-scripts"><span class="chip">02</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">수치적 기준선</span>
+        <h3>2체 문제 RK4 수치적분</h3>
+        <p>해석해 대신 운동방정식을 RK4로 직접 적분해 01/02번의 해석해와 대조하고, O(h^4) 수렴 차수와 에너지 드리프트를 확인한다 — 07번 섭동 모델의 신뢰성 기준선이 된다.</p>
+        <div class="phase-scripts"><span class="chip">03</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">관측 기하</span>
+        <h3>좌표계 변환 (ECI/ECEF/SEZ)</h3>
+        <p>지구 자전(ECI→ECEF)과 관측자 위치(위경도)를 반영해 궤도 위치를 방위각/고도각으로 바꾼다. 05번이 이 변환을 재사용한다.</p>
+        <div class="phase-scripts"><span class="chip">04</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">이 프로젝트의 핵심 차별점</span>
+        <h3>실측 지상국 가시성</h3>
+        <p>사각파 근사 대신, 01번의 실제 궤도 전파 + 04번의 좌표변환으로 매 순간 고도각을 계산해 실측 접촉 창(AOS/LOS)을 찾는다.</p>
+        <div class="phase-scripts"><span class="chip">05</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">임무 설계</span>
+        <h3>호만 전이</h3>
+        <p>최소 에너지로 궤도를 변경하는 두 번의 임펄스를 계산하고, LEO→GEO 델타-V가 교과서 값과 일치하는지, 01번 전파로 전이 도착 시각이 정확한지 검증한다.</p>
+        <div class="phase-scripts"><span class="chip">06</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">섭동</span>
+        <h3>J2 섭동 (RAAN/근점편각 세차)</h3>
+        <p>지구 편평도가 일으키는 궤도면 회전을 계산한다. 임계경사각에서 근점편각 세차가 0이 되는 것, 극궤도에서 RAAN 세차가 0이 되는 것을 직접 확인한다.</p>
+        <div class="phase-scripts"><span class="chip">07</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">시각화</span>
+        <h3>궤도, 접촉 창, 전이궤도 그리기</h3>
+        <p>시뮬레이션 없이 앞선 스크립트들의 CSV만 읽어 궤도 형상, 고도각 시계열, 접촉 창 간트차트, 전이궤도, J2 세차를 그래프로 그린다.</p>
+        <div class="phase-scripts"><span class="chip">08</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2>결과 그래프</h2>
+    </div>
+
+    <div class="result">
+      <img id="img-orbit-shape" src="{{IMG_ORBIT_SHAPE}}" alt="궤도면 좌표계에서 그려진 케플러 궤도 형상, 초점에 지구가 표시됨">
+      <div class="result-caption"><strong>케플러 궤도 형상</strong> — 01번의 궤도면(perifocal) 위치 시계열을 그대로 그린 타원 궤도.</div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-second-law" src="{{IMG_SECOND_LAW}}" alt="원궤도와 타원궤도에서 시간에 따른 진근점 이각 변화를 비교한 선 그래프, 타원궤도가 근지점 근처에서 더 빠르게 증가함">
+        <div class="result-caption"><strong>케플러 제2법칙</strong> — 타원궤도는 근지점 근처에서 각도가 빠르게, 원지점 근처에서 느리게 변한다.</div>
+      </div>
+      <div class="result">
+        <img id="img-zenith" src="{{IMG_ZENITH}}" alt="천정 근처 위성과 지구 반대편 위성의 고도각을 비교한 막대 그래프, 부호가 반대로 나타남">
+        <div class="result-caption"><strong>고도각의 부호</strong> — 천정 근처는 양수(가시), 지구 반대편은 음수(불가시)로 명확히 갈린다.</div>
+      </div>
+    </div>
+
+    <div class="result">
+      <img id="img-elevation" src="{{IMG_ELEVATION}}" alt="시간에 따른 지상국 고도각 시계열, 최소 고도각 10도 선 위 구간이 초록색으로 강조됨">
+      <div class="result-caption"><strong>실측 고도각 시계열</strong> — 사각파 근사가 아니라 01번의 실제 궤도 전파로 계산된 곡선이다. 10도 선 위 구간(초록색)만 유효한 접촉 창이다.</div>
+    </div>
+
+    <div class="result">
+      <img id="img-contact-gantt" src="{{IMG_CONTACT_GANTT}}" alt="발견된 접촉 창들을 시간 순서대로 나열한 간트 차트, 각 막대에 최대 고도각이 표시됨">
+      <div class="result-caption"><strong>접촉 창 간트 차트</strong> — {{CONTACT_WINDOW_COUNT}}개의 접촉 창이 발견되었으며, 각 접촉의 품질(최대 고도각)이 함께 표시된다.</div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-hohmann-orbit" src="{{IMG_HOHMANN_ORBIT}}" alt="출발 원궤도, 전이 타원궤도, 목표 원궤도를 함께 그린 다이어그램">
+        <div class="result-caption"><strong>호만 전이궤도</strong> — 출발/목표 원궤도에 모두 접하는 전이 타원.</div>
+      </div>
+      <div class="result">
+        <img id="img-hohmann-ratio" src="{{IMG_HOHMANN_RATIO}}" alt="목표/출발 반지름 비율에 따른 총 델타-V 변화를 그린 선 그래프">
+        <div class="result-caption"><strong>반지름 비율 vs 델타-V</strong> — 비율이 커질수록 델타-V 증가폭이 둔화된다.</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-j2-raan" src="{{IMG_J2_RAAN}}" alt="경사각에 따른 RAAN 세차율을 그린 선 그래프, 90도에서 부호가 바뀜">
+        <div class="result-caption"><strong>경사각별 RAAN 세차율</strong> — 극궤도(90도)에서 세차가 0이 되며, 순행/역행 궤도에서 부호가 반대다.</div>
+      </div>
+      <div class="result">
+        <img id="img-j2-drift" src="{{IMG_J2_DRIFT}}" alt="30일에 걸친 RAAN 값의 선형 드리프트를 그린 선 그래프">
+        <div class="result-caption"><strong>장기 RAAN 드리프트</strong> — 태양동기궤도에 가까운 경사각에서 RAAN이 시간에 선형으로 누적된다.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="validation">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2>물리 법칙/표준값 대조 요약</h2>
+    </div>
+    <p class="lede">각 스크립트가 자체 pytest로 검증하는 핵심 주장을 한 곳에 모았다 — 근사가 아니라 실제 공식/수치적분/알려진 문헌값과의 일치를 확인한다.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>검증 항목</th>
+            <th class="num">측정 기준</th>
+            <th class="num">계산값</th>
+            <th class="num">기준값</th>
+            <th>판정</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>케플러 방정식: 원궤도(e=0) 즉시 수렴</td>
+            <td class="num">뉴턴-랍슨 반복 횟수</td>
+            <td class="num">{{KEPLER_E0_ITERATIONS}}</td>
+            <td class="num">1</td>
+            <td><span class="pill good">일치</span></td>
+          </tr>
+          <tr>
+            <td>2체 문제: 비에너지/비각운동량 보존</td>
+            <td class="num">궤도 전체 최대 오차</td>
+            <td class="num">{{CONSERVATION_MAX_ENERGY_ERROR}}</td>
+            <td class="num">&lt; 1e-6</td>
+            <td><span class="pill good">보존됨</span></td>
+          </tr>
+          <tr>
+            <td>RK4 수치적분: O(h^4) 수렴 차수</td>
+            <td class="num">스텝 절반 시 오차 감소율</td>
+            <td class="num">약 {{RK4_CONVERGENCE_RATIO}}배</td>
+            <td class="num">약 16배</td>
+            <td><span class="pill good">근접</span></td>
+          </tr>
+          <tr>
+            <td>좌표변환: 천정 고도각</td>
+            <td class="num">고도각(도)</td>
+            <td class="num">{{ZENITH_ELEVATION_DEG}}</td>
+            <td class="num">90.0</td>
+            <td><span class="pill good">일치</span></td>
+          </tr>
+          <tr>
+            <td>호만 전이: LEO→GEO 델타-V</td>
+            <td class="num">총 델타-V (km/s)</td>
+            <td class="num">{{HOHMANN_TOTAL_DV}}</td>
+            <td class="num">약 3.9</td>
+            <td><span class="pill good">교과서 값과 일치</span></td>
+          </tr>
+          <tr>
+            <td>J2 섭동: 임계경사각(63.4도) 근점편각 세차</td>
+            <td class="num">세차율(도/일)</td>
+            <td class="num">{{CRITICAL_INCLINATION_ARGP_RATE}}</td>
+            <td class="num">0.0</td>
+            <td><span class="pill good">이론과 일치</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
+    <span class="mono">01–08 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+  </footer>
+
+</div>

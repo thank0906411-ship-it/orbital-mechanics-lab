@@ -1,0 +1,188 @@
+"""
+results/*.csv를 읽어 report_template.html의 플레이스홀더({{...}})를 실제 수치와
+그래프 이미지(base64)로 채운 뒤 report.html을 생성한다.
+
+run_all.sh / run_all.ps1의 마지막 단계에서 08_visualize_orbits.py 실행 직후 호출된다.
+CSV가 없는 항목(예: 아직 한 번도 해당 스크립트를 안 돌렸을 때)은 "-"로 표시하고 계속
+진행한다.
+"""
+
+import base64
+import csv
+import datetime
+import os
+import subprocess
+import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+  sys.stdout.reconfigure(encoding="utf-8")
+  sys.stderr.reconfigure(encoding="utf-8")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+RESULTS_DIR = os.path.join(BASE_DIR, "results")
+TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template.html")
+OUTPUT_PATH = os.path.join(BASE_DIR, "report.html")
+
+
+def read_csv_rows(filename):
+  path = os.path.join(RESULTS_DIR, filename)
+  if not os.path.exists(path):
+    return None
+  with open(path, encoding="utf-8", newline="") as f:
+    return list(csv.DictReader(f))
+
+
+def img_to_data_uri(filename):
+  path = os.path.join(RESULTS_DIR, filename)
+  if not os.path.exists(path):
+    return ""
+  with open(path, "rb") as f:
+    b64 = base64.b64encode(f.read()).decode("ascii")
+  return f"data:image/png;base64,{b64}"
+
+
+def count_pytest_tests():
+  """tests/ 폴더의 테스트 개수를 pytest --collect-only로 직접 센다 (하드코딩 방지).
+  마지막 요약 줄은 "N tests collected in X.XXs" 또는 "N test collected in X.XXs" 형식이다."""
+  try:
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "tests/", "--collect-only", "-q"],
+        cwd=BASE_DIR, capture_output=True, text=True, timeout=60,
+    )
+    for line in reversed(result.stdout.splitlines()):
+      line = line.strip()
+      if line.startswith(("no tests collected", "no test collected")):
+        return "0"
+      if ("tests collected" in line or "test collected" in line) and line.split(" ")[0].isdigit():
+        return line.split(" ")[0]
+  except Exception:
+    pass
+  return "-"
+
+
+def compute_kepler_convergence():
+  rows = read_csv_rows("kepler_convergence.csv")
+  if not rows:
+    return dict.fromkeys(["KEPLER_E0_ITERATIONS", "KEPLER_E099_ITERATIONS"], "-")
+  by_e = {row["eccentricity"]: row["iterations"] for row in rows}
+  return {
+      "KEPLER_E0_ITERATIONS": by_e.get("0.0", "-"),
+      "KEPLER_E099_ITERATIONS": by_e.get("0.99", "-"),
+  }
+
+
+def compute_conservation():
+  rows = read_csv_rows("conserved_quantities.csv")
+  if not rows:
+    return {"CONSERVATION_MAX_ENERGY_ERROR": "-"}
+  a = 8000.0
+  expected_energy = -398600.4418 / (2 * a)
+  max_error = max(abs(float(row["specific_energy"]) - expected_energy) for row in rows)
+  return {"CONSERVATION_MAX_ENERGY_ERROR": f"{max_error:.2e}"}
+
+
+def compute_rk4_convergence():
+  rows = read_csv_rows("rk4_step_size_convergence.csv")
+  if not rows or len(rows) < 2:
+    return {"RK4_CONVERGENCE_RATIO": "-"}
+  errors = [float(row["position_error_km"]) for row in rows]
+  ratios = [errors[i - 1] / errors[i] for i in range(1, len(errors)) if errors[i] > 0]
+  if not ratios:
+    return {"RK4_CONVERGENCE_RATIO": "-"}
+  avg_ratio = sum(ratios) / len(ratios)
+  return {"RK4_CONVERGENCE_RATIO": f"{avg_ratio:.1f}"}
+
+
+def compute_zenith_case():
+  rows = read_csv_rows("zenith_case.csv")
+  if not rows:
+    return {"ZENITH_ELEVATION_DEG": "-"}
+  return {"ZENITH_ELEVATION_DEG": f"{float(rows[0]['elevation_deg']):.4f}"}
+
+
+def compute_contact_windows():
+  rows = read_csv_rows("contact_windows.csv")
+  if not rows:
+    return {"CONTACT_WINDOW_COUNT": "0", "CONTACT_MAX_ELEVATION": "-"}
+  max_elevation = max(float(row["max_elevation_deg"]) for row in rows)
+  return {"CONTACT_WINDOW_COUNT": str(len(rows)), "CONTACT_MAX_ELEVATION": f"{max_elevation:.1f}"}
+
+
+def compute_hohmann():
+  rows = read_csv_rows("hohmann_leo_to_geo.csv")
+  if not rows:
+    return dict.fromkeys(["HOHMANN_TOTAL_DV", "HOHMANN_TRANSFER_HOURS"], "-")
+  row = rows[0]
+  return {
+      "HOHMANN_TOTAL_DV": f"{float(row['total_delta_v']):.3f}",
+      "HOHMANN_TRANSFER_HOURS": f"{float(row['transfer_time_sec']) / 3600:.2f}",
+  }
+
+
+def compute_j2_critical_inclination():
+  rows = read_csv_rows("j2_critical_inclination_argp.csv")
+  if not rows:
+    return {"CRITICAL_INCLINATION_ARGP_RATE": "-"}
+  critical_row = min(rows, key=lambda r: abs(float(r["argp_rate_deg_per_day"])))
+  return {"CRITICAL_INCLINATION_ARGP_RATE": f"{float(critical_row['argp_rate_deg_per_day']):.6f}"}
+
+
+def compute_j2_raan_drift():
+  rows = read_csv_rows("j2_long_term_raan_drift.csv")
+  if not rows:
+    return {"RAAN_DRIFT_30DAYS_DEG": "-"}
+  first, last = rows[0], rows[-1]
+  drift = abs(float(last["raan_deg"]) - float(first["raan_deg"]))
+  return {"RAAN_DRIFT_30DAYS_DEG": f"{drift:.2f}"}
+
+
+def main():
+  with open(TEMPLATE_PATH, encoding="utf-8") as f:
+    html = f.read()
+
+  values = {
+      "RUN_DATE": datetime.date.today().isoformat(),
+      "TEST_COUNT": count_pytest_tests(),
+      "IMG_ORBIT_SHAPE": img_to_data_uri("kepler_orbit_shape.png"),
+      "IMG_SECOND_LAW": img_to_data_uri("kepler_second_law_areas.png"),
+      "IMG_ZENITH": img_to_data_uri("zenith_and_horizon_cases.png"),
+      "IMG_ELEVATION": img_to_data_uri("elevation_over_time.png"),
+      "IMG_CONTACT_GANTT": img_to_data_uri("contact_windows_gantt.png"),
+      "IMG_HOHMANN_ORBIT": img_to_data_uri("hohmann_transfer_orbit.png"),
+      "IMG_HOHMANN_RATIO": img_to_data_uri("hohmann_delta_v_vs_ratio.png"),
+      "IMG_J2_RAAN": img_to_data_uri("j2_raan_precession.png"),
+      "IMG_J2_DRIFT": img_to_data_uri("j2_ground_track_drift.png"),
+  }
+  values.update(compute_kepler_convergence())
+  values.update(compute_conservation())
+  values.update(compute_rk4_convergence())
+  values.update(compute_zenith_case())
+  values.update(compute_contact_windows())
+  values.update(compute_hohmann())
+  values.update(compute_j2_critical_inclination())
+  values.update(compute_j2_raan_drift())
+
+  for key, val in values.items():
+    token = "{{" + key + "}}"
+    if token in html:
+      html = html.replace(token, val)
+  # 아직 스크립트를 안 돌려서 CSV가 없는 경우는 각 compute_*() 함수가 이미 "-"로 채워
+  # 넣으므로, 여기서 남는 {{PLACEHOLDER}}는 그런 정상적인 경우가 아니라 템플릿에 새
+  # 플레이스홀더를 추가했는데 values 딕셔너리에 그 키를 안 넣었거나 오타를 낸 경우뿐이다
+  # — 경고만 찍고 넘어가면 report.html에 리터럴 {{PLACEHOLDER}} 텍스트가 그대로 박힌 채
+  # exit code 0으로 끝나므로, 빌드를 실패시켜 CI에서 잡히게 한다.
+  missing = [line.strip() for line in html.splitlines() if "{{" in line and "}}" in line]
+  if missing:
+    print("[오류] 채워지지 않은 플레이스홀더가 남아있습니다 (템플릿과 values 딕셔너리 불일치):")
+    for line in missing:
+      print("  ", line)
+    raise SystemExit(1)
+
+  with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+    f.write(html)
+
+  print(f"[완료] report.html 생성됨 ({len(html):,}자) → {OUTPUT_PATH}")
+
+
+if __name__ == "__main__":
+  main()
