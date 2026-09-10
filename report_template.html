@@ -361,7 +361,7 @@
     <div>
       <span class="kicker">궤도역학 실험실 · 형제 프로젝트</span>
       <h1>궤도역학 실험실</h1>
-      <p class="subtitle">케플러 궤도 전파부터 좌표변환, 실측 지상국 가시성, 호만 전이, J2 섭동, 란베르트 문제, 다중 위성 성좌 커버리지, 위성간 링크 가시선까지, 궤도역학 자체를 1급 시뮬레이션 대상으로 처음부터 직접 구현한 11개의 점진적 시뮬레이션.</p>
+      <p class="subtitle">케플러 궤도 전파부터 좌표변환, 실측 지상국 가시성, 호만 전이, J2 섭동, 란베르트 문제, 다중 위성 성좌 커버리지, 위성간 링크 가시선, 행성간 궤적(Patched Conic)까지, 궤도역학 자체를 1급 시뮬레이션 대상으로 처음부터 직접 구현한 12개의 점진적 시뮬레이션.</p>
     </div>
     <div class="meta">
       마지막 실행<br>
@@ -376,7 +376,7 @@
     </div>
     <div class="stat-grid">
       <div class="stat">
-        <div class="stat-value">11</div>
+        <div class="stat-value">12</div>
         <div class="stat-label">독립 실행 시뮬레이션 스크립트</div>
       </div>
       <div class="stat">
@@ -467,13 +467,19 @@
         <div class="dash-value">{{ISL_SAME_PLANE_BLOCKED_PCT}}% vs {{ISL_CROSS_PLANE_BLOCKED_PCT}}%</div>
         <p class="dash-note">두 위성을 잇는 선분과 지구 중심 사이 최근접 거리로 기하학적 판정</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">행성간 궤적</span><span class="dash-scripts">12</span></div>
+        <div class="dash-metric">지구→화성 Patched Conic 전이시간·총 델타-V</div>
+        <div class="dash-value">{{PATCHED_CONIC_TRANSFER_DAYS}}일, {{PATCHED_CONIC_TOTAL_DV}}km/s</div>
+        <p class="dash-note">06번 호만 전이 공식을 태양 GM으로 그대로 재사용해 실제 임무 값 재현</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>열한 단계의 확장</h2>
+      <h2>열두 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -542,6 +548,12 @@
         <h3>위성간 링크(ISL) 가시선</h3>
         <p>지상국이 아니라 위성-위성 사이의 시선을, 선분과 구(지구) 사이의 최근접 거리라는 순수 기하 문제로 판정한다. 정반대편(반드시 가려짐), 같은 평면(대부분 보임) 경계 케이스로 검증한다.</p>
         <div class="phase-scripts"><span class="chip">11</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">태양 중심 확장</span>
+        <h3>행성간 궤적 (Patched Conic)</h3>
+        <p>지구 하나의 중력장을 벗어나, 지구 탈출-태양 중심 전이-화성 포획을 세 개의 독립된 2체 문제로 이어붙인다. 06번의 호만 전이 공식을 태양 GM으로 그대로 재사용하고, 중력권(SOI) 반지름이 전이거리에 비해 실제로 작은지 스스로 검증한다.</p>
+        <div class="phase-scripts"><span class="chip">12</span></div>
       </div>
     </div>
   </section>
@@ -620,6 +632,17 @@
       <img id="img-isl" src="{{IMG_ISL_COMPARISON}}" alt="같은 궤도면과 극/적도 교차 평면의 위성간 링크 가시성을 시간에 따라 비교한 그래프">
       <div class="result-caption"><strong>위성간 링크(ISL) 가시성</strong> — 같은 평면 위성은 대부분 가시 상태를 유지하지만, 교차 평면 위성은 지구에 주기적으로 가려진다.</div>
     </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-patched-conic-orbit" src="{{IMG_PATCHED_CONIC_ORBIT}}" alt="지구 궤도, 화성 궤도, 그 사이를 잇는 태양 중심 전이 타원을 함께 그린 다이어그램">
+        <div class="result-caption"><strong>지구-화성 태양 중심 전이궤도</strong> — 06번 호만 전이 공식을 태양 GM으로 재사용해 만든 전이 타원.</div>
+      </div>
+      <div class="result">
+        <img id="img-patched-conic-dv" src="{{IMG_PATCHED_CONIC_DV}}" alt="지구 탈출과 화성 포획에 필요한 델타-V를 비교한 막대 그래프">
+        <div class="result-caption"><strong>임무 델타-V 분해</strong> — 지구 탈출(쌍곡선 이탈)과 화성 포획(쌍곡선 감속)에 필요한 델타-V.</div>
+      </div>
+    </div>
   </section>
 
   <section id="validation">
@@ -696,6 +719,20 @@
             <td class="num">0.0</td>
             <td><span class="pill good">기하 판정 함수 검증됨</span></td>
           </tr>
+          <tr>
+            <td>행성간 궤적: 지구→화성 전이시간</td>
+            <td class="num">전이시간(일)</td>
+            <td class="num">{{PATCHED_CONIC_TRANSFER_DAYS}}</td>
+            <td class="num">약 259</td>
+            <td><span class="pill good">문헌값과 일치</span></td>
+          </tr>
+          <tr>
+            <td>행성간 궤적: SOI 반지름이 전이거리에서 차지하는 비율</td>
+            <td class="num">지구 SOI 비율(%)</td>
+            <td class="num">{{PATCHED_CONIC_SOI_EARTH_PCT}}</td>
+            <td class="num">&lt; 2.0</td>
+            <td><span class="pill good">Patched Conic 근사 타당</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -703,7 +740,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–11 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–12 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>

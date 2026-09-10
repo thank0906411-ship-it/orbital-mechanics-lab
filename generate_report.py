@@ -182,6 +182,22 @@ def compute_isl():
   return result
 
 
+def compute_patched_conic():
+  result = dict.fromkeys(
+      ["PATCHED_CONIC_TRANSFER_DAYS", "PATCHED_CONIC_TOTAL_DV", "PATCHED_CONIC_SOI_EARTH_PCT"], "-")
+
+  mission_rows = read_csv_rows("patched_conic_mission_delta_v.csv")
+  if mission_rows:
+    result["PATCHED_CONIC_TRANSFER_DAYS"] = f"{float(mission_rows[0]['transfer_time_days']):.1f}"
+    result["PATCHED_CONIC_TOTAL_DV"] = f"{float(mission_rows[0]['total_dv']):.2f}"
+
+  soi_rows = read_csv_rows("patched_conic_soi_comparison.csv")
+  if soi_rows:
+    result["PATCHED_CONIC_SOI_EARTH_PCT"] = f"{float(soi_rows[0]['earth_ratio_pct']):.2f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -202,6 +218,8 @@ def main():
       "IMG_CONSTELLATION_SIZE": img_to_data_uri("constellation_size_vs_gap.png"),
       "IMG_CONSTELLATION_PLANE": img_to_data_uri("constellation_plane_comparison.png"),
       "IMG_ISL_COMPARISON": img_to_data_uri("isl_visibility_comparison.png"),
+      "IMG_PATCHED_CONIC_ORBIT": img_to_data_uri("patched_conic_transfer_orbit.png"),
+      "IMG_PATCHED_CONIC_DV": img_to_data_uri("patched_conic_delta_v_breakdown.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -214,6 +232,7 @@ def main():
   values.update(compute_lambert())
   values.update(compute_constellation())
   values.update(compute_isl())
+  values.update(compute_patched_conic())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

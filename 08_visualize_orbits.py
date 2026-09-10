@@ -1,12 +1,13 @@
 """
-01, 04, 05, 06, 07, 09, 10, 11번 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
+01, 04, 05, 06, 07, 09, 10, 11, 12번 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
 실행 전에 먼저 01_Kepler_orbit_propagation.py, 04_Coordinate_frame_transforms.py,
 05_Ground_station_visibility.py, 06_Hohmann_transfer.py, 07_J2_perturbation.py,
 09_Lambert_problem.py, 10_Constellation_coverage.py,
-11_Intersatellite_link_visibility.py를 한 번 이상 실행해서 results/ 폴더에 CSV가
-생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
+11_Intersatellite_link_visibility.py, 12_Patched_conic_interplanetary.py를 한 번
+이상 실행해서 results/ 폴더에 CSV가 생성되어 있어야 한다. (해당 CSV가 없는 항목은
+건너뛰고 나머지만 그린다.)
 
 실행: python 08_visualize_orbits.py
 출력: results/kepler_orbit_shape.png, results/kepler_second_law_areas.png,
@@ -15,7 +16,8 @@
       results/hohmann_delta_v_vs_ratio.png, results/j2_raan_precession.png,
       results/j2_ground_track_drift.png, results/lambert_short_vs_long_way.png,
       results/constellation_size_vs_gap.png, results/constellation_plane_comparison.png,
-      results/isl_visibility_comparison.png
+      results/isl_visibility_comparison.png, results/patched_conic_transfer_orbit.png,
+      results/patched_conic_delta_v_breakdown.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -447,6 +449,73 @@ def plot_isl_visibility_comparison():
   print(f"[저장됨] {out_path}")
 
 
+def plot_patched_conic_transfer_orbit():
+  csv_path = os.path.join(RESULTS_DIR, "patched_conic_heliocentric_propagation.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 12_Patched_conic_interplanetary.py를 실행하세요.")
+    return
+
+  AU_KM = 1.495978707e8
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    row = next(csv.DictReader(f))
+  a_t, e_t = float(row["a_t_km"]), float(row["e_t"])
+  r_earth = a_t * (1 - e_t)
+  r_mars = a_t * (1 + e_t)
+
+  theta = np.linspace(0, 2 * np.pi, 400)
+  r_transfer = a_t * (1 - e_t ** 2) / (1 + e_t * np.cos(theta))
+  x_transfer, y_transfer = r_transfer * np.cos(theta) / AU_KM, r_transfer * np.sin(theta) / AU_KM
+
+  fig, ax = plt.subplots(figsize=(7, 7))
+  circle_earth = plt.Circle((0, 0), r_earth / AU_KM, fill=False, color="tab:blue", linewidth=2, label="Earth orbit (1 AU)")
+  circle_mars = plt.Circle((0, 0), r_mars / AU_KM, fill=False, color="tab:red", linewidth=2, label="Mars orbit (1.52 AU)")
+  ax.add_patch(circle_earth)
+  ax.add_patch(circle_mars)
+  ax.plot(x_transfer, y_transfer, color="tab:purple", linewidth=1.5, linestyle="--", label="Heliocentric transfer ellipse")
+  ax.scatter([0], [0], color="gold", s=150, marker="*", zorder=3, label="Sun")
+  ax.set_xlabel("x (AU)")
+  ax.set_ylabel("y (AU)")
+  ax.set_title("Patched conic: Earth-to-Mars heliocentric transfer orbit")
+  ax.set_aspect("equal")
+  ax.legend(fontsize=9)
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "patched_conic_transfer_orbit.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_patched_conic_delta_v_breakdown():
+  csv_path = os.path.join(RESULTS_DIR, "patched_conic_mission_delta_v.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 12_Patched_conic_interplanetary.py를 실행하세요.")
+    return
+
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    row = next(csv.DictReader(f))
+  dv_depart = float(row["dv_depart"])
+  dv_capture = float(row["dv_capture"])
+  total_dv = float(row["total_dv"])
+
+  fig, ax = plt.subplots(figsize=(7, 5))
+  labels = ["Earth departure\n(hyperbolic escape)", "Mars capture\n(hyperbolic capture)"]
+  values = [dv_depart, dv_capture]
+  bars = ax.bar(labels, values, color=["tab:blue", "tab:red"], alpha=0.85)
+  ax.set_ylabel("Delta-V (km/s)")
+  ax.set_title(f"Earth-to-Mars mission delta-V breakdown (total: {total_dv:.2f} km/s)")
+  ax.grid(True, axis="y", alpha=0.3)
+  for bar, v in zip(bars, values):
+    ax.text(bar.get_x() + bar.get_width() / 2, v + 0.05, f"{v:.2f}", ha="center")
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "patched_conic_delta_v_breakdown.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -462,3 +531,5 @@ if __name__ == "__main__":
   plot_constellation_size_vs_gap()
   plot_constellation_plane_comparison()
   plot_isl_visibility_comparison()
+  plot_patched_conic_transfer_orbit()
+  plot_patched_conic_delta_v_breakdown()
