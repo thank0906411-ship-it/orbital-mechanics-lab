@@ -1,18 +1,20 @@
 """
-01, 04, 05, 06, 07, 09, 10, 11, 12, 13, 14번 시뮬레이션이 남긴 결과 CSV를 그래프로
-그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
+propagation/kepler_orbit_propagation.py, frames/coordinate_frame_transforms.py,
+missions/ground_station_visibility.py, missions/hohmann_transfer.py,
+perturbations/j2_perturbation.py, missions/lambert_problem.py,
+constellations/constellation_coverage.py,
+constellations/intersatellite_link_visibility.py,
+missions/patched_conic_interplanetary.py, missions/clohessy_wiltshire_rendezvous.py,
+missions/orbit_determination.py 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
+도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 01_Kepler_orbit_propagation.py, 04_Coordinate_frame_transforms.py,
-05_Ground_station_visibility.py, 06_Hohmann_transfer.py, 07_J2_perturbation.py,
-09_Lambert_problem.py, 10_Constellation_coverage.py,
-11_Intersatellite_link_visibility.py, 12_Patched_conic_interplanetary.py,
-13_Clohessy_wiltshire_rendezvous.py, 14_Orbit_determination.py를 한 번 이상
-실행해서 results/ 폴더에 CSV가 생성되어 있어야 한다. (해당 CSV가 없는 항목은
-건너뛰고 나머지만 그린다.)
+실행 전에 먼저 위 11개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
-실행: python 08_visualize_orbits.py
-출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 소속 스크립트
-번호를 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 01번 결과):
+실행: python visualization/visualize_orbits.py
+출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
+(01~14, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
       results/05_contact_windows_gantt.png, results/06_hohmann_transfer_orbit.png,
@@ -51,7 +53,7 @@ RESULTS_DIR = os.path.join(BASE_DIR, "results")
 def plot_kepler_orbit_shape():
   csv_path = os.path.join(RESULTS_DIR, "kepler_position_time_series.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 01_Kepler_orbit_propagation.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 propagation/kepler_orbit_propagation.py를 실행하세요.")
     return
 
   xs, ys = [], []
@@ -80,7 +82,7 @@ def plot_kepler_orbit_shape():
 def plot_kepler_second_law_areas():
   csv_path = os.path.join(RESULTS_DIR, "circular_vs_elliptical.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 01_Kepler_orbit_propagation.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 propagation/kepler_orbit_propagation.py를 실행하세요.")
     return
 
   # "orbit" 컬럼은 01번이 콘솔 출력용으로 쓴 한글 문구라 문구가 조금만 바뀌어도
@@ -114,7 +116,7 @@ def plot_kepler_second_law_areas():
 def plot_zenith_and_horizon_cases():
   horizon_path = os.path.join(RESULTS_DIR, "horizon_cases.csv")
   if not os.path.exists(horizon_path):
-    print(f"[건너뜀] {horizon_path} 없음 — 먼저 04_Coordinate_frame_transforms.py를 실행하세요.")
+    print(f"[건너뜀] {horizon_path} 없음 — 먼저 frames/coordinate_frame_transforms.py를 실행하세요.")
     return
 
   # "label"은 04번이 콘솔 출력용으로 쓴 한글 문구라 문구가 바뀌면 매칭이 깨진다 —
@@ -146,7 +148,7 @@ def plot_zenith_and_horizon_cases():
 def plot_elevation_over_time():
   csv_path = os.path.join(RESULTS_DIR, "elevation_time_series.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 05_Ground_station_visibility.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/ground_station_visibility.py를 실행하세요.")
     return
 
   times_min, elevations = [], []
@@ -177,7 +179,7 @@ def plot_elevation_over_time():
 def plot_contact_windows_gantt():
   csv_path = os.path.join(RESULTS_DIR, "contact_windows.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 05_Ground_station_visibility.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/ground_station_visibility.py를 실행하세요.")
     return
 
   windows = []
@@ -210,7 +212,7 @@ def plot_contact_windows_gantt():
 def plot_hohmann_transfer_orbit():
   csv_path = os.path.join(RESULTS_DIR, "hohmann_propagated_verification.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 06_Hohmann_transfer.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/hohmann_transfer.py를 실행하세요.")
     return
 
   with open(csv_path, newline="", encoding="utf-8") as f:
@@ -247,7 +249,7 @@ def plot_hohmann_transfer_orbit():
 def plot_hohmann_delta_v_vs_ratio():
   csv_path = os.path.join(RESULTS_DIR, "hohmann_delta_v_vs_ratio.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 06_Hohmann_transfer.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/hohmann_transfer.py를 실행하세요.")
     return
 
   ratios, totals = [], []
@@ -273,7 +275,7 @@ def plot_hohmann_delta_v_vs_ratio():
 def plot_j2_raan_precession():
   csv_path = os.path.join(RESULTS_DIR, "j2_raan_precession_by_inclination.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 07_J2_perturbation.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 perturbations/j2_perturbation.py를 실행하세요.")
     return
 
   inclinations, rates = [], []
@@ -302,7 +304,7 @@ def plot_j2_raan_precession():
 def plot_j2_ground_track_drift():
   csv_path = os.path.join(RESULTS_DIR, "j2_long_term_raan_drift.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 07_J2_perturbation.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 perturbations/j2_perturbation.py를 실행하세요.")
     return
 
   days, raans = [], []
@@ -328,7 +330,7 @@ def plot_j2_ground_track_drift():
 def plot_lambert_short_vs_long_way():
   csv_path = os.path.join(RESULTS_DIR, "lambert_short_vs_long_way.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 09_Lambert_problem.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/lambert_problem.py를 실행하세요.")
     return
 
   labels_en = {"짧은 길(prograde)": "Short way\n(prograde)", "긴 길(retrograde 선택)": "Long way\n(retrograde)"}
@@ -356,7 +358,7 @@ def plot_lambert_short_vs_long_way():
 def plot_constellation_size_vs_gap():
   csv_path = os.path.join(RESULTS_DIR, "constellation_size_vs_gap.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 10_Constellation_coverage.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 constellations/constellation_coverage.py를 실행하세요.")
     return
 
   num_sats, max_gaps = [], []
@@ -382,7 +384,7 @@ def plot_constellation_size_vs_gap():
 def plot_constellation_plane_comparison():
   csv_path = os.path.join(RESULTS_DIR, "constellation_plane_comparison.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 10_Constellation_coverage.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 constellations/constellation_coverage.py를 실행하세요.")
     return
 
   labels_en = {"단일 평면(1개 평면에 12기)": "Single plane\n(12 sats, 1 plane)",
@@ -413,7 +415,7 @@ def plot_isl_visibility_comparison():
   cross_plane_path = os.path.join(RESULTS_DIR, "isl_polar_vs_equatorial.csv")
   if not os.path.exists(same_plane_path) or not os.path.exists(cross_plane_path):
     print(f"[건너뜀] {same_plane_path} 또는 {cross_plane_path} 없음 — "
-          "먼저 11_Intersatellite_link_visibility.py를 실행하세요.")
+          "먼저 constellations/intersatellite_link_visibility.py를 실행하세요.")
     return
 
   def read_series(path):
@@ -458,7 +460,7 @@ def plot_isl_visibility_comparison():
 def plot_patched_conic_transfer_orbit():
   csv_path = os.path.join(RESULTS_DIR, "patched_conic_heliocentric_propagation.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 12_Patched_conic_interplanetary.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/patched_conic_interplanetary.py를 실행하세요.")
     return
 
   AU_KM = 1.495978707e8
@@ -496,7 +498,7 @@ def plot_patched_conic_transfer_orbit():
 def plot_patched_conic_delta_v_breakdown():
   csv_path = os.path.join(RESULTS_DIR, "patched_conic_mission_delta_v.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 12_Patched_conic_interplanetary.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/patched_conic_interplanetary.py를 실행하세요.")
     return
 
   with open(csv_path, newline="", encoding="utf-8") as f:
@@ -525,7 +527,7 @@ def plot_patched_conic_delta_v_breakdown():
 def plot_cw_zero_drift_comparison():
   csv_path = os.path.join(RESULTS_DIR, "cw_zero_drift_comparison.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 13_Clohessy_wiltshire_rendezvous.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/clohessy_wiltshire_rendezvous.py를 실행하세요.")
     return
 
   num_orbits, y_zero_drift, y_no_correction = [], [], []
@@ -555,7 +557,7 @@ def plot_cw_zero_drift_comparison():
 def plot_cw_approximation_validity():
   csv_path = os.path.join(RESULTS_DIR, "cw_approximation_validity.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 13_Clohessy_wiltshire_rendezvous.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/clohessy_wiltshire_rendezvous.py를 실행하세요.")
     return
 
   x0_values, errors = [], []
@@ -583,7 +585,7 @@ def plot_cw_approximation_validity():
 def plot_orbit_determination_noise_sensitivity():
   csv_path = os.path.join(RESULTS_DIR, "orbit_determination_noise_sensitivity.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 14_Orbit_determination.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/orbit_determination.py를 실행하세요.")
     return
 
   angle_noise_deg, inclination_error_deg = [], []
@@ -611,7 +613,7 @@ def plot_orbit_determination_noise_sensitivity():
 def plot_orbit_determination_observation_count():
   csv_path = os.path.join(RESULTS_DIR, "orbit_determination_observation_count.csv")
   if not os.path.exists(csv_path):
-    print(f"[건너뜀] {csv_path} 없음 — 먼저 14_Orbit_determination.py를 실행하세요.")
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/orbit_determination.py를 실행하세요.")
     return
 
   num_obs, mean_error, std_error = [], [], []

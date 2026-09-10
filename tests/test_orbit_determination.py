@@ -1,4 +1,4 @@
-"""14_Orbit_determination.py 검증: 방위각/고도각/거리 <-> ECI 위치 왕복 변환이
+"""orbit_determination.py 검증: 방위각/고도각/거리 <-> ECI 위치 왕복 변환이
 04번의 정확한 역함수인지, 작은 노이즈에서 원궤도 요소가 거의 정확히 복원되는지,
 노이즈가 커질수록 오차가 커지는지, 관측 개수가 늘수록 평균 오차와 표준편차가
 함께 줄어드는지."""
@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("missions/14_Orbit_determination.py")
+m = load_module("missions/orbit_determination.py")
 
 
 def test_look_angles_roundtrip_recovers_original_position():

@@ -1,4 +1,4 @@
-"""13_Clohessy_wiltshire_rendezvous.py 검증: 상태천이행렬이 알려진 특수해(z축
+"""clohessy_wiltshire_rendezvous.py 검증: 상태천이행렬이 알려진 특수해(z축
 단순조화진동 주기, 궤도 주기마다 초기값으로 복귀)를 재현하는지, 제로 드리프트
 조건이 실제로 발산을 막는지, 랑데부 델타-V 역산이 정확히 원점에 도달하는지,
 그리고 CW 근사가 초기 옵셋이 커질수록 실제 비선형 전파와 벗어나는지."""
@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("missions/13_Clohessy_wiltshire_rendezvous.py")
+m = load_module("missions/clohessy_wiltshire_rendezvous.py")
 
 
 def test_z_axis_returns_to_initial_value_after_one_period():

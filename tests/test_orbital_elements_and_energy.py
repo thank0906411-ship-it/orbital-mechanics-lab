@@ -1,4 +1,4 @@
-"""02_Orbital_elements_and_energy.py 검증: 궤도요소<->상태벡터 왕복 변환의 정확성,
+"""orbital_elements_and_energy.py 검증: 궤도요소<->상태벡터 왕복 변환의 정확성,
 비에너지/비각운동량 보존, vis-viva 방정식, 그리고 원궤도에서 근점 편각이 정의되지
 않는 특이 케이스가 안전하게 처리되는지."""
 
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("propagation/02_Orbital_elements_and_energy.py")
+m = load_module("propagation/orbital_elements_and_energy.py")
 
 
 def test_rotation_matrix_z_is_identity_at_zero_angle():

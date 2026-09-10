@@ -1,4 +1,4 @@
-"""12_Patched_conic_interplanetary.py 검증: SOI 공식이 알려진 형태와 일치하는지,
+"""patched_conic_interplanetary.py 검증: SOI 공식이 알려진 형태와 일치하는지,
 06번 호만 전이 함수를 감싼 결과가 06번을 직접 태양 GM으로 호출한 것과 정확히
 일치하는지, 지구->화성 임무 델타-V/전이시간이 알려진 범위 안에 있는지, 그리고
 01번 재전파로 화성 궤도반지름 도달이 정확히 검증되는지."""
@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("missions/12_Patched_conic_interplanetary.py")
+m = load_module("missions/patched_conic_interplanetary.py")
 
 
 def test_sphere_of_influence_matches_formula():

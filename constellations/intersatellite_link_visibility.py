@@ -53,12 +53,12 @@ if hasattr(sys.stdout, "reconfigure"):
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT_DIR = os.path.dirname(_THIS_DIR)
 
-_KEPLER_PATH = os.path.join(_ROOT_DIR, "propagation", "01_Kepler_orbit_propagation.py")
+_KEPLER_PATH = os.path.join(_ROOT_DIR, "propagation", "kepler_orbit_propagation.py")
 _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)
 
-_VISIBILITY_PATH = os.path.join(_ROOT_DIR, "missions", "05_Ground_station_visibility.py")
+_VISIBILITY_PATH = os.path.join(_ROOT_DIR, "missions", "ground_station_visibility.py")
 _visibility_spec = importlib.util.spec_from_file_location("visibility_module", _VISIBILITY_PATH)
 visibility = importlib.util.module_from_spec(_visibility_spec)
 _visibility_spec.loader.exec_module(visibility)

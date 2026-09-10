@@ -1,4 +1,4 @@
-"""07_J2_perturbation.py 검증: RAAN 세차 방향이 경사각(순행/역행)에 따라 부호가
+"""j2_perturbation.py 검증: RAAN 세차 방향이 경사각(순행/역행)에 따라 부호가
 바뀌는지, 극궤도에서 세차율이 0인지, 임계경사각(약 63.4도)에서 근점편각 세차율이
 0이 되는지, 그리고 J2=0이면(가상으로) 세차가 사라지는지."""
 
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("perturbations/07_J2_perturbation.py")
+m = load_module("perturbations/j2_perturbation.py")
 
 
 def test_semi_latus_rectum_circular_orbit_equals_radius():

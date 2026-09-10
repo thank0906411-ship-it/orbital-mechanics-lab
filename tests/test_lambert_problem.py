@@ -1,4 +1,4 @@
-"""09_Lambert_problem.py 검증: 스텀프 함수가 z=0에서 연속인지, 란베르트 일반해가
+"""lambert_problem.py 검증: 스텀프 함수가 z=0에서 연속인지, 란베르트 일반해가
 06번 호만 전이 특수해와 교차검증되는지, 짧은 길/긴 길 선택이 서로 다른 전이각과
 델타-V를 내는지, 그리고 180도 특이 케이스에서 외적이 0에 가까운지."""
 
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("missions/09_Lambert_problem.py")
+m = load_module("missions/lambert_problem.py")
 
 
 def test_stumpff_c_continuous_at_zero():

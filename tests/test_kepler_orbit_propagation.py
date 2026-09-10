@@ -1,4 +1,4 @@
-"""01_Kepler_orbit_propagation.py 검증: 케플러 방정식 뉴턴-랍슨 해의 정확성(잔차),
+"""kepler_orbit_propagation.py 검증: 케플러 방정식 뉴턴-랍슨 해의 정확성(잔차),
 원궤도 특수해, 진근점 이각 변환의 기하학적 일관성, 케플러 제2법칙(면적속도 보존),
 그리고 이심률에 따른 수렴 난이도 변화."""
 
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("propagation/01_Kepler_orbit_propagation.py")
+m = load_module("propagation/kepler_orbit_propagation.py")
 
 
 def test_solve_kepler_equation_residual_is_near_zero():

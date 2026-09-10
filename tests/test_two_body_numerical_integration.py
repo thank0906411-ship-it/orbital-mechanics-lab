@@ -1,4 +1,4 @@
-"""03_Two_body_numerical_integration.py 검증: RK4 한 스텝의 정확성, 수치적분이
+"""two_body_numerical_integration.py 검증: RK4 한 스텝의 정확성, 수치적분이
 01/02번의 해석해와 일치하는지, 스텝 크기를 절반으로 줄일 때 오차가 O(h^4)답게
 줄어드는지, 그리고 큰 스텝에서 에너지 드리프트가 실제로 커지는지."""
 
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("propagation/03_Two_body_numerical_integration.py")
+m = load_module("propagation/two_body_numerical_integration.py")
 
 
 def test_two_body_acceleration_points_toward_origin():

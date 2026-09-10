@@ -1,4 +1,4 @@
-"""05_Ground_station_visibility.py 검증: 접촉 창 탐지 로직(find_contact_windows)이
+"""ground_station_visibility.py 검증: 접촉 창 탐지 로직(find_contact_windows)이
 연속 구간을 정확히 찾는지, 경계 조건(관찰 끝날 때도 접촉 중인 경우)을 올바르게
 처리하는지, 그리고 실측 궤도 전파로 접촉 창이 실제로 발견되는지."""
 
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("missions/05_Ground_station_visibility.py")
+m = load_module("missions/ground_station_visibility.py")
 
 
 def _series(elevations, dt=10.0):

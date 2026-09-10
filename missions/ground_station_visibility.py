@@ -61,8 +61,8 @@ def _load(path, name):
   return module
 
 
-kepler = _load(os.path.join("propagation", "01_Kepler_orbit_propagation.py"), "kepler_module")
-frames = _load(os.path.join("frames", "04_Coordinate_frame_transforms.py"), "frames_module")
+kepler = _load(os.path.join("propagation", "kepler_orbit_propagation.py"), "kepler_module")
+frames = _load(os.path.join("frames", "coordinate_frame_transforms.py"), "frames_module")
 orbit_math = _load("orbit_math.py", "orbit_math")
 rotation_matrix_x = orbit_math.rotation_matrix_x
 rotation_matrix_z = orbit_math.rotation_matrix_z

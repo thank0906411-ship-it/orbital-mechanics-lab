@@ -1,4 +1,4 @@
-"""11_Intersatellite_link_visibility.py 검증: 기하학적 시선 차단 판정 함수가
+"""intersatellite_link_visibility.py 검증: 기하학적 시선 차단 판정 함수가
 정반대편(반드시 가려짐), 같은 위치 근처(가려지지 않음), 선분 바깥에 최근접점이
 있는 경우(가려지지 않음)를 올바르게 판정하는지, 그리고 시계열/데모가 정상
 동작하는지."""
@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("constellations/11_Intersatellite_link_visibility.py")
+m = load_module("constellations/intersatellite_link_visibility.py")
 
 
 def test_opposite_side_of_earth_is_blocked():

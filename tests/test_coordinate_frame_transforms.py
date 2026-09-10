@@ -1,4 +1,4 @@
-"""04_Coordinate_frame_transforms.py 검증: ECI<->ECEF 왕복 변환의 정확성, 천정에서
+"""coordinate_frame_transforms.py 검증: ECI<->ECEF 왕복 변환의 정확성, 천정에서
 고도각이 정확히 90도가 되는지, 지구 반대편 위성의 고도각이 음수인지, 그리고 방위각/
 고도각 계산이 알려진 특수 케이스에서 기대한 값을 내는지."""
 
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("frames/04_Coordinate_frame_transforms.py")
+m = load_module("frames/coordinate_frame_transforms.py")
 
 
 def test_eci_to_ecef_zero_gst_is_identity():

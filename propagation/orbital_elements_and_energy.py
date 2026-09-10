@@ -62,7 +62,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _ROOT_DIR = os.path.dirname(_THIS_DIR)
-_KEPLER_PATH = os.path.join(_THIS_DIR, "01_Kepler_orbit_propagation.py")
+_KEPLER_PATH = os.path.join(_THIS_DIR, "kepler_orbit_propagation.py")
 _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)

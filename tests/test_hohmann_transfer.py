@@ -1,11 +1,11 @@
-"""06_Hohmann_transfer.py 검증: LEO->GEO 델타-V가 교과서 값과 일치하는지, 전이궤도
+"""hohmann_transfer.py 검증: LEO->GEO 델타-V가 교과서 값과 일치하는지, 전이궤도
 공식(반장축/이심률)이 정확한지, 그리고 01번 실제 궤도 전파로 전이궤도를 따라가면
 계산된 전이 시간에 정확히 목표 반지름(원지점)에 도달하는지."""
 
 import pytest
 from helpers import load_module
 
-m = load_module("missions/06_Hohmann_transfer.py")
+m = load_module("missions/hohmann_transfer.py")
 
 
 def test_leo_to_geo_total_delta_v_matches_textbook_value():

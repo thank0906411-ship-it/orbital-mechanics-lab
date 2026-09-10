@@ -71,9 +71,9 @@ def _load(path, name):
   return module
 
 
-kepler = _load(os.path.join("propagation", "01_Kepler_orbit_propagation.py"), "kepler_module")
-frames = _load(os.path.join("frames", "04_Coordinate_frame_transforms.py"), "frames_module")
-visibility = _load(os.path.join("missions", "05_Ground_station_visibility.py"), "visibility_module")
+kepler = _load(os.path.join("propagation", "kepler_orbit_propagation.py"), "kepler_module")
+frames = _load(os.path.join("frames", "coordinate_frame_transforms.py"), "frames_module")
+visibility = _load(os.path.join("missions", "ground_station_visibility.py"), "visibility_module")
 
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 

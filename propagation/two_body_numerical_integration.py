@@ -68,8 +68,8 @@ def _load(filename, name):
   return module
 
 
-kepler = _load("01_Kepler_orbit_propagation.py", "kepler_module")
-elements = _load("02_Orbital_elements_and_energy.py", "elements_module")
+kepler = _load("kepler_orbit_propagation.py", "kepler_module")
+elements = _load("orbital_elements_and_energy.py", "elements_module")
 
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 

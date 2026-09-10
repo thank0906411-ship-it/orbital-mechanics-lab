@@ -65,9 +65,9 @@ def _load(path, name):
   return module
 
 
-kepler = _load(os.path.join("propagation", "01_Kepler_orbit_propagation.py"), "kepler_module")
-elements = _load(os.path.join("propagation", "02_Orbital_elements_and_energy.py"), "elements_module")
-hohmann = _load(os.path.join("missions", "06_Hohmann_transfer.py"), "hohmann_module")
+kepler = _load(os.path.join("propagation", "kepler_orbit_propagation.py"), "kepler_module")
+elements = _load(os.path.join("propagation", "orbital_elements_and_energy.py"), "elements_module")
+hohmann = _load(os.path.join("missions", "hohmann_transfer.py"), "hohmann_module")
 
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 

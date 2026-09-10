@@ -1,4 +1,4 @@
-"""10_Constellation_coverage.py 검증: 워커 델타 성좌 생성이 요청한 위성 수/평면
+"""constellation_coverage.py 검증: 워커 델타 성좌 생성이 요청한 위성 수/평면
 수대로 정확히 만들어지는지(RAAN이 평면마다 균등 분배되는지), 커버리지 공백 탐지
 로직이 05번의 접촉 창 탐지와 대칭적으로 동작하는지, 그리고 실제로 위성 수가
 늘어나면 공백이 줄어드는(또는 최소한 늘어나지 않는) 경향이 있는지."""
@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("constellations/10_Constellation_coverage.py")
+m = load_module("constellations/constellation_coverage.py")
 
 
 def test_walker_delta_creates_correct_number_of_satellites():
