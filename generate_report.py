@@ -198,6 +198,22 @@ def compute_patched_conic():
   return result
 
 
+def compute_cw_rendezvous():
+  result = dict.fromkeys(
+      ["CW_RENDEZVOUS_DELTA_V_MS", "CW_APPROX_SMALL_ERROR_PCT", "CW_APPROX_LARGE_ERROR_PCT"], "-")
+
+  rendezvous_rows = read_csv_rows("cw_rendezvous_delta_v.csv")
+  if rendezvous_rows:
+    result["CW_RENDEZVOUS_DELTA_V_MS"] = f"{float(rendezvous_rows[0]['delta_v_km_s']) * 1000:.2f}"
+
+  approximation_rows = read_csv_rows("cw_approximation_validity.csv")
+  if approximation_rows:
+    result["CW_APPROX_SMALL_ERROR_PCT"] = f"{float(approximation_rows[0]['relative_error_pct']):.4f}"
+    result["CW_APPROX_LARGE_ERROR_PCT"] = f"{float(approximation_rows[-1]['relative_error_pct']):.2f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -220,6 +236,8 @@ def main():
       "IMG_ISL_COMPARISON": img_to_data_uri("isl_visibility_comparison.png"),
       "IMG_PATCHED_CONIC_ORBIT": img_to_data_uri("patched_conic_transfer_orbit.png"),
       "IMG_PATCHED_CONIC_DV": img_to_data_uri("patched_conic_delta_v_breakdown.png"),
+      "IMG_CW_ZERO_DRIFT": img_to_data_uri("cw_zero_drift_comparison.png"),
+      "IMG_CW_APPROXIMATION": img_to_data_uri("cw_approximation_validity.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -233,6 +251,7 @@ def main():
   values.update(compute_constellation())
   values.update(compute_isl())
   values.update(compute_patched_conic())
+  values.update(compute_cw_rendezvous())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

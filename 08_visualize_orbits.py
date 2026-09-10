@@ -1,13 +1,13 @@
 """
-01, 04, 05, 06, 07, 09, 10, 11, 12번 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
-도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
+01, 04, 05, 06, 07, 09, 10, 11, 12, 13번 시뮬레이션이 남긴 결과 CSV를 그래프로
+그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
 실행 전에 먼저 01_Kepler_orbit_propagation.py, 04_Coordinate_frame_transforms.py,
 05_Ground_station_visibility.py, 06_Hohmann_transfer.py, 07_J2_perturbation.py,
 09_Lambert_problem.py, 10_Constellation_coverage.py,
-11_Intersatellite_link_visibility.py, 12_Patched_conic_interplanetary.py를 한 번
-이상 실행해서 results/ 폴더에 CSV가 생성되어 있어야 한다. (해당 CSV가 없는 항목은
-건너뛰고 나머지만 그린다.)
+11_Intersatellite_link_visibility.py, 12_Patched_conic_interplanetary.py,
+13_Clohessy_wiltshire_rendezvous.py를 한 번 이상 실행해서 results/ 폴더에 CSV가
+생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python 08_visualize_orbits.py
 출력: results/kepler_orbit_shape.png, results/kepler_second_law_areas.png,
@@ -17,7 +17,8 @@
       results/j2_ground_track_drift.png, results/lambert_short_vs_long_way.png,
       results/constellation_size_vs_gap.png, results/constellation_plane_comparison.png,
       results/isl_visibility_comparison.png, results/patched_conic_transfer_orbit.png,
-      results/patched_conic_delta_v_breakdown.png
+      results/patched_conic_delta_v_breakdown.png, results/cw_zero_drift_comparison.png,
+      results/cw_approximation_validity.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -516,6 +517,64 @@ def plot_patched_conic_delta_v_breakdown():
   print(f"[저장됨] {out_path}")
 
 
+def plot_cw_zero_drift_comparison():
+  csv_path = os.path.join(RESULTS_DIR, "cw_zero_drift_comparison.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 13_Clohessy_wiltshire_rendezvous.py를 실행하세요.")
+    return
+
+  num_orbits, y_zero_drift, y_no_correction = [], [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      num_orbits.append(int(row["num_orbits"]))
+      y_zero_drift.append(float(row["y_zero_drift_km"]))
+      y_no_correction.append(float(row["y_no_correction_km"]))
+
+  fig, ax = plt.subplots(figsize=(8, 5))
+  ax.plot(num_orbits, y_zero_drift, marker="o", linewidth=2, color="tab:green", label="Zero-drift velocity")
+  ax.plot(num_orbits, y_no_correction, marker="s", linewidth=2, color="tab:red", label="No correction (vy0=0)")
+  ax.axhline(0, color="black", linewidth=0.8)
+  ax.set_xlabel("Number of target orbits elapsed")
+  ax.set_ylabel("Along-track offset y (km)")
+  ax.set_title("CW zero-drift condition prevents secular divergence")
+  ax.legend()
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "cw_zero_drift_comparison.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_cw_approximation_validity():
+  csv_path = os.path.join(RESULTS_DIR, "cw_approximation_validity.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 13_Clohessy_wiltshire_rendezvous.py를 실행하세요.")
+    return
+
+  x0_values, errors = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      x0_values.append(float(row["x0_km"]))
+      errors.append(float(row["relative_error_pct"]))
+
+  fig, ax = plt.subplots(figsize=(8, 5))
+  ax.plot(x0_values, errors, marker="o", linewidth=2, color="tab:purple")
+  ax.set_xscale("log")
+  ax.set_yscale("log")
+  ax.set_xlabel("Initial radial offset x0 (km, log scale)")
+  ax.set_ylabel("CW vs nonlinear propagation error (%, log scale)")
+  ax.set_title("CW linearization error grows with separation distance")
+  ax.grid(True, which="both", alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "cw_approximation_validity.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -533,3 +592,5 @@ if __name__ == "__main__":
   plot_isl_visibility_comparison()
   plot_patched_conic_transfer_orbit()
   plot_patched_conic_delta_v_breakdown()
+  plot_cw_zero_drift_comparison()
+  plot_cw_approximation_validity()
