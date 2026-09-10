@@ -1,24 +1,28 @@
 """
-01, 04, 05, 06, 07, 09, 10, 11, 12, 13번 시뮬레이션이 남긴 결과 CSV를 그래프로
+01, 04, 05, 06, 07, 09, 10, 11, 12, 13, 14번 시뮬레이션이 남긴 결과 CSV를 그래프로
 그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
 실행 전에 먼저 01_Kepler_orbit_propagation.py, 04_Coordinate_frame_transforms.py,
 05_Ground_station_visibility.py, 06_Hohmann_transfer.py, 07_J2_perturbation.py,
 09_Lambert_problem.py, 10_Constellation_coverage.py,
 11_Intersatellite_link_visibility.py, 12_Patched_conic_interplanetary.py,
-13_Clohessy_wiltshire_rendezvous.py를 한 번 이상 실행해서 results/ 폴더에 CSV가
-생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
+13_Clohessy_wiltshire_rendezvous.py, 14_Orbit_determination.py를 한 번 이상
+실행해서 results/ 폴더에 CSV가 생성되어 있어야 한다. (해당 CSV가 없는 항목은
+건너뛰고 나머지만 그린다.)
 
 실행: python 08_visualize_orbits.py
-출력: results/kepler_orbit_shape.png, results/kepler_second_law_areas.png,
-      results/zenith_and_horizon_cases.png, results/elevation_over_time.png,
-      results/contact_windows_gantt.png, results/hohmann_transfer_orbit.png,
-      results/hohmann_delta_v_vs_ratio.png, results/j2_raan_precession.png,
-      results/j2_ground_track_drift.png, results/lambert_short_vs_long_way.png,
-      results/constellation_size_vs_gap.png, results/constellation_plane_comparison.png,
-      results/isl_visibility_comparison.png, results/patched_conic_transfer_orbit.png,
-      results/patched_conic_delta_v_breakdown.png, results/cw_zero_drift_comparison.png,
-      results/cw_approximation_validity.png
+출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 소속 스크립트
+번호를 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 01번 결과):
+      results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
+      results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
+      results/05_contact_windows_gantt.png, results/06_hohmann_transfer_orbit.png,
+      results/06_hohmann_delta_v_vs_ratio.png, results/07_j2_raan_precession.png,
+      results/07_j2_ground_track_drift.png, results/09_lambert_short_vs_long_way.png,
+      results/10_constellation_size_vs_gap.png, results/10_constellation_plane_comparison.png,
+      results/11_isl_visibility_comparison.png, results/12_patched_conic_transfer_orbit.png,
+      results/12_patched_conic_delta_v_breakdown.png, results/13_cw_zero_drift_comparison.png,
+      results/13_cw_approximation_validity.png, results/14_orbit_determination_noise_sensitivity.png,
+      results/14_orbit_determination_observation_count.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -66,7 +70,7 @@ def plot_kepler_orbit_shape():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "kepler_orbit_shape.png")
+  out_path = os.path.join(RESULTS_DIR, "01_kepler_orbit_shape.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -100,7 +104,7 @@ def plot_kepler_second_law_areas():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "kepler_second_law_areas.png")
+  out_path = os.path.join(RESULTS_DIR, "01_kepler_second_law_areas.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -132,7 +136,7 @@ def plot_zenith_and_horizon_cases():
     ax.text(bar.get_x() + bar.get_width() / 2, e + (2 if e > 0 else -4), f"{e:.1f}", ha="center")
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "zenith_and_horizon_cases.png")
+  out_path = os.path.join(RESULTS_DIR, "04_zenith_and_horizon_cases.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -163,7 +167,7 @@ def plot_elevation_over_time():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "elevation_over_time.png")
+  out_path = os.path.join(RESULTS_DIR, "05_elevation_over_time.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -196,7 +200,7 @@ def plot_contact_windows_gantt():
   ax.grid(True, axis="x", alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "contact_windows_gantt.png")
+  out_path = os.path.join(RESULTS_DIR, "05_contact_windows_gantt.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -233,7 +237,7 @@ def plot_hohmann_transfer_orbit():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "hohmann_transfer_orbit.png")
+  out_path = os.path.join(RESULTS_DIR, "06_hohmann_transfer_orbit.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -259,7 +263,7 @@ def plot_hohmann_delta_v_vs_ratio():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "hohmann_delta_v_vs_ratio.png")
+  out_path = os.path.join(RESULTS_DIR, "06_hohmann_delta_v_vs_ratio.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -288,7 +292,7 @@ def plot_j2_raan_precession():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "j2_raan_precession.png")
+  out_path = os.path.join(RESULTS_DIR, "07_j2_raan_precession.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -314,7 +318,7 @@ def plot_j2_ground_track_drift():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "j2_ground_track_drift.png")
+  out_path = os.path.join(RESULTS_DIR, "07_j2_ground_track_drift.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -342,7 +346,7 @@ def plot_lambert_short_vs_long_way():
     ax.text(bar.get_x() + bar.get_width() / 2, v + 0.05, f"{v:.2f}", ha="center")
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "lambert_short_vs_long_way.png")
+  out_path = os.path.join(RESULTS_DIR, "09_lambert_short_vs_long_way.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -368,7 +372,7 @@ def plot_constellation_size_vs_gap():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "constellation_size_vs_gap.png")
+  out_path = os.path.join(RESULTS_DIR, "10_constellation_size_vs_gap.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -397,7 +401,7 @@ def plot_constellation_plane_comparison():
     ax.text(bar.get_x() + bar.get_width() / 2, v + 0.2, f"{v:.1f}", ha="center")
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "constellation_plane_comparison.png")
+  out_path = os.path.join(RESULTS_DIR, "10_constellation_plane_comparison.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -444,7 +448,7 @@ def plot_isl_visibility_comparison():
   fig.suptitle("Inter-satellite link visibility: same plane vs crossing planes")
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "isl_visibility_comparison.png")
+  out_path = os.path.join(RESULTS_DIR, "11_isl_visibility_comparison.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -482,7 +486,7 @@ def plot_patched_conic_transfer_orbit():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "patched_conic_transfer_orbit.png")
+  out_path = os.path.join(RESULTS_DIR, "12_patched_conic_transfer_orbit.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -511,7 +515,7 @@ def plot_patched_conic_delta_v_breakdown():
     ax.text(bar.get_x() + bar.get_width() / 2, v + 0.05, f"{v:.2f}", ha="center")
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "patched_conic_delta_v_breakdown.png")
+  out_path = os.path.join(RESULTS_DIR, "12_patched_conic_delta_v_breakdown.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -541,7 +545,7 @@ def plot_cw_zero_drift_comparison():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "cw_zero_drift_comparison.png")
+  out_path = os.path.join(RESULTS_DIR, "13_cw_zero_drift_comparison.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -569,7 +573,7 @@ def plot_cw_approximation_validity():
   ax.grid(True, which="both", alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "cw_approximation_validity.png")
+  out_path = os.path.join(RESULTS_DIR, "13_cw_approximation_validity.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -597,7 +601,7 @@ def plot_orbit_determination_noise_sensitivity():
   ax.grid(True, which="both", alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "orbit_determination_noise_sensitivity.png")
+  out_path = os.path.join(RESULTS_DIR, "14_orbit_determination_noise_sensitivity.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
@@ -624,7 +628,7 @@ def plot_orbit_determination_observation_count():
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
-  out_path = os.path.join(RESULTS_DIR, "orbit_determination_observation_count.png")
+  out_path = os.path.join(RESULTS_DIR, "14_orbit_determination_observation_count.png")
   fig.savefig(out_path, dpi=120)
   plt.close(fig)
   print(f"[저장됨] {out_path}")
