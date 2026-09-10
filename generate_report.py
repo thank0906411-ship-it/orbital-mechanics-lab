@@ -137,6 +137,51 @@ def compute_j2_raan_drift():
   return {"RAAN_DRIFT_30DAYS_DEG": f"{drift:.2f}"}
 
 
+def compute_lambert():
+  rows = read_csv_rows("lambert_hohmann_cross_check.csv")
+  if not rows:
+    return {"LAMBERT_CROSS_CHECK_ERROR": "-"}
+  return {"LAMBERT_CROSS_CHECK_ERROR": f"{float(rows[0]['error']):.4f}"}
+
+
+def compute_constellation():
+  rows = read_csv_rows("constellation_plane_comparison.csv")
+  if not rows:
+    return dict.fromkeys(["CONSTELLATION_SINGLE_PLANE_GAP", "CONSTELLATION_MULTI_PLANE_GAP"], "-")
+  # "label"은 10번이 콘솔 출력용으로 쓴 한글 문구라 문구가 바뀌면 매칭이 깨진다 —
+  # 대신 안정적인 숫자 컬럼인 num_planes로 단일/다중 평면을 구분한다.
+  by_num_planes = {int(row["num_planes"]): row for row in rows}
+  single = by_num_planes.get(1)
+  multi = next((row for planes, row in by_num_planes.items() if planes > 1), None)
+  if not single or not multi:
+    return dict.fromkeys(["CONSTELLATION_SINGLE_PLANE_GAP", "CONSTELLATION_MULTI_PLANE_GAP"], "-")
+  return {
+      "CONSTELLATION_SINGLE_PLANE_GAP": f"{float(single['max_gap_min']):.1f}",
+      "CONSTELLATION_MULTI_PLANE_GAP": f"{float(multi['max_gap_min']):.1f}",
+  }
+
+
+def compute_isl():
+  result = dict.fromkeys(
+      ["ISL_SAME_PLANE_BLOCKED_PCT", "ISL_CROSS_PLANE_BLOCKED_PCT", "ISL_OPPOSITE_DISTANCE"], "-")
+
+  same_plane_rows = read_csv_rows("isl_same_plane_visibility.csv")
+  if same_plane_rows:
+    blocked_count = sum(1 for row in same_plane_rows if row["blocked"] == "True")
+    result["ISL_SAME_PLANE_BLOCKED_PCT"] = f"{blocked_count / len(same_plane_rows) * 100:.1f}"
+
+  cross_plane_rows = read_csv_rows("isl_polar_vs_equatorial.csv")
+  if cross_plane_rows:
+    blocked_count = sum(1 for row in cross_plane_rows if row["blocked"] == "True")
+    result["ISL_CROSS_PLANE_BLOCKED_PCT"] = f"{blocked_count / len(cross_plane_rows) * 100:.1f}"
+
+  opposite_rows = read_csv_rows("isl_opposite_side_edge_case.csv")
+  if opposite_rows:
+    result["ISL_OPPOSITE_DISTANCE"] = f"{float(opposite_rows[0]['closest_distance_km']):.4f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -153,6 +198,10 @@ def main():
       "IMG_HOHMANN_RATIO": img_to_data_uri("hohmann_delta_v_vs_ratio.png"),
       "IMG_J2_RAAN": img_to_data_uri("j2_raan_precession.png"),
       "IMG_J2_DRIFT": img_to_data_uri("j2_ground_track_drift.png"),
+      "IMG_LAMBERT_SHORT_LONG": img_to_data_uri("lambert_short_vs_long_way.png"),
+      "IMG_CONSTELLATION_SIZE": img_to_data_uri("constellation_size_vs_gap.png"),
+      "IMG_CONSTELLATION_PLANE": img_to_data_uri("constellation_plane_comparison.png"),
+      "IMG_ISL_COMPARISON": img_to_data_uri("isl_visibility_comparison.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -162,6 +211,9 @@ def main():
   values.update(compute_hohmann())
   values.update(compute_j2_critical_inclination())
   values.update(compute_j2_raan_drift())
+  values.update(compute_lambert())
+  values.update(compute_constellation())
+  values.update(compute_isl())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

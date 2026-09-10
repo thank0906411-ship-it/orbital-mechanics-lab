@@ -361,7 +361,7 @@
     <div>
       <span class="kicker">궤도역학 실험실 · 형제 프로젝트</span>
       <h1>궤도역학 실험실</h1>
-      <p class="subtitle">케플러 궤도 전파부터 좌표변환, 실측 지상국 가시성, 호만 전이, J2 섭동까지, 궤도역학 자체를 1급 시뮬레이션 대상으로 처음부터 직접 구현한 8개의 점진적 시뮬레이션.</p>
+      <p class="subtitle">케플러 궤도 전파부터 좌표변환, 실측 지상국 가시성, 호만 전이, J2 섭동, 란베르트 문제, 다중 위성 성좌 커버리지, 위성간 링크 가시선까지, 궤도역학 자체를 1급 시뮬레이션 대상으로 처음부터 직접 구현한 11개의 점진적 시뮬레이션.</p>
     </div>
     <div class="meta">
       마지막 실행<br>
@@ -376,7 +376,7 @@
     </div>
     <div class="stat-grid">
       <div class="stat">
-        <div class="stat-value">8</div>
+        <div class="stat-value">11</div>
         <div class="stat-label">독립 실행 시뮬레이션 스크립트</div>
       </div>
       <div class="stat">
@@ -449,13 +449,31 @@
         <div class="dash-value">약 {{RAAN_DRIFT_30DAYS_DEG}}도</div>
         <p class="dash-note">지구 편평도(J2)가 궤도면 자체를 서서히 회전시킴</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">란베르트 문제</span><span class="dash-scripts">09</span></div>
+        <div class="dash-metric">일반해 vs 06번 호만 전이 특수해 델타-V 오차</div>
+        <div class="dash-value">{{LAMBERT_CROSS_CHECK_ERROR}}km/s</div>
+        <p class="dash-note">유니버설 변수 반복법과 닫힌 공식이 서로 다른 방법으로 같은 답에 수렴</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">성좌 커버리지</span><span class="dash-scripts">10</span></div>
+        <div class="dash-metric">단일 평면 vs 다중 평면 최대 공백 시간(같은 지점 기준)</div>
+        <div class="dash-value">{{CONSTELLATION_SINGLE_PLANE_GAP}}분 vs {{CONSTELLATION_MULTI_PLANE_GAP}}분</div>
+        <p class="dash-note">"평면을 나누면 항상 좋다"는 직관이 지점 하나 기준에서는 뒤집힘(감추지 않음)</p>
+      </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">위성간 링크(ISL)</span><span class="dash-scripts">11</span></div>
+        <div class="dash-metric">같은 평면 vs 극/적도 교차 평면 가려짐 비율</div>
+        <div class="dash-value">{{ISL_SAME_PLANE_BLOCKED_PCT}}% vs {{ISL_CROSS_PLANE_BLOCKED_PCT}}%</div>
+        <p class="dash-note">두 위성을 잇는 선분과 지구 중심 사이 최근접 거리로 기하학적 판정</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>여덟 단계의 확장</h2>
+      <h2>열한 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -506,6 +524,24 @@
         <h3>궤도, 접촉 창, 전이궤도 그리기</h3>
         <p>시뮬레이션 없이 앞선 스크립트들의 CSV만 읽어 궤도 형상, 고도각 시계열, 접촉 창 간트차트, 전이궤도, J2 세차를 그래프로 그린다.</p>
         <div class="phase-scripts"><span class="chip">08</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">역문제</span>
+        <h3>란베르트 문제</h3>
+        <p>궤도요소가 주어졌을 때 위치를 구하던 순문제를 뒤집어, 두 위치·비행시간으로 속도벡터를 구하는 역문제를 유니버설 변수·스텀프 함수로 푼다. 06번 호만 전이와 교차검증한다.</p>
+        <div class="phase-scripts"><span class="chip">09</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">다중 위성 응용</span>
+        <h3>성좌 커버리지</h3>
+        <p>워커 델타 패턴으로 여러 위성을 배치하고, 05번의 접촉 창 계산을 "하나 이상 보임" 조건으로 일반화해 커버리지 공백을 계산한다. "평면을 나누면 항상 좋다"는 직관이 지점 하나 기준에서는 성립하지 않는다는 것을 실측으로 확인한다.</p>
+        <div class="phase-scripts"><span class="chip">10</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">위성-위성 기하</span>
+        <h3>위성간 링크(ISL) 가시선</h3>
+        <p>지상국이 아니라 위성-위성 사이의 시선을, 선분과 구(지구) 사이의 최근접 거리라는 순수 기하 문제로 판정한다. 정반대편(반드시 가려짐), 같은 평면(대부분 보임) 경계 케이스로 검증한다.</p>
+        <div class="phase-scripts"><span class="chip">11</span></div>
       </div>
     </div>
   </section>
@@ -562,6 +598,27 @@
         <img id="img-j2-drift" src="{{IMG_J2_DRIFT}}" alt="30일에 걸친 RAAN 값의 선형 드리프트를 그린 선 그래프">
         <div class="result-caption"><strong>장기 RAAN 드리프트</strong> — 태양동기궤도에 가까운 경사각에서 RAAN이 시간에 선형으로 누적된다.</div>
       </div>
+    </div>
+
+    <div class="result">
+      <img id="img-lambert" src="{{IMG_LAMBERT_SHORT_LONG}}" alt="짧은 길과 긴 길 전이가 요구하는 출발 속도를 비교한 막대 그래프">
+      <div class="result-caption"><strong>란베르트 문제: 짧은 길 vs 긴 길</strong> — 같은 출발/도착 위치·비행시간이라도 전이 방향에 따라 요구되는 속도가 다르다.</div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-constellation-size" src="{{IMG_CONSTELLATION_SIZE}}" alt="성좌 위성 수에 따른 최대 커버리지 공백 시간을 그린 선 그래프">
+        <div class="result-caption"><strong>위성 수 vs 커버리지 공백</strong> — 위성을 늘리면 최대 공백이 줄지만 항상 비례하지는 않는다.</div>
+      </div>
+      <div class="result">
+        <img id="img-constellation-plane" src="{{IMG_CONSTELLATION_PLANE}}" alt="단일 평면과 다중 평면 성좌의 최대 커버리지 공백을 비교한 막대 그래프">
+        <div class="result-caption"><strong>단일 평면 vs 다중 평면</strong> — 지점 하나 기준에서는 "평면을 나누면 좋다"는 직관이 뒤집힌다(감추지 않고 그대로 기록).</div>
+      </div>
+    </div>
+
+    <div class="result">
+      <img id="img-isl" src="{{IMG_ISL_COMPARISON}}" alt="같은 궤도면과 극/적도 교차 평면의 위성간 링크 가시성을 시간에 따라 비교한 그래프">
+      <div class="result-caption"><strong>위성간 링크(ISL) 가시성</strong> — 같은 평면 위성은 대부분 가시 상태를 유지하지만, 교차 평면 위성은 지구에 주기적으로 가려진다.</div>
     </div>
   </section>
 
@@ -625,6 +682,20 @@
             <td class="num">0.0</td>
             <td><span class="pill good">이론과 일치</span></td>
           </tr>
+          <tr>
+            <td>란베르트 문제: 06번 호만 전이와 교차검증</td>
+            <td class="num">델타-V 오차(km/s)</td>
+            <td class="num">{{LAMBERT_CROSS_CHECK_ERROR}}</td>
+            <td class="num">&lt; 0.05</td>
+            <td><span class="pill good">닫힌 공식과 일치</span></td>
+          </tr>
+          <tr>
+            <td>위성간 링크(ISL): 지구 정반대편 경계 케이스</td>
+            <td class="num">시선-지구중심 최근접 거리(km)</td>
+            <td class="num">{{ISL_OPPOSITE_DISTANCE}}</td>
+            <td class="num">0.0</td>
+            <td><span class="pill good">기하 판정 함수 검증됨</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -632,7 +703,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–08 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–11 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>

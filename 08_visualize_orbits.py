@@ -1,18 +1,21 @@
 """
-01, 04, 05, 07번 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는 도구. 시뮬레이션
-코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
+01, 04, 05, 06, 07, 09, 10, 11번 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
+도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
 실행 전에 먼저 01_Kepler_orbit_propagation.py, 04_Coordinate_frame_transforms.py,
-05_Ground_station_visibility.py, 06_Hohmann_transfer.py, 07_J2_perturbation.py를
-한 번 이상 실행해서 results/ 폴더에 CSV가 생성되어 있어야 한다. (해당 CSV가 없는
-항목은 건너뛰고 나머지만 그린다.)
+05_Ground_station_visibility.py, 06_Hohmann_transfer.py, 07_J2_perturbation.py,
+09_Lambert_problem.py, 10_Constellation_coverage.py,
+11_Intersatellite_link_visibility.py를 한 번 이상 실행해서 results/ 폴더에 CSV가
+생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python 08_visualize_orbits.py
 출력: results/kepler_orbit_shape.png, results/kepler_second_law_areas.png,
       results/zenith_and_horizon_cases.png, results/elevation_over_time.png,
       results/contact_windows_gantt.png, results/hohmann_transfer_orbit.png,
       results/hohmann_delta_v_vs_ratio.png, results/j2_raan_precession.png,
-      results/j2_ground_track_drift.png
+      results/j2_ground_track_drift.png, results/lambert_short_vs_long_way.png,
+      results/constellation_size_vs_gap.png, results/constellation_plane_comparison.png,
+      results/isl_visibility_comparison.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -314,6 +317,136 @@ def plot_j2_ground_track_drift():
   print(f"[저장됨] {out_path}")
 
 
+def plot_lambert_short_vs_long_way():
+  csv_path = os.path.join(RESULTS_DIR, "lambert_short_vs_long_way.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 09_Lambert_problem.py를 실행하세요.")
+    return
+
+  labels_en = {"짧은 길(prograde)": "Short way\n(prograde)", "긴 길(retrograde 선택)": "Long way\n(retrograde)"}
+  labels, v1_values = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      labels.append(labels_en.get(row["label"], row["label"]))
+      v1_values.append(float(row["v1_km_s"]))
+
+  fig, ax = plt.subplots(figsize=(7, 5))
+  bars = ax.bar(labels, v1_values, color=["tab:blue", "tab:red"], alpha=0.85)
+  ax.set_ylabel("Departure speed |v1| (km/s)")
+  ax.set_title("Lambert's problem: short way vs long way require different speeds")
+  ax.grid(True, axis="y", alpha=0.3)
+  for bar, v in zip(bars, v1_values):
+    ax.text(bar.get_x() + bar.get_width() / 2, v + 0.05, f"{v:.2f}", ha="center")
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "lambert_short_vs_long_way.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_constellation_size_vs_gap():
+  csv_path = os.path.join(RESULTS_DIR, "constellation_size_vs_gap.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 10_Constellation_coverage.py를 실행하세요.")
+    return
+
+  num_sats, max_gaps = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      num_sats.append(int(row["num_satellites"]))
+      max_gaps.append(float(row["max_gap_min"]))
+
+  fig, ax = plt.subplots(figsize=(8, 5))
+  ax.plot(num_sats, max_gaps, marker="o", linewidth=2, color="tab:green")
+  ax.set_xlabel("Number of satellites in constellation")
+  ax.set_ylabel("Max coverage gap (min)")
+  ax.set_title("Constellation size vs max coverage gap at one ground site")
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "constellation_size_vs_gap.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_constellation_plane_comparison():
+  csv_path = os.path.join(RESULTS_DIR, "constellation_plane_comparison.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 10_Constellation_coverage.py를 실행하세요.")
+    return
+
+  labels_en = {"단일 평면(1개 평면에 12기)": "Single plane\n(12 sats, 1 plane)",
+               "다중 평면(3개 평면에 4기씩)": "Multi-plane\n(12 sats, 3 planes)"}
+  labels, max_gaps = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      labels.append(labels_en.get(row["label"], row["label"]))
+      max_gaps.append(float(row["max_gap_min"]))
+
+  fig, ax = plt.subplots(figsize=(7, 5))
+  bars = ax.bar(labels, max_gaps, color=["tab:blue", "tab:orange"], alpha=0.85)
+  ax.set_ylabel("Max coverage gap (min)")
+  ax.set_title("Single plane can beat multi-plane for one fixed ground site\n(counter to the 'spread planes' intuition)")
+  ax.grid(True, axis="y", alpha=0.3)
+  for bar, v in zip(bars, max_gaps):
+    ax.text(bar.get_x() + bar.get_width() / 2, v + 0.2, f"{v:.1f}", ha="center")
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "constellation_plane_comparison.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_isl_visibility_comparison():
+  same_plane_path = os.path.join(RESULTS_DIR, "isl_same_plane_visibility.csv")
+  cross_plane_path = os.path.join(RESULTS_DIR, "isl_polar_vs_equatorial.csv")
+  if not os.path.exists(same_plane_path) or not os.path.exists(cross_plane_path):
+    print(f"[건너뜀] {same_plane_path} 또는 {cross_plane_path} 없음 — "
+          "먼저 11_Intersatellite_link_visibility.py를 실행하세요.")
+    return
+
+  def read_series(path):
+    times_min, blocked = [], []
+    with open(path, newline="", encoding="utf-8") as f:
+      for row in csv.DictReader(f):
+        times_min.append(float(row["t_sec"]) / 60)
+        blocked.append(row["blocked"] == "True")
+    return times_min, blocked
+
+  same_times, same_blocked = read_series(same_plane_path)
+  cross_times, cross_blocked = read_series(cross_plane_path)
+
+  fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=False)
+
+  ax1.fill_between(same_times, 0, 1, where=same_blocked, color="tab:red", alpha=0.6, step="post", label="Blocked")
+  ax1.fill_between(same_times, 0, 1, where=[not b for b in same_blocked], color="tab:green", alpha=0.4,
+                    step="post", label="Visible")
+  ax1.set_ylim(0, 1)
+  ax1.set_yticks([])
+  ax1.set_title("ISL visibility: same orbital plane (30 deg phase offset)")
+  ax1.legend(loc="upper right", fontsize=8)
+
+  ax2.fill_between(cross_times, 0, 1, where=cross_blocked, color="tab:red", alpha=0.6, step="post", label="Blocked")
+  ax2.fill_between(cross_times, 0, 1, where=[not b for b in cross_blocked], color="tab:green", alpha=0.4,
+                    step="post", label="Visible")
+  ax2.set_ylim(0, 1)
+  ax2.set_yticks([])
+  ax2.set_xlabel("Time (min)")
+  ax2.set_title("ISL visibility: polar vs equatorial planes")
+  ax2.legend(loc="upper right", fontsize=8)
+
+  fig.suptitle("Inter-satellite link visibility: same plane vs crossing planes")
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "isl_visibility_comparison.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -325,3 +458,7 @@ if __name__ == "__main__":
   plot_hohmann_delta_v_vs_ratio()
   plot_j2_raan_precession()
   plot_j2_ground_track_drift()
+  plot_lambert_short_vs_long_way()
+  plot_constellation_size_vs_gap()
+  plot_constellation_plane_comparison()
+  plot_isl_visibility_comparison()
