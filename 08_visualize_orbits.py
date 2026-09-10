@@ -575,6 +575,61 @@ def plot_cw_approximation_validity():
   print(f"[저장됨] {out_path}")
 
 
+def plot_orbit_determination_noise_sensitivity():
+  csv_path = os.path.join(RESULTS_DIR, "orbit_determination_noise_sensitivity.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 14_Orbit_determination.py를 실행하세요.")
+    return
+
+  angle_noise_deg, inclination_error_deg = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      angle_noise_deg.append(float(row["angle_noise_deg"]))
+      inclination_error_deg.append(float(row["inclination_error_deg"]))
+
+  fig, ax = plt.subplots(figsize=(8, 5))
+  ax.plot(angle_noise_deg, inclination_error_deg, marker="o", linewidth=2, color="tab:orange")
+  ax.set_xscale("log")
+  ax.set_yscale("log")
+  ax.set_xlabel("Observation angle noise std dev (deg, log scale)")
+  ax.set_ylabel("Recovered inclination error (deg, log scale)")
+  ax.set_title("Orbit determination accuracy degrades with observation noise")
+  ax.grid(True, which="both", alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "orbit_determination_noise_sensitivity.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_orbit_determination_observation_count():
+  csv_path = os.path.join(RESULTS_DIR, "orbit_determination_observation_count.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 14_Orbit_determination.py를 실행하세요.")
+    return
+
+  num_obs, mean_error, std_error = [], [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      num_obs.append(int(row["actual_num_obs"]))
+      mean_error.append(float(row["mean_inclination_error_deg"]))
+      std_error.append(float(row["std_inclination_error_deg"]))
+
+  fig, ax = plt.subplots(figsize=(8, 5))
+  ax.errorbar(num_obs, mean_error, yerr=std_error, marker="o", linewidth=2, capsize=5, color="tab:blue")
+  ax.set_xlabel("Number of observations used")
+  ax.set_ylabel("Mean inclination error over trials (deg)")
+  ax.set_title("More observations stabilize orbit determination (error bars = std dev)")
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "orbit_determination_observation_count.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -594,3 +649,5 @@ if __name__ == "__main__":
   plot_patched_conic_delta_v_breakdown()
   plot_cw_zero_drift_comparison()
   plot_cw_approximation_validity()
+  plot_orbit_determination_noise_sensitivity()
+  plot_orbit_determination_observation_count()

@@ -214,6 +214,35 @@ def compute_cw_rendezvous():
   return result
 
 
+def compute_orbit_determination():
+  result = dict.fromkeys(
+      ["OD_ROUNDTRIP_ERROR_KM", "OD_RECOVERY_A_ERROR_PCT", "OD_RECOVERY_I_ERROR_DEG",
+       "OD_NOISE_SMALL_ERROR_DEG", "OD_NOISE_LARGE_ERROR_DEG",
+       "OD_OBS_COUNT_SMALL_MEAN_DEG", "OD_OBS_COUNT_LARGE_MEAN_DEG"], "-")
+
+  roundtrip_rows = read_csv_rows("orbit_determination_roundtrip.csv")
+  if roundtrip_rows:
+    max_error = max(float(row["roundtrip_error_km"]) for row in roundtrip_rows)
+    result["OD_ROUNDTRIP_ERROR_KM"] = f"{max_error:.2e}"
+
+  recovery_rows = read_csv_rows("orbit_determination_recovery.csv")
+  if recovery_rows:
+    result["OD_RECOVERY_A_ERROR_PCT"] = f"{float(recovery_rows[0]['a_error_pct']):.4f}"
+    result["OD_RECOVERY_I_ERROR_DEG"] = f"{float(recovery_rows[0]['i_error_deg']):.4f}"
+
+  noise_rows = read_csv_rows("orbit_determination_noise_sensitivity.csv")
+  if noise_rows:
+    result["OD_NOISE_SMALL_ERROR_DEG"] = f"{float(noise_rows[0]['inclination_error_deg']):.4f}"
+    result["OD_NOISE_LARGE_ERROR_DEG"] = f"{float(noise_rows[-1]['inclination_error_deg']):.4f}"
+
+  obs_count_rows = read_csv_rows("orbit_determination_observation_count.csv")
+  if obs_count_rows:
+    result["OD_OBS_COUNT_SMALL_MEAN_DEG"] = f"{float(obs_count_rows[0]['mean_inclination_error_deg']):.4f}"
+    result["OD_OBS_COUNT_LARGE_MEAN_DEG"] = f"{float(obs_count_rows[-1]['mean_inclination_error_deg']):.4f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -238,6 +267,8 @@ def main():
       "IMG_PATCHED_CONIC_DV": img_to_data_uri("patched_conic_delta_v_breakdown.png"),
       "IMG_CW_ZERO_DRIFT": img_to_data_uri("cw_zero_drift_comparison.png"),
       "IMG_CW_APPROXIMATION": img_to_data_uri("cw_approximation_validity.png"),
+      "IMG_OD_NOISE_SENSITIVITY": img_to_data_uri("orbit_determination_noise_sensitivity.png"),
+      "IMG_OD_OBSERVATION_COUNT": img_to_data_uri("orbit_determination_observation_count.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -252,6 +283,7 @@ def main():
   values.update(compute_isl())
   values.update(compute_patched_conic())
   values.update(compute_cw_rendezvous())
+  values.update(compute_orbit_determination())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

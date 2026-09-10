@@ -479,13 +479,19 @@
         <div class="dash-value">{{CW_APPROX_SMALL_ERROR_PCT}}% vs {{CW_APPROX_LARGE_ERROR_PCT}}%</div>
         <p class="dash-note">Clohessy-Wiltshire 선형화는 근접 운용에서만 정확함을 실측으로 확인</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">궤도 결정</span><span class="dash-scripts">14</span></div>
+        <div class="dash-metric">관측 2개 vs 30개 평균 경사각 오차(노이즈 1도)</div>
+        <div class="dash-value">{{OD_OBS_COUNT_SMALL_MEAN_DEG}}도 → {{OD_OBS_COUNT_LARGE_MEAN_DEG}}도</div>
+        <p class="dash-note">노이즈 낀 레이더 관측만으로 02번 궤도요소를 거꾸로 복원, 관측이 늘수록 안정화</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>열세 단계의 확장</h2>
+      <h2>열네 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -566,6 +572,12 @@
         <h3>도킹/랑데부 (Clohessy-Wiltshire)</h3>
         <p>09번의 큰 스케일 전이 다음 단계 — 목표 위성을 원점으로 한 상대좌표계에서 근접 운용 궤적을 선형화된 닫힌 해(상태천이행렬)로 구한다. 제로 드리프트 조건 없이는 진행 방향으로 선형 발산한다는 것과, 이 근사가 상대거리가 커지면 실제 비선형 궤도에서 벗어난다는 것을 01/02번 재전파로 검증한다.</p>
         <div class="phase-scripts"><span class="chip">13</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">역문제, 노이즈 하에서</span>
+        <h3>궤도 결정 (Orbit Determination)</h3>
+        <p>02번(궤도요소→상태벡터)과 정반대 방향 — 지상 레이더의 노이즈 낀 거리/방위각/고도각 관측값"만"으로 원궤도의 반장축·경사각·RAAN을 역산한다. 04번 관측 기하 변환을 정확히 뒤집어 순간 위치를 복원하고, 여러 시점의 위치에 SVD로 궤도면을 최소자승 피팅한다. 관측 노이즈가 커질수록, 관측 개수가 적을수록 추정이 불안정해지는 것을 직접 확인한다.</p>
+        <div class="phase-scripts"><span class="chip">14</span></div>
       </div>
     </div>
   </section>
@@ -664,6 +676,17 @@
       <div class="result">
         <img id="img-cw-approximation" src="{{IMG_CW_APPROXIMATION}}" alt="초기 반경 옵셋 크기에 따른 CW 근사와 실제 비선형 전파 사이의 상대오차를 로그-로그 척도로 그린 선 그래프">
         <div class="result-caption"><strong>CW 선형화 근사의 한계</strong> — 초기 옵셋이 커질수록 오차가 뚜렷이 커진다(근접 운용에만 유효한 이유).</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-od-noise" src="{{IMG_OD_NOISE_SENSITIVITY}}" alt="관측 각도 노이즈 크기에 따른 복원된 경사각 오차를 로그-로그 척도로 그린 선 그래프">
+        <div class="result-caption"><strong>관측 노이즈 민감도</strong> — 각도 관측 노이즈가 커질수록 복원된 경사각 오차도 함께 커진다.</div>
+      </div>
+      <div class="result">
+        <img id="img-od-obs-count" src="{{IMG_OD_OBSERVATION_COUNT}}" alt="관측 개수에 따른 평균 경사각 오차와 표준편차를 에러바로 그린 그래프">
+        <div class="result-caption"><strong>관측 개수와 안정성</strong> — 관측이 늘수록 여러 시행에 걸친 평균 오차와 표준편차가 함께 줄어든다.</div>
       </div>
     </div>
   </section>
@@ -770,6 +793,27 @@
             <td class="num">{{CW_APPROX_LARGE_ERROR_PCT}}%(500km에서)</td>
             <td><span class="pill good">근접 근사임을 확인</span></td>
           </tr>
+          <tr>
+            <td>궤도 결정: 관측값↔ECI 위치 왕복 변환</td>
+            <td class="num">최대 왕복 오차(km)</td>
+            <td class="num">{{OD_ROUNDTRIP_ERROR_KM}}</td>
+            <td class="num">&lt; 1e-6</td>
+            <td><span class="pill good">04번 정변환의 정확한 역함수</span></td>
+          </tr>
+          <tr>
+            <td>궤도 결정: 작은 노이즈에서 원궤도 요소 복원</td>
+            <td class="num">반장축/경사각 오차(%/도)</td>
+            <td class="num">{{OD_RECOVERY_A_ERROR_PCT}}% / {{OD_RECOVERY_I_ERROR_DEG}}도</td>
+            <td class="num">&lt; 1.0 각각</td>
+            <td><span class="pill good">노이즈 낀 관측만으로 복원됨</span></td>
+          </tr>
+          <tr>
+            <td>궤도 결정: 관측 노이즈 대비 정확도</td>
+            <td class="num">경사각 오차(작은 노이즈 vs 큰 노이즈, 도)</td>
+            <td class="num">{{OD_NOISE_SMALL_ERROR_DEG}}도 vs {{OD_NOISE_LARGE_ERROR_DEG}}도</td>
+            <td class="num">큰 노이즈 &gt; 작은 노이즈</td>
+            <td><span class="pill good">단조 증가 확인</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -777,7 +821,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–13 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–14 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>
