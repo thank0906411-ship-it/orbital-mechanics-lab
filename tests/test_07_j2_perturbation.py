@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("07_J2_perturbation.py")
+m = load_module("perturbations/07_J2_perturbation.py")
 
 
 def test_semi_latus_rectum_circular_orbit_equals_radius():

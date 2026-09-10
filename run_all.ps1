@@ -34,46 +34,46 @@ Write-Section "1/16 자동 테스트 (pytest) - 코드가 깨진 상태로 시�
 Invoke-Step "pytest" { python -m pytest tests/ -q }
 
 Write-Section "2/16 케플러 방정식과 궤도 전파"
-Invoke-Step "01_Kepler_orbit_propagation.py" { python 01_Kepler_orbit_propagation.py }
+Invoke-Step "propagation/01_Kepler_orbit_propagation.py" { python propagation/01_Kepler_orbit_propagation.py }
 
 Write-Section "3/16 궤도요소-상태벡터 변환과 보존량(에너지/각운동량)"
-Invoke-Step "02_Orbital_elements_and_energy.py" { python 02_Orbital_elements_and_energy.py }
+Invoke-Step "propagation/02_Orbital_elements_and_energy.py" { python propagation/02_Orbital_elements_and_energy.py }
 
 Write-Section "4/16 2체 문제 수치적분(RK4)과 해석해 검증"
-Invoke-Step "03_Two_body_numerical_integration.py" { python 03_Two_body_numerical_integration.py }
+Invoke-Step "propagation/03_Two_body_numerical_integration.py" { python propagation/03_Two_body_numerical_integration.py }
 
 Write-Section "5/16 좌표계 변환 (ECI/ECEF/SEZ)과 방위각/고도각"
-Invoke-Step "04_Coordinate_frame_transforms.py" { python 04_Coordinate_frame_transforms.py }
+Invoke-Step "frames/04_Coordinate_frame_transforms.py" { python frames/04_Coordinate_frame_transforms.py }
 
 Write-Section "6/16 지상국 가시성: 실측 궤도 전파로 계산하는 접촉 창"
-Invoke-Step "05_Ground_station_visibility.py" { python 05_Ground_station_visibility.py }
+Invoke-Step "missions/05_Ground_station_visibility.py" { python missions/05_Ground_station_visibility.py }
 
 Write-Section "7/16 호만 전이(Hohmann Transfer) 델타-V와 전이시간"
-Invoke-Step "06_Hohmann_transfer.py" { python 06_Hohmann_transfer.py }
+Invoke-Step "missions/06_Hohmann_transfer.py" { python missions/06_Hohmann_transfer.py }
 
 Write-Section "8/16 J2 섭동: RAAN/근점편각 세차"
-Invoke-Step "07_J2_perturbation.py" { python 07_J2_perturbation.py }
+Invoke-Step "perturbations/07_J2_perturbation.py" { python perturbations/07_J2_perturbation.py }
 
 Write-Section "9/16 란베르트 문제: 두 위치-비행시간으로 궤도 속도 계산"
-Invoke-Step "09_Lambert_problem.py" { python 09_Lambert_problem.py }
+Invoke-Step "missions/09_Lambert_problem.py" { python missions/09_Lambert_problem.py }
 
 Write-Section "10/16 다중 위성 성좌 커버리지: 워커 델타 패턴과 재방문 공백"
-Invoke-Step "10_Constellation_coverage.py" { python 10_Constellation_coverage.py }
+Invoke-Step "constellations/10_Constellation_coverage.py" { python constellations/10_Constellation_coverage.py }
 
 Write-Section "11/16 위성간 링크(ISL) 가시선: 지구 차단 기하 판정"
-Invoke-Step "11_Intersatellite_link_visibility.py" { python 11_Intersatellite_link_visibility.py }
+Invoke-Step "constellations/11_Intersatellite_link_visibility.py" { python constellations/11_Intersatellite_link_visibility.py }
 
 Write-Section "12/16 행성간 궤적: Patched Conic 근사로 지구-화성 임무 델타-V"
-Invoke-Step "12_Patched_conic_interplanetary.py" { python 12_Patched_conic_interplanetary.py }
+Invoke-Step "missions/12_Patched_conic_interplanetary.py" { python missions/12_Patched_conic_interplanetary.py }
 
 Write-Section "13/16 도킹/랑데부: Clohessy-Wiltshire 근접 상대운동"
-Invoke-Step "13_Clohessy_wiltshire_rendezvous.py" { python 13_Clohessy_wiltshire_rendezvous.py }
+Invoke-Step "missions/13_Clohessy_wiltshire_rendezvous.py" { python missions/13_Clohessy_wiltshire_rendezvous.py }
 
 Write-Section "14/16 궤도 결정: 노이즈 낀 레이더 관측값에서 궤도요소 역산"
-Invoke-Step "14_Orbit_determination.py" { python 14_Orbit_determination.py }
+Invoke-Step "missions/14_Orbit_determination.py" { python missions/14_Orbit_determination.py }
 
 Write-Section "15/16 결과 시각화 (results/*.png 생성)"
-Invoke-Step "08_visualize_orbits.py" { python 08_visualize_orbits.py }
+Invoke-Step "visualization/08_visualize_orbits.py" { python visualization/08_visualize_orbits.py }
 
 Write-Section "16/16 프로젝트 요약 리포트 생성 (report.html)"
 Invoke-Step "generate_report.py" { python generate_report.py }

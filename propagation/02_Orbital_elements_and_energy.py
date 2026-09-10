@@ -61,12 +61,17 @@ if hasattr(sys.stdout, "reconfigure"):
   sys.stderr.reconfigure(encoding="utf-8")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
 _KEPLER_PATH = os.path.join(_THIS_DIR, "01_Kepler_orbit_propagation.py")
 _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)
 
-from orbit_math import rotation_matrix_x, rotation_matrix_z  # noqa: E402
+_orbit_math_spec = importlib.util.spec_from_file_location("orbit_math", os.path.join(_ROOT_DIR, "orbit_math.py"))
+orbit_math = importlib.util.module_from_spec(_orbit_math_spec)
+_orbit_math_spec.loader.exec_module(orbit_math)
+rotation_matrix_x = orbit_math.rotation_matrix_x
+rotation_matrix_z = orbit_math.rotation_matrix_z
 
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 
@@ -280,7 +285,7 @@ def main():
   vis_viva_rows = demo_vis_viva_speed_prediction()
   singular_case = demo_singular_case_circular_orbit_argp_undefined()
 
-  results_dir = os.path.join(_THIS_DIR, "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   roundtrip_csv = os.path.join(results_dir, "orbital_elements_roundtrip.csv")

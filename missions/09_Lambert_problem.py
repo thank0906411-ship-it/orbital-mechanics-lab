@@ -55,18 +55,19 @@ if hasattr(sys.stdout, "reconfigure"):
   sys.stderr.reconfigure(encoding="utf-8")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
 
 
-def _load(filename, name):
-  spec = importlib.util.spec_from_file_location(name, os.path.join(_THIS_DIR, filename))
+def _load(path, name):
+  spec = importlib.util.spec_from_file_location(name, os.path.join(_ROOT_DIR, path))
   module = importlib.util.module_from_spec(spec)
   spec.loader.exec_module(module)
   return module
 
 
-kepler = _load("01_Kepler_orbit_propagation.py", "kepler_module")
-elements = _load("02_Orbital_elements_and_energy.py", "elements_module")
-hohmann = _load("06_Hohmann_transfer.py", "hohmann_module")
+kepler = _load(os.path.join("propagation", "01_Kepler_orbit_propagation.py"), "kepler_module")
+elements = _load(os.path.join("propagation", "02_Orbital_elements_and_energy.py"), "elements_module")
+hohmann = _load(os.path.join("missions", "06_Hohmann_transfer.py"), "hohmann_module")
 
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 
@@ -253,7 +254,7 @@ def main():
   short_long_rows = demo_short_way_vs_long_way()
   edge_case_result = demo_edge_case_180_degree_transfer()
 
-  results_dir = os.path.join(_THIS_DIR, "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   cross_check_csv = os.path.join(results_dir, "lambert_hohmann_cross_check.csv")

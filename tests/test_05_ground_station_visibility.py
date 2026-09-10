@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("05_Ground_station_visibility.py")
+m = load_module("missions/05_Ground_station_visibility.py")
 
 
 def _series(elevations, dt=10.0):

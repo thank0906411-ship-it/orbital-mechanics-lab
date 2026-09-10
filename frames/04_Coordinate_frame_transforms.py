@@ -45,6 +45,7 @@
 
 import argparse
 import csv
+import importlib.util
 import os
 import sys
 
@@ -54,7 +55,14 @@ if hasattr(sys.stdout, "reconfigure"):
   sys.stdout.reconfigure(encoding="utf-8")
   sys.stderr.reconfigure(encoding="utf-8")
 
-from orbit_math import EARTH_RADIUS_KM, rotation_matrix_y, rotation_matrix_z
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
+_orbit_math_spec = importlib.util.spec_from_file_location("orbit_math", os.path.join(_ROOT_DIR, "orbit_math.py"))
+orbit_math = importlib.util.module_from_spec(_orbit_math_spec)
+_orbit_math_spec.loader.exec_module(orbit_math)
+EARTH_RADIUS_KM = orbit_math.EARTH_RADIUS_KM
+rotation_matrix_y = orbit_math.rotation_matrix_y
+rotation_matrix_z = orbit_math.rotation_matrix_z
 
 EARTH_ROTATION_RATE_RAD_S = 7.2921159e-5  # 지구 자전각속도 (rad/s), 항성일 기준
 
@@ -216,7 +224,7 @@ def main():
   zenith_case = demo_zenith_case_elevation_90()
   horizon_rows = demo_horizon_and_below_horizon()
 
-  results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   roundtrip_csv = os.path.join(results_dir, "eci_ecef_roundtrip.csv")

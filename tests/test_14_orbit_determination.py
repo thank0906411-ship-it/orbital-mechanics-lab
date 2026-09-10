@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("14_Orbit_determination.py")
+m = load_module("missions/14_Orbit_determination.py")
 
 
 def test_look_angles_roundtrip_recovers_original_position():

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("09_Lambert_problem.py")
+m = load_module("missions/09_Lambert_problem.py")
 
 
 def test_stumpff_c_continuous_at_zero():

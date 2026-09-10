@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("10_Constellation_coverage.py")
+m = load_module("constellations/10_Constellation_coverage.py")
 
 
 def test_walker_delta_creates_correct_number_of_satellites():

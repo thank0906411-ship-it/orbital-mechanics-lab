@@ -61,24 +61,27 @@ import sys
 
 import numpy as np
 
-from orbit_math import rotation_matrix_x, rotation_matrix_y, rotation_matrix_z
-
 if hasattr(sys.stdout, "reconfigure"):
   sys.stdout.reconfigure(encoding="utf-8")
   sys.stderr.reconfigure(encoding="utf-8")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
 
 
-def _load(filename, name):
-  spec = importlib.util.spec_from_file_location(name, os.path.join(_THIS_DIR, filename))
+def _load(path, name):
+  spec = importlib.util.spec_from_file_location(name, os.path.join(_ROOT_DIR, path))
   module = importlib.util.module_from_spec(spec)
   spec.loader.exec_module(module)
   return module
 
 
-kepler = _load("01_Kepler_orbit_propagation.py", "kepler_module")
-frames = _load("04_Coordinate_frame_transforms.py", "frames_module")
+kepler = _load(os.path.join("propagation", "01_Kepler_orbit_propagation.py"), "kepler_module")
+frames = _load(os.path.join("frames", "04_Coordinate_frame_transforms.py"), "frames_module")
+orbit_math = _load("orbit_math.py", "orbit_math")
+rotation_matrix_x = orbit_math.rotation_matrix_x
+rotation_matrix_y = orbit_math.rotation_matrix_y
+rotation_matrix_z = orbit_math.rotation_matrix_z
 
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 
@@ -373,7 +376,7 @@ def main():
   noise_rows = demo_accuracy_degrades_with_observation_noise()
   num_obs_rows = demo_minimum_observations_needed()
 
-  results_dir = os.path.join(_THIS_DIR, "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   roundtrip_csv = os.path.join(results_dir, "orbit_determination_roundtrip.csv")

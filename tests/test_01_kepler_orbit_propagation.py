@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("01_Kepler_orbit_propagation.py")
+m = load_module("propagation/01_Kepler_orbit_propagation.py")
 
 
 def test_solve_kepler_equation_residual_is_near_zero():

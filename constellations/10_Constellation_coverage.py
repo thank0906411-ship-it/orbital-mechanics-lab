@@ -61,18 +61,19 @@ if hasattr(sys.stdout, "reconfigure"):
   sys.stderr.reconfigure(encoding="utf-8")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
 
 
-def _load(filename, name):
-  spec = importlib.util.spec_from_file_location(name, os.path.join(_THIS_DIR, filename))
+def _load(path, name):
+  spec = importlib.util.spec_from_file_location(name, os.path.join(_ROOT_DIR, path))
   module = importlib.util.module_from_spec(spec)
   spec.loader.exec_module(module)
   return module
 
 
-kepler = _load("01_Kepler_orbit_propagation.py", "kepler_module")
-frames = _load("04_Coordinate_frame_transforms.py", "frames_module")
-visibility = _load("05_Ground_station_visibility.py", "visibility_module")
+kepler = _load(os.path.join("propagation", "01_Kepler_orbit_propagation.py"), "kepler_module")
+frames = _load(os.path.join("frames", "04_Coordinate_frame_transforms.py"), "frames_module")
+visibility = _load(os.path.join("missions", "05_Ground_station_visibility.py"), "visibility_module")
 
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 
@@ -267,7 +268,7 @@ def main():
   plane_comparison_rows = demo_single_plane_vs_multi_plane()
   latitude_rows = demo_coverage_degrades_above_inclination_latitude()
 
-  results_dir = os.path.join(_THIS_DIR, "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   more_sats_csv = os.path.join(results_dir, "constellation_size_vs_gap.csv")

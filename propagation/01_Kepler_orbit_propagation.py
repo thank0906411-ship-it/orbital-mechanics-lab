@@ -261,7 +261,7 @@ def main():
   time_series_rows = demo_position_time_series(args.semi_major_axis_km, args.eccentricity, duration_sec, args.steps)
   edge_case_rows = demo_edge_case_near_parabolic()
 
-  results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+  results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results")
   os.makedirs(results_dir, exist_ok=True)
 
   convergence_csv = os.path.join(results_dir, "kepler_convergence.csv")

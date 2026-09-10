@@ -43,7 +43,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (3D 프로젝션 등록을 위해 필요)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(_THIS_DIR)
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
 
 

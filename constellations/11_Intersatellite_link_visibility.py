@@ -46,22 +46,27 @@ import sys
 
 import numpy as np
 
-from orbit_math import EARTH_RADIUS_KM
-
 if hasattr(sys.stdout, "reconfigure"):
   sys.stdout.reconfigure(encoding="utf-8")
   sys.stderr.reconfigure(encoding="utf-8")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_KEPLER_PATH = os.path.join(_THIS_DIR, "01_Kepler_orbit_propagation.py")
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
+
+_KEPLER_PATH = os.path.join(_ROOT_DIR, "propagation", "01_Kepler_orbit_propagation.py")
 _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)
 
-_VISIBILITY_PATH = os.path.join(_THIS_DIR, "05_Ground_station_visibility.py")
+_VISIBILITY_PATH = os.path.join(_ROOT_DIR, "missions", "05_Ground_station_visibility.py")
 _visibility_spec = importlib.util.spec_from_file_location("visibility_module", _VISIBILITY_PATH)
 visibility = importlib.util.module_from_spec(_visibility_spec)
 _visibility_spec.loader.exec_module(visibility)
+
+_orbit_math_spec = importlib.util.spec_from_file_location("orbit_math", os.path.join(_ROOT_DIR, "orbit_math.py"))
+orbit_math = importlib.util.module_from_spec(_orbit_math_spec)
+_orbit_math_spec.loader.exec_module(orbit_math)
+EARTH_RADIUS_KM = orbit_math.EARTH_RADIUS_KM
 
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 orbital_position_eci = visibility.orbital_position_eci
@@ -205,7 +210,7 @@ def main():
   opposite_result = demo_opposite_side_of_earth_blocked()
   cross_plane_series, cross_plane_fraction = demo_polar_vs_equatorial_plane_crossing()
 
-  results_dir = os.path.join(_THIS_DIR, "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   same_plane_csv = os.path.join(results_dir, "isl_same_plane_visibility.csv")

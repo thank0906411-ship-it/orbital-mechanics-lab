@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("11_Intersatellite_link_visibility.py")
+m = load_module("constellations/11_Intersatellite_link_visibility.py")
 
 
 def test_opposite_side_of_earth_is_blocked():

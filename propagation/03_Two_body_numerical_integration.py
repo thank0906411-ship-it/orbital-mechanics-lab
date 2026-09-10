@@ -58,6 +58,7 @@ if hasattr(sys.stdout, "reconfigure"):
   sys.stderr.reconfigure(encoding="utf-8")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
 
 
 def _load(filename, name):
@@ -232,7 +233,7 @@ def main():
   convergence_rows = demo_step_size_convergence_order()
   drift_rows = demo_energy_drift_with_large_steps()
 
-  results_dir = os.path.join(_THIS_DIR, "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   comparison_csv = os.path.join(results_dir, "rk4_vs_analytical.csv")

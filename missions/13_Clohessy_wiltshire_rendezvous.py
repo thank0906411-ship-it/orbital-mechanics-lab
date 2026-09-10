@@ -65,12 +65,14 @@ if hasattr(sys.stdout, "reconfigure"):
   sys.stderr.reconfigure(encoding="utf-8")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_KEPLER_PATH = os.path.join(_THIS_DIR, "01_Kepler_orbit_propagation.py")
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
+
+_KEPLER_PATH = os.path.join(_ROOT_DIR, "propagation", "01_Kepler_orbit_propagation.py")
 _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)
 
-_ELEMENTS_PATH = os.path.join(_THIS_DIR, "02_Orbital_elements_and_energy.py")
+_ELEMENTS_PATH = os.path.join(_ROOT_DIR, "propagation", "02_Orbital_elements_and_energy.py")
 _elements_spec = importlib.util.spec_from_file_location("elements_module", _ELEMENTS_PATH)
 elements_module = importlib.util.module_from_spec(_elements_spec)
 _elements_spec.loader.exec_module(elements_module)
@@ -320,7 +322,7 @@ def main():
   rendezvous_result = demo_rendezvous_delta_v_reaches_target(a)
   approximation_rows = demo_cw_valid_only_for_small_separation(a)
 
-  results_dir = os.path.join(_THIS_DIR, "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   z_axis_csv = os.path.join(results_dir, "cw_z_axis_shm.csv")

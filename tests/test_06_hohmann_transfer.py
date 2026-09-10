@@ -5,7 +5,7 @@
 import pytest
 from helpers import load_module
 
-m = load_module("06_Hohmann_transfer.py")
+m = load_module("missions/06_Hohmann_transfer.py")
 
 
 def test_leo_to_geo_total_delta_v_matches_textbook_value():

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("02_Orbital_elements_and_energy.py")
+m = load_module("propagation/02_Orbital_elements_and_energy.py")
 
 
 def test_rotation_matrix_z_is_identity_at_zero_angle():

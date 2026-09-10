@@ -50,7 +50,8 @@ if hasattr(sys.stdout, "reconfigure"):
   sys.stderr.reconfigure(encoding="utf-8")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_KEPLER_PATH = os.path.join(_THIS_DIR, "01_Kepler_orbit_propagation.py")
+_ROOT_DIR = os.path.dirname(_THIS_DIR)
+_KEPLER_PATH = os.path.join(_ROOT_DIR, "propagation", "01_Kepler_orbit_propagation.py")
 _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)
@@ -183,7 +184,7 @@ def main():
   propagated_result = demo_propagated_transfer_reaches_target_radius()
   ratio_rows = demo_delta_v_varies_with_radius_ratio()
 
-  results_dir = os.path.join(_THIS_DIR, "results")
+  results_dir = os.path.join(_ROOT_DIR, "results")
   os.makedirs(results_dir, exist_ok=True)
 
   _custom_delta_v1, _custom_delta_v2, custom_total = hohmann_transfer_delta_v(args.r1_km, args.r2_km)

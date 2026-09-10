@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("03_Two_body_numerical_integration.py")
+m = load_module("propagation/03_Two_body_numerical_integration.py")
 
 
 def test_two_body_acceleration_points_toward_origin():

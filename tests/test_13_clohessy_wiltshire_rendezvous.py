@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("13_Clohessy_wiltshire_rendezvous.py")
+m = load_module("missions/13_Clohessy_wiltshire_rendezvous.py")
 
 
 def test_z_axis_returns_to_initial_value_after_one_period():

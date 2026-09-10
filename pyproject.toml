@@ -11,7 +11,7 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
-omit = ["tests/*", "08_visualize_orbits.py", "generate_report.py"]
+omit = ["tests/*", "visualization/08_visualize_orbits.py", "generate_report.py"]
 
 [tool.coverage.report]
 exclude_also = [

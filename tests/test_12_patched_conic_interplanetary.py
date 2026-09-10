@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("12_Patched_conic_interplanetary.py")
+m = load_module("missions/12_Patched_conic_interplanetary.py")
 
 
 def test_sphere_of_influence_matches_formula():

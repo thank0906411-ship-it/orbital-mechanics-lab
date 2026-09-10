@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from helpers import load_module
 
-m = load_module("04_Coordinate_frame_transforms.py")
+m = load_module("frames/04_Coordinate_frame_transforms.py")
 
 
 def test_eci_to_ecef_zero_gst_is_identity():
