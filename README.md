@@ -8,7 +8,7 @@
 
 두 프로젝트는 완전히 독립된 별도 git 저장소이며, 코드나 의존성을 공유하지 않습니다. 이 프로젝트에서만 `numpy`가 새로 필요합니다(벡터/행렬 연산 때문).
 
-프로젝트 전체 요약은 [report.html](report.html)에서 그래프와 함께 볼 수 있습니다 — `run_all.sh`/`run_all.ps1` 실행 시 `results/*.csv`를 바탕으로 자동 재생성됩니다.
+프로젝트 전체 요약은 [report.html](report.html)에서 그래프와 함께 볼 수 있습니다 — `run_all.sh`/`run_all.ps1` 실행 시 `results/*.csv`를 바탕으로 자동 재생성되며, 같은 내용이 GitHub Pages 배포용 `index.html`로도 동기화됩니다. GitHub Pages가 켜진 저장소라면 별도 클론 없이 웹에서 바로 볼 수 있습니다.
 
 ## 구성
 

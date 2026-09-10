@@ -304,7 +304,15 @@ def main():
   with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
     f.write(html)
 
+  # GitHub Pages는 저장소 루트의 index.html을 자동으로 서빙한다 — report.html과
+  # 똑같은 내용을 index.html로도 저장해, 매 실행마다 별도 동기화 없이 GitHub Pages
+  # 배포본이 항상 최신 report.html과 같은 상태를 유지하게 한다.
+  index_path = os.path.join(BASE_DIR, "index.html")
+  with open(index_path, "w", encoding="utf-8") as f:
+    f.write(html)
+
   print(f"[완료] report.html 생성됨 ({len(html):,}자) → {OUTPUT_PATH}")
+  print(f"[완료] index.html 동기화됨 (GitHub Pages용) → {index_path}")
 
 
 if __name__ == "__main__":
