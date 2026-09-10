@@ -6,3 +6,6 @@ __pycache__/
 .coverage
 .ruff_cache/
 htmlcov/
+
+# Claude Code 로컬 도구 설정 (개인 권한 설정 등, 저장소에 공유할 필요 없음)
+.claude/
