@@ -168,12 +168,17 @@ def demo_polar_vs_equatorial_plane_crossing():
   duration_sec = 2 * np.pi / kepler.mean_motion(a)
   num_steps = 500
 
+  # 두 위성이 mean_anomaly0=0으로 같은 시점에 승교점에서 출발하면, 반장축(따라서
+  # 평균운동)이 같으므로 둘의 상대 기하가 궤도 내내 고정돼버린다(자전만 다른 평면으로
+  # 돌 뿐 서로에 대한 위상차는 절대 안 바뀜) — 실제로 이 버그를 겪었다: 500개 시점
+  # 전부에서 거리/차단 여부가 완전히 똑같은 상수로 나왔다. 위상차(45도)를 줘야
+  # 시간에 따라 상대 거리가 실제로 변하는 시계열이 나온다.
   sat_polar = {"semi_major_axis_km": a, "eccentricity": 0.0, "inclination_rad": np.radians(90.0),
                "raan_rad": 0.0, "argp_rad": 0.0, "mean_anomaly0_rad": 0.0}
   sat_equatorial = {"semi_major_axis_km": a, "eccentricity": 0.0, "inclination_rad": 0.0,
-                    "raan_rad": 0.0, "argp_rad": 0.0, "mean_anomaly0_rad": 0.0}
+                    "raan_rad": 0.0, "argp_rad": 0.0, "mean_anomaly0_rad": np.radians(45.0)}
 
-  print(f"반장축={a:.1f}km, 위성1: 극궤도(90도), 위성2: 적도궤도(0도)\n")
+  print(f"반장축={a:.1f}km, 위성1: 극궤도(90도), 위성2: 적도궤도(0도), 위상차=45도\n")
   series = compute_isl_visibility_time_series(sat_polar, sat_equatorial, duration_sec, num_steps)
   blocked_fraction = sum(1 for row in series if row["blocked"]) / len(series)
   print(f"가려진 시간 비율: {blocked_fraction * 100:.2f}%")
