@@ -54,18 +54,9 @@ if hasattr(sys.stdout, "reconfigure"):
   sys.stdout.reconfigure(encoding="utf-8")
   sys.stderr.reconfigure(encoding="utf-8")
 
+from orbit_math import EARTH_RADIUS_KM, rotation_matrix_y, rotation_matrix_z
+
 EARTH_ROTATION_RATE_RAD_S = 7.2921159e-5  # 지구 자전각속도 (rad/s), 항성일 기준
-EARTH_RADIUS_KM = 6378.137  # WGS84 적도 반지름 근사
-
-
-def rotation_matrix_z(angle_rad):
-  c, s = np.cos(angle_rad), np.sin(angle_rad)
-  return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-
-
-def rotation_matrix_y(angle_rad):
-  c, s = np.cos(angle_rad), np.sin(angle_rad)
-  return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
 
 
 def eci_to_ecef(position_eci_km, gst_rad):

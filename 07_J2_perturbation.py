@@ -64,8 +64,9 @@ _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)
 
+from orbit_math import EARTH_RADIUS_KM, rotation_matrix_x, rotation_matrix_z  # noqa: E402
+
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
-EARTH_RADIUS_KM = 6378.137
 J2 = 1.08263e-3  # 지구 중력장의 2차 대역조화계수 (무차원)
 
 
@@ -100,14 +101,6 @@ def propagate_with_j2_precession(semi_major_axis_km, eccentricity, inclination_r
 
   x_p, y_p = state["x_p"], state["y_p"]
   position_perifocal = np.array([x_p, y_p, 0.0])
-
-  def rotation_matrix_z(a):
-    c, s = np.cos(a), np.sin(a)
-    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-
-  def rotation_matrix_x(a):
-    c, s = np.cos(a), np.sin(a)
-    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
 
   rotation = rotation_matrix_z(raan) @ rotation_matrix_x(inclination_rad) @ rotation_matrix_z(argp)
   position_eci = rotation @ position_perifocal

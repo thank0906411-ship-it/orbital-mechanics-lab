@@ -66,17 +66,14 @@ _spec = importlib.util.spec_from_file_location("kepler_module", _KEPLER_PATH)
 kepler = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(kepler)
 
+from orbit_math import rotation_matrix_x, rotation_matrix_z  # noqa: E402
+
 EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 
-
-def rotation_matrix_z(angle_rad):
-  c, s = np.cos(angle_rad), np.sin(angle_rad)
-  return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-
-
-def rotation_matrix_x(angle_rad):
-  c, s = np.cos(angle_rad), np.sin(angle_rad)
-  return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+# 원궤도(e~0)/적도궤도(i~0,180도)에서 근점편각/RAAN이 물리적으로 정의되지 않는 경계를
+# 판정하는 공통 허용오차. 두 판정 모두 이 값 하나로 통제한다 — 실제 SGP4 출력처럼
+# 잡음이 섞인 입력에 맞춰 느슨하게 조정할 때 값을 한 곳에서만 바꾸면 되게 하기 위함이다.
+SINGULARITY_TOLERANCE = 1e-9
 
 
 def perifocal_velocity(mu, semi_latus_rectum_km, eccentricity, true_anomaly_rad):
@@ -129,14 +126,14 @@ def state_vector_to_orbital_elements(position_km, velocity_km_s, mu=EARTH_MU_KM3
   node_vec = np.cross(z_hat, h_vec)
   node_norm = np.linalg.norm(node_vec)
 
-  if node_norm < 1e-9:
+  if node_norm < SINGULARITY_TOLERANCE:
     raan = 0.0  # 적도궤도: 승교점 자체가 정의되지 않음
   else:
     raan = np.arctan2(node_vec[1], node_vec[0])
     if raan < 0:
       raan += 2 * np.pi
 
-  if eccentricity < 1e-9 or node_norm < 1e-9:
+  if eccentricity < SINGULARITY_TOLERANCE or node_norm < SINGULARITY_TOLERANCE:
     argp = 0.0  # 원궤도: 근점 자체가 정의되지 않음
   else:
     cos_argp = np.dot(node_vec, e_vec) / (node_norm * eccentricity)

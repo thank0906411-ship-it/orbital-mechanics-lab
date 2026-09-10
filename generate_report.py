@@ -43,21 +43,20 @@ def img_to_data_uri(filename):
 
 def count_pytest_tests():
   """tests/ 폴더의 테스트 개수를 pytest --collect-only로 직접 센다 (하드코딩 방지).
-  마지막 요약 줄은 "N tests collected in X.XXs" 또는 "N test collected in X.XXs" 형식이다."""
+  마지막 "N tests collected" 요약 줄은 pytest 버전/로케일/플러그인에 따라 문구가
+  바뀔 수 있어(실제로 메이저 버전 사이에 바뀐 적이 있음) 그 대신 -q 모드에서 수집된
+  테스트마다 한 줄씩 찍히는 "path::test_name" 형식의 줄 개수를 직접 센다 — 이쪽이
+  훨씬 안정적이다."""
   try:
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "tests/", "--collect-only", "-q"],
         cwd=BASE_DIR, capture_output=True, text=True, timeout=60,
     )
-    for line in reversed(result.stdout.splitlines()):
-      line = line.strip()
-      if line.startswith(("no tests collected", "no test collected")):
-        return "0"
-      if ("tests collected" in line or "test collected" in line) and line.split(" ")[0].isdigit():
-        return line.split(" ")[0]
-  except Exception:
-    pass
-  return "-"
+  except (OSError, subprocess.TimeoutExpired) as exc:
+    print(f"[경고] pytest 테스트 수 집계 실패({exc}), TEST_COUNT를 '-'로 표시합니다.")
+    return "-"
+  collected = [line for line in result.stdout.splitlines() if "::" in line]
+  return str(len(collected))
 
 
 def compute_kepler_convergence():
@@ -72,12 +71,14 @@ def compute_kepler_convergence():
 
 
 def compute_conservation():
+  """비에너지가 궤도 전체에서 보존된다면 모든 행의 값이 같아야 한다 — 그 최대/최소
+  편차를 "보존 오차"로 쓴다. 02번의 데모가 어떤 반장축/GM을 썼는지 이 스크립트가
+  다시 알 필요가 없다: CSV 자체가 이미 보존이 성립했는지 판단할 정보를 담고 있다."""
   rows = read_csv_rows("conserved_quantities.csv")
   if not rows:
     return {"CONSERVATION_MAX_ENERGY_ERROR": "-"}
-  a = 8000.0
-  expected_energy = -398600.4418 / (2 * a)
-  max_error = max(abs(float(row["specific_energy"]) - expected_energy) for row in rows)
+  energies = [float(row["specific_energy"]) for row in rows]
+  max_error = max(energies) - min(energies)
   return {"CONSERVATION_MAX_ENERGY_ERROR": f"{max_error:.2e}"}
 
 

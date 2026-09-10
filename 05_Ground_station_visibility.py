@@ -46,6 +46,8 @@ import sys
 
 import numpy as np
 
+from orbit_math import rotation_matrix_x, rotation_matrix_z
+
 if hasattr(sys.stdout, "reconfigure"):
   sys.stdout.reconfigure(encoding="utf-8")
   sys.stderr.reconfigure(encoding="utf-8")
@@ -69,19 +71,10 @@ EARTH_MU_KM3_S2 = kepler.EARTH_MU_KM3_S2
 def orbital_position_eci(semi_major_axis_km, eccentricity, inclination_rad, raan_rad, argp_rad,
                           mean_anomaly0_rad, time_sec, mu=EARTH_MU_KM3_S2):
   """01번의 궤도면 위치에 3번 회전(argp, i, RAAN)을 적용해 ECI 위치를 만든다.
-  02번과 동일한 회전 관례(Rz(RAAN)*Rx(i)*Rz(argp))를 여기서 다시 최소 형태로 둔다 —
-  05번은 02번 전체를 재사용하지 않고 위치 계산에 필요한 부분만 가져온다."""
+  02번과 동일한 회전 관례(Rz(RAAN)*Rx(i)*Rz(argp))를 orbit_math의 공유 회전행렬로 적용한다."""
   state = kepler.propagate_orbit(semi_major_axis_km, eccentricity, mean_anomaly0_rad, time_sec, mu)
   _r, x_p, y_p = state["r"], state["x_p"], state["y_p"]
   position_perifocal = np.array([x_p, y_p, 0.0])
-
-  def rotation_matrix_z(a):
-    c, s = np.cos(a), np.sin(a)
-    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
-
-  def rotation_matrix_x(a):
-    c, s = np.cos(a), np.sin(a)
-    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
 
   rotation = rotation_matrix_z(raan_rad) @ rotation_matrix_x(inclination_rad) @ rotation_matrix_z(argp_rad)
   return rotation @ position_perifocal

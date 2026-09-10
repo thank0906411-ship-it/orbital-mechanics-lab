@@ -72,18 +72,21 @@ def plot_kepler_second_law_areas():
     print(f"[건너뜀] {csv_path} 없음 — 먼저 01_Kepler_orbit_propagation.py를 실행하세요.")
     return
 
-  by_orbit = {}
+  # "orbit" 컬럼은 01번이 콘솔 출력용으로 쓴 한글 문구라 문구가 조금만 바뀌어도
+  # 매칭이 깨진다 — 대신 안정적인 숫자 컬럼인 eccentricity로 원궤도/타원궤도를 구분한다.
+  by_eccentricity = {}
   with open(csv_path, newline="", encoding="utf-8") as f:
     for row in csv.DictReader(f):
-      by_orbit.setdefault(row["orbit"], {"fractions": [], "true_anomalies": []})
-      by_orbit[row["orbit"]]["fractions"].append(float(row["time_fraction"]))
-      by_orbit[row["orbit"]]["true_anomalies"].append(float(row["true_anomaly_deg"]))
+      e = float(row["eccentricity"])
+      by_eccentricity.setdefault(e, {"fractions": [], "true_anomalies": []})
+      by_eccentricity[e]["fractions"].append(float(row["time_fraction"]))
+      by_eccentricity[e]["true_anomalies"].append(float(row["true_anomaly_deg"]))
 
-  labels_en = {"원궤도(e=0.0)": "Circular (e=0.0)", "타원궤도(e=0.7)": "Elliptical (e=0.7)"}
   fig, ax = plt.subplots(figsize=(9, 5))
-  for orbit, data in by_orbit.items():
+  for e, data in sorted(by_eccentricity.items()):
+    label = "Circular" if e == 0.0 else "Elliptical"
     ax.plot(data["fractions"], data["true_anomalies"], marker="o", linewidth=2,
-            label=labels_en.get(orbit, orbit))
+            label=f"{label} (e={e:.1f})")
   ax.set_xlabel("Time (fraction of orbital period)")
   ax.set_ylabel("True anomaly (deg)")
   ax.set_title("Kepler's 2nd law: elliptical orbit sweeps angle faster near perigee")
@@ -103,12 +106,14 @@ def plot_zenith_and_horizon_cases():
     print(f"[건너뜀] {horizon_path} 없음 — 먼저 04_Coordinate_frame_transforms.py를 실행하세요.")
     return
 
-  labels_en = {"천정 근처(관측자 방향)": "Near zenith\n(above site)", "지구 반대편": "Opposite side\nof Earth"}
+  # "label"은 04번이 콘솔 출력용으로 쓴 한글 문구라 문구가 바뀌면 매칭이 깨진다 —
+  # 대신 이 그래프가 실제로 보여주려는 것 자체인 고도각의 부호로 라벨을 새로 만든다.
   labels, elevations = [], []
   with open(horizon_path, newline="", encoding="utf-8") as f:
     for row in csv.DictReader(f):
-      labels.append(labels_en.get(row["label"], row["label"]))
-      elevations.append(float(row["elevation_deg"]))
+      elevation = float(row["elevation_deg"])
+      labels.append("Above horizon\n(visible)" if elevation > 0 else "Below horizon\n(not visible)")
+      elevations.append(elevation)
 
   fig, ax = plt.subplots(figsize=(7, 5))
   colors = ["tab:green" if e > 0 else "tab:red" for e in elevations]
