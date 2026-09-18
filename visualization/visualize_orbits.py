@@ -84,7 +84,7 @@ def plot_kepler_orbit_shape():
       xs.append(float(row["x_p_km"]))
       ys.append(float(row["y_p_km"]))
 
-  fig, ax = plt.subplots(figsize=(7, 7))
+  fig, ax = plt.subplots(figsize=(8, 7))
   ax.plot(xs, ys, color="tab:blue", linewidth=1.5)
   ax.scatter([0], [0], color="tab:orange", s=100, marker="*", zorder=3, label="Focus (Earth)")
   ax.set_xlabel("Perifocal x (km)")
@@ -150,7 +150,7 @@ def plot_zenith_and_horizon_cases():
       labels.append("Above horizon\n(visible)" if elevation > 0 else "Below horizon\n(not visible)")
       elevations.append(elevation)
 
-  fig, ax = plt.subplots(figsize=(7, 5))
+  fig, ax = plt.subplots(figsize=(8, 5))
   colors = ["tab:green" if e > 0 else "tab:red" for e in elevations]
   bars = ax.bar(labels, elevations, color=colors, alpha=0.85)
   ax.axhline(0, color="black", linewidth=1)
@@ -249,7 +249,7 @@ def plot_hohmann_transfer_orbit():
   r_transfer = a_t * (1 - e_t ** 2) / (1 + e_t * np.cos(theta))
   x_transfer, y_transfer = r_transfer * np.cos(theta), r_transfer * np.sin(theta)
 
-  fig, ax = plt.subplots(figsize=(7, 7))
+  fig, ax = plt.subplots(figsize=(8, 7))
   circle1 = plt.Circle((0, 0), r1, fill=False, color="tab:green", linewidth=2, label=f"Departure orbit (r={r1:.0f}km)")
   circle2 = plt.Circle((0, 0), r2, fill=False, color="tab:red", linewidth=2, label=f"Target orbit (r={r2:.0f}km)")
   ax.add_patch(circle1)
@@ -308,7 +308,7 @@ def plot_j2_raan_precession():
       inclinations.append(float(row["inclination_deg"]))
       rates.append(float(row["raan_rate_deg_per_day"]))
 
-  fig, ax = plt.subplots(figsize=(8, 5))
+  fig, ax = plt.subplots(figsize=(9, 5))
   ax.plot(inclinations, rates, marker="o", linewidth=2, color="tab:blue")
   ax.axhline(0, color="black", linewidth=1)
   ax.axvline(90, color="tab:gray", linestyle=":", label="Polar orbit (90 deg): zero precession")
@@ -364,7 +364,7 @@ def plot_lambert_short_vs_long_way():
       labels.append(labels_en.get(row["label"], row["label"]))
       v1_values.append(float(row["v1_km_s"]))
 
-  fig, ax = plt.subplots(figsize=(7, 5))
+  fig, ax = plt.subplots(figsize=(8, 5))
   bars = ax.bar(labels, v1_values, color=["tab:blue", "tab:red"], alpha=0.85)
   ax.set_ylabel("Departure speed |v1| (km/s)")
   ax.set_title("Lambert's problem: short way vs long way require different speeds")
@@ -419,7 +419,7 @@ def plot_constellation_plane_comparison():
       labels.append(labels_en.get(row["label"], row["label"]))
       max_gaps.append(float(row["max_gap_min"]))
 
-  fig, ax = plt.subplots(figsize=(7, 5))
+  fig, ax = plt.subplots(figsize=(8, 5))
   bars = ax.bar(labels, max_gaps, color=["tab:blue", "tab:orange"], alpha=0.85)
   ax.set_ylabel("Max coverage gap (min)")
   ax.set_title("Single plane can beat multi-plane for one fixed ground site\n(counter to the 'spread planes' intuition)")
@@ -531,7 +531,7 @@ def plot_patched_conic_delta_v_breakdown():
   dv_capture = float(row["dv_capture"])
   total_dv = float(row["total_dv"])
 
-  fig, ax = plt.subplots(figsize=(7, 5))
+  fig, ax = plt.subplots(figsize=(8, 5))
   labels = ["Earth departure\n(hyperbolic escape)", "Mars capture\n(hyperbolic capture)"]
   values = [dv_depart, dv_capture]
   bars = ax.bar(labels, values, color=["tab:blue", "tab:red"], alpha=0.85)
@@ -647,7 +647,7 @@ def plot_orbit_determination_observation_count():
       mean_error.append(float(row["mean_inclination_error_deg"]))
       std_error.append(float(row["std_inclination_error_deg"]))
 
-  fig, ax = plt.subplots(figsize=(8, 5))
+  fig, ax = plt.subplots(figsize=(9, 5))
   ax.errorbar(num_obs, mean_error, yerr=std_error, marker="o", linewidth=2, capsize=5, color="tab:blue")
   ax.set_xlabel("Number of observations used")
   ax.set_ylabel("Mean inclination error over trials (deg)")
@@ -673,7 +673,7 @@ def plot_low_thrust_spiral_trajectory():
       xs.append(float(row["x_km"]))
       ys.append(float(row["y_km"]))
 
-  fig, ax = plt.subplots(figsize=(7, 7))
+  fig, ax = plt.subplots(figsize=(9, 7))
   ax.plot(xs, ys, color="tab:purple", linewidth=1.0)
   ax.scatter([xs[0]], [ys[0]], color="tab:green", s=80, zorder=3, label="Start (circular orbit)")
   ax.scatter([xs[-1]], [ys[-1]], color="tab:red", s=80, zorder=3, label="End (target orbit)")
