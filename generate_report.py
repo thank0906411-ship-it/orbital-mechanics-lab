@@ -262,6 +262,23 @@ def compute_low_thrust_transfer():
   return result
 
 
+def compute_attitude_dynamics():
+  result = dict.fromkeys(
+      ["ATTITUDE_ENERGY_DRIFT", "ATTITUDE_MOMENTUM_DRIFT", "ATTITUDE_MINOR_RATIO",
+       "ATTITUDE_MAJOR_RATIO", "ATTITUDE_INTERMEDIATE_RATIO"], "-")
+
+  summary_rows = read_csv_rows("attitude_summary.csv")
+  if summary_rows:
+    row = summary_rows[0]
+    result["ATTITUDE_ENERGY_DRIFT"] = row["energy_drift"]
+    result["ATTITUDE_MOMENTUM_DRIFT"] = row["momentum_drift"]
+    result["ATTITUDE_MINOR_RATIO"] = f"{float(row['minor_axis_ratio']):.1f}"
+    result["ATTITUDE_MAJOR_RATIO"] = f"{float(row['major_axis_ratio']):.1f}"
+    result["ATTITUDE_INTERMEDIATE_RATIO"] = f"{float(row['intermediate_axis_ratio']):.1f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -290,6 +307,8 @@ def main():
       "IMG_OD_OBSERVATION_COUNT": img_to_data_uri("14_orbit_determination_observation_count.png"),
       "IMG_LOW_THRUST_SPIRAL": img_to_data_uri("15_low_thrust_spiral_trajectory.png"),
       "IMG_LOW_THRUST_TIME_VS_THRUST": img_to_data_uri("15_low_thrust_transfer_time_vs_thrust.png"),
+      "IMG_ATTITUDE_INSTABILITY": img_to_data_uri("16_attitude_intermediate_axis_instability.png"),
+      "IMG_ATTITUDE_GROWTH_COMPARISON": img_to_data_uri("16_attitude_perturbation_growth_comparison.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -306,6 +325,7 @@ def main():
   values.update(compute_cw_rendezvous())
   values.update(compute_orbit_determination())
   values.update(compute_low_thrust_transfer())
+  values.update(compute_attitude_dynamics())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

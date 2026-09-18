@@ -5,16 +5,16 @@ perturbations/j2_perturbation.py, missions/lambert_problem.py,
 constellations/constellation_coverage.py,
 constellations/intersatellite_link_visibility.py,
 missions/patched_conic_interplanetary.py, missions/clohessy_wiltshire_rendezvous.py,
-missions/orbit_determination.py, missions/low_thrust_transfer.py 시뮬레이션이 남긴
-결과 CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기
-위한" 별도 스크립트다.
+missions/orbit_determination.py, missions/low_thrust_transfer.py,
+attitude/torque_free_rigid_body.py 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
+도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 위 12개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 13개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~15, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~16, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -26,7 +26,8 @@ missions/orbit_determination.py, missions/low_thrust_transfer.py 시뮬레이션
       results/12_patched_conic_delta_v_breakdown.png, results/13_cw_zero_drift_comparison.png,
       results/13_cw_approximation_validity.png, results/14_orbit_determination_noise_sensitivity.png,
       results/14_orbit_determination_observation_count.png, results/15_low_thrust_spiral_trajectory.png,
-      results/15_low_thrust_transfer_time_vs_thrust.png
+      results/15_low_thrust_transfer_time_vs_thrust.png, results/16_attitude_intermediate_axis_instability.png,
+      results/16_attitude_perturbation_growth_comparison.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -698,6 +699,67 @@ def plot_low_thrust_transfer_time_vs_thrust():
   print(f"[저장됨] {out_path}")
 
 
+def plot_attitude_intermediate_axis_instability():
+  csv_path = os.path.join(RESULTS_DIR, "attitude_unstable_axis_omega_history.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 attitude/torque_free_rigid_body.py를 실행하세요.")
+    return
+
+  times, omega1, omega2, omega3 = [], [], [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      times.append(float(row["t_sec"]))
+      omega1.append(float(row["omega1"]))
+      omega2.append(float(row["omega2"]))
+      omega3.append(float(row["omega3"]))
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  ax.plot(times, omega1, linewidth=1.5, label="omega1 (perturbed)")
+  ax.plot(times, omega2, linewidth=1.5, label="omega2 (spin axis, intermediate I2)")
+  ax.plot(times, omega3, linewidth=1.5, label="omega3 (perturbed)")
+  ax.set_xlabel("Time (s)")
+  ax.set_ylabel("Angular velocity component (rad/s)")
+  ax.set_title("Intermediate axis theorem: small perturbations grow explosively")
+  ax.legend()
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "16_attitude_intermediate_axis_instability.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_attitude_perturbation_growth_comparison():
+  csv_path = os.path.join(RESULTS_DIR, "attitude_perturbation_growth_comparison.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 attitude/torque_free_rigid_body.py를 실행하세요.")
+    return
+
+  labels_en = {"최소축(I1)": "Minor axis\n(I1)", "중간축(I2)": "Intermediate axis\n(I2)",
+               "최대축(I3)": "Major axis\n(I3)"}
+  labels, ratios = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      labels.append(labels_en.get(row["axis_label"], row["axis_label"]))
+      ratios.append(float(row["growth_ratio"]))
+
+  fig, ax = plt.subplots(figsize=(7, 5))
+  colors = ["tab:green", "tab:red", "tab:green"]
+  bars = ax.bar(labels, ratios, color=colors, alpha=0.85)
+  ax.set_ylabel("Perturbation growth ratio")
+  ax.set_title("Only the intermediate axis is unstable")
+  ax.grid(True, axis="y", alpha=0.3)
+  for bar, v in zip(bars, ratios):
+    ax.text(bar.get_x() + bar.get_width() / 2, v + max(ratios) * 0.02, f"{v:.1f}x", ha="center")
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "16_attitude_perturbation_growth_comparison.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -721,3 +783,5 @@ if __name__ == "__main__":
   plot_orbit_determination_observation_count()
   plot_low_thrust_spiral_trajectory()
   plot_low_thrust_transfer_time_vs_thrust()
+  plot_attitude_intermediate_axis_instability()
+  plot_attitude_perturbation_growth_comparison()
