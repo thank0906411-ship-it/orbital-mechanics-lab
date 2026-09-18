@@ -53,6 +53,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (3D 프로젝션 등록을 위해 필요)
 
+# 기본 폰트 크기(10pt)로 저장하면 report.html에서 그래프가 실제 표시 크기보다
+# 훨씬 크게 눌려 나와(그래프 이미지 자체는 크지만 화면에는 축소돼 보임) 축/제목
+# 글자가 상대적으로 작아 잘 안 보인다 — 전역 rcParams로 폰트 크기를 일괄 확대해
+# 27개 그래프 함수를 개별로 건드리지 않고 한 번에 해결한다.
+matplotlib.rcParams.update({
+    "font.size": 14,
+    "axes.titlesize": 16,
+    "axes.labelsize": 14,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 12,
+    "figure.titlesize": 18,
+})
+
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(_THIS_DIR)
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
@@ -199,11 +213,13 @@ def plot_contact_windows_gantt():
     print(f"[건너뜀] {csv_path}에 접촉 창이 없음")
     return
 
-  fig, ax = plt.subplots(figsize=(9, 4))
+  fig, ax = plt.subplots(figsize=(11, 4))
   for idx, (aos_min, duration_min, max_el) in enumerate(windows):
     ax.barh(idx, duration_min, left=aos_min, color="tab:blue", alpha=0.85)
-    ax.text(aos_min + duration_min / 2, idx, f"max El={max_el:.0f}°", ha="center", va="center",
-            color="white", fontsize=8)
+    # 짧은 패스는 막대 안에 라벨이 다 안 들어가 잘리므로, 막대 바로 오른쪽에
+    # 항상 폭과 무관하게 안전하게 보이도록 쓴다(막대 안 흰 글씨 대신).
+    ax.text(aos_min + duration_min + 3, idx, f"max El={max_el:.0f}°", ha="left", va="center",
+            color="black", fontsize=11)
   ax.set_yticks(range(len(windows)))
   ax.set_yticklabels([f"Pass {i + 1}" for i in range(len(windows))])
   ax.set_xlabel("Time (min)")
@@ -244,7 +260,7 @@ def plot_hohmann_transfer_orbit():
   ax.set_ylabel("y (km)")
   ax.set_title("Hohmann transfer: departure circle, transfer ellipse, target circle")
   ax.set_aspect("equal")
-  ax.legend(fontsize=9)
+  ax.legend(fontsize=11)
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
@@ -445,7 +461,7 @@ def plot_isl_visibility_comparison():
   ax1.set_ylim(0, 1)
   ax1.set_yticks([])
   ax1.set_title("ISL visibility: same orbital plane (30 deg phase offset)")
-  ax1.legend(loc="upper right", fontsize=8)
+  ax1.legend(loc="upper right", fontsize=10)
 
   ax2.fill_between(cross_times, 0, 1, where=cross_blocked, color="tab:red", alpha=0.6, step="post", label="Blocked")
   ax2.fill_between(cross_times, 0, 1, where=[not b for b in cross_blocked], color="tab:green", alpha=0.4,
@@ -454,7 +470,7 @@ def plot_isl_visibility_comparison():
   ax2.set_yticks([])
   ax2.set_xlabel("Time (min)")
   ax2.set_title("ISL visibility: polar vs equatorial planes")
-  ax2.legend(loc="upper right", fontsize=8)
+  ax2.legend(loc="upper right", fontsize=10)
 
   fig.suptitle("Inter-satellite link visibility: same plane vs crossing planes")
   fig.tight_layout()
@@ -493,7 +509,7 @@ def plot_patched_conic_transfer_orbit():
   ax.set_ylabel("y (AU)")
   ax.set_title("Patched conic: Earth-to-Mars heliocentric transfer orbit")
   ax.set_aspect("equal")
-  ax.legend(fontsize=9)
+  ax.legend(fontsize=11)
   ax.grid(True, alpha=0.3)
   fig.tight_layout()
 
@@ -804,7 +820,7 @@ def plot_station_keeping_delta_v_budget():
       num_burns.append(int(row["num_burns"]))
       total_dv.append(float(row["total_delta_v_ms"]))
 
-  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 5))
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
   ax1.plot(tolerances, num_burns, marker="o", linewidth=2, color="tab:orange")
   ax1.set_xlabel("RAAN tolerance (deg)")
   ax1.set_ylabel("Number of burns over mission")
@@ -881,7 +897,7 @@ def plot_lagrange_points_layout():
   for name, (x, y) in positions.items():
     color = "tab:green" if name in ("L4", "L5") else "tab:red"
     ax.scatter([x], [y], color=color, s=60, zorder=3)
-    ax.annotate(name, (x, y), textcoords="offset points", xytext=(8, 8), fontsize=11)
+    ax.annotate(name, (x, y), textcoords="offset points", xytext=(8, 8), fontsize=13)
   ax.axhline(0, color="black", linewidth=0.5)
   ax.set_xlabel("x (dimensionless, corotating frame)")
   ax.set_ylabel("y (dimensionless, corotating frame)")
@@ -915,7 +931,7 @@ def plot_lagrange_points_stability_trajectories():
   l4_xs, l4_ys = read_xy(l4_csv)
   l1_xs, l1_ys = read_xy(l1_csv)
 
-  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 7))
   ax1.plot(l4_xs, l4_ys, color="tab:green", linewidth=1.0)
   ax1.scatter([l4_xs[0]], [l4_ys[0]], color="black", s=60, zorder=3, label="L4 (start)")
   ax1.set_xlabel("x (dimensionless)")
@@ -962,7 +978,7 @@ def plot_orbital_decay_lifetime_comparison():
       altitudes.append(float(row["initial_altitude_km"]))
       alt_lifetimes.append(float(row["lifetime_days"]))
 
-  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 5))
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
   ax1.plot(bcs, bc_lifetimes, marker="o", linewidth=2, color="tab:blue")
   ax1.set_xlabel("Ballistic coefficient (kg/m^2)")
   ax1.set_ylabel("Orbital lifetime (days)")
