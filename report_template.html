@@ -497,13 +497,19 @@
         <div class="dash-value">{{ATTITUDE_INTERMEDIATE_RATIO}}배 vs {{ATTITUDE_MINOR_RATIO}}/{{ATTITUDE_MAJOR_RATIO}}배</div>
         <p class="dash-note">토크 없는 자유회전에서 중간축만 작은 섭동에도 크게 발산함을 오일러 방정식으로 재현(중간축 정리)</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">궤도 유지 비용</span><span class="dash-scripts">17</span></div>
+        <div class="dash-metric">허용 오차 10배 차이에도 거의 일정한 5년 총 델타-V</div>
+        <div class="dash-value">편차 {{SK_DELTA_V_SPREAD_PCT}}%</div>
+        <p class="dash-note">07번 J2 세차의 잔여 오차를 평면 변경 기동으로 주기 보정 — 1년에 {{SK_NUM_BURNS_1YR}}회, 기동당 {{SK_BURN_DELTA_V_MS}}m/s</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>열여섯 단계의 확장</h2>
+      <h2>열일곱 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -602,6 +608,12 @@
         <h3>자세동역학 (Torque-Free Rigid Body, 중간축 정리)</h3>
         <p>01〜15번은 모두 위성을 점 질량으로 다뤘다 — 궤도상의 위치/속도(병진운동)만 계산했지, 위성 자체가 어느 방향을 향하는지(자세)는 다루지 않았다. 이 스크립트는 처음으로 궤도역학과 독립적인 새 물리 영역, 즉 강체의 회전운동을 연다. 외부 토크가 전혀 없는 강체의 오일러 회전방정식을 03/15번과 같은 RK4 구조로 직접 수치적분해, 관성모멘트가 가장 크거나 가장 작은 축 주위 회전은 작은 섭동에도 안정적이지만 중간 크기 축 주위 회전은 섭동이 기하급수적으로 커져 축 자체가 뒤집힌다는 "중간축 정리"(테니스 라켓 정리)를 재현한다. 자세제어(PID 피드백)는 이 프로젝트에서 계속 범위 밖으로 남겨두고, 순수한 동역학(외부 입력 없는 자유회전)만 다룬다.</p>
         <div class="phase-scripts"><span class="chip">16</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">07번의 방치된 드리프트를 실제로 보정</span>
+        <h3>궤도 유지 비용 (Station-Keeping)</h3>
+        <p>07번(J2 섭동)은 궤도면(RAAN)이 서서히 흐트러진다는 것을 보여줬지만, 그 드리프트를 방치한 결과만 계산했다. 실제 위성은 이걸 방치하지 않고 주기적으로 작은 기동(임펄스)으로 되돌리는데, 07번의 예측 세차율 자체는(태양동기궤도라면) 오히려 의도된 값이라 보정 대상이 아니다 — 실제로 보정하는 것은 그 예측과 실측 사이의 작은 잔여 오차뿐이다. 이 스크립트는 RAAN을 되돌리는 데 필요한 평면 변경(plane-change) 델타-V 공식(Δv=2*v*sin(각도/2), 06번 호만 전이의 반지름 변경 공식과는 다른 종류)을 새로 정의하고, 허용 오차에 도달할 때마다 기동해 RAAN 오차가 톱니파 형태로 유계에 머무는 것을 확인한다. 허용 오차를 10배까지 바꿔도 임무 기간 총 델타-V 예산은 거의 그대로다 — 자주 보정하면 한 번에 쓰는 델타-V는 작지만 횟수가 늘고, 드물게 보정하면 그 반대라 서로 상쇄되기 때문이다.</p>
+        <div class="phase-scripts"><span class="chip">17</span></div>
       </div>
     </div>
   </section>
@@ -733,6 +745,17 @@
       <div class="result">
         <img id="img-attitude-growth" src="{{IMG_ATTITUDE_GROWTH_COMPARISON}}" alt="최소축, 중간축, 최대축 각각의 섭동 성장 배율을 비교한 막대그래프">
         <div class="result-caption"><strong>세 축의 섭동 성장 배율 비교</strong> — 최소축/최대축은 안정적이지만 중간축만 압도적으로 불안정하다.</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-sk-sawtooth" src="{{IMG_SK_SAWTOOTH}}" alt="주기적 평면 변경 기동으로 RAAN 잔여 오차가 톱니파 형태로 유계에 머무는 시계열 그래프">
+        <div class="result-caption"><strong>궤도 유지 톱니파</strong> — RAAN 오차가 허용 범위까지 선형으로 커졌다가 기동으로 순간 0으로 복귀한다.</div>
+      </div>
+      <div class="result">
+        <img id="img-sk-budget" src="{{IMG_SK_DELTA_V_BUDGET}}" alt="RAAN 허용 오차에 따른 기동 횟수와 임무 기간 총 델타-V를 나란히 그린 그래프">
+        <div class="result-caption"><strong>허용 오차 vs 기동 빈도/델타-V</strong> — 기동 횟수는 허용 오차에 반비례하지만 총 델타-V는 거의 일정하다.</div>
       </div>
     </div>
   </section>
@@ -888,6 +911,20 @@
             <td class="num">중간축 &gt; 나머지 x5</td>
             <td><span class="pill good">중간축만 불안정함을 확인</span></td>
           </tr>
+          <tr>
+            <td>궤도 유지: 주기적 보정 후 5년 방치 대비 오차</td>
+            <td class="num">보정 없는 5년 오차(도)</td>
+            <td class="num">{{SK_UNCORRECTED_5YR_ERROR_DEG}}도</td>
+            <td class="num">방치 시 계속 증가</td>
+            <td><span class="pill good">보정 없이는 선형으로 계속 커짐</span></td>
+          </tr>
+          <tr>
+            <td>궤도 유지: 허용 오차에 따른 총 델타-V 편차</td>
+            <td class="num">편차(%)</td>
+            <td class="num">{{SK_DELTA_V_SPREAD_PCT}}%</td>
+            <td class="num">&lt; 20%</td>
+            <td><span class="pill good">허용 오차 선택과 거의 무관</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -895,7 +932,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–16 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–17 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>

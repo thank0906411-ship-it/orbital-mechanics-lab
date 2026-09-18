@@ -279,6 +279,38 @@ def compute_attitude_dynamics():
   return result
 
 
+def compute_station_keeping():
+  result = dict.fromkeys(
+      ["SK_UNCORRECTED_5YR_ERROR_DEG", "SK_NUM_BURNS_1YR", "SK_BURN_DELTA_V_MS",
+       "SK_TOTAL_DELTA_V_MS", "SK_DELTA_V_SPREAD_PCT"], "-")
+
+  drift_rows = read_csv_rows("station_keeping_uncorrected_drift.csv")
+  if drift_rows:
+    result["SK_UNCORRECTED_5YR_ERROR_DEG"] = f"{float(drift_rows[-1]['raan_error_deg']):.4f}"
+
+  budget_rows = read_csv_rows("station_keeping_delta_v_budget.csv")
+  if budget_rows:
+    dv_values = [float(row["total_delta_v_ms"]) for row in budget_rows]
+    spread_pct = (max(dv_values) - min(dv_values)) / min(dv_values) * 100
+    result["SK_DELTA_V_SPREAD_PCT"] = f"{spread_pct:.1f}"
+    result["SK_TOTAL_DELTA_V_MS"] = f"{dv_values[len(dv_values) // 2]:.1f}"
+
+  frequency_rows = read_csv_rows("station_keeping_tolerance_vs_frequency.csv")
+  if frequency_rows:
+    for row in frequency_rows:
+      if abs(float(row["tolerance_deg"]) - 0.1) < 1e-6:
+        result["SK_NUM_BURNS_1YR"] = row["num_burns"]
+        break
+
+  if budget_rows:
+    for row in budget_rows:
+      if abs(float(row["tolerance_deg"]) - 0.1) < 1e-6 and int(row["num_burns"]) > 0:
+        result["SK_BURN_DELTA_V_MS"] = f"{float(row['total_delta_v_ms']) / int(row['num_burns']):.2f}"
+        break
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -309,6 +341,8 @@ def main():
       "IMG_LOW_THRUST_TIME_VS_THRUST": img_to_data_uri("15_low_thrust_transfer_time_vs_thrust.png"),
       "IMG_ATTITUDE_INSTABILITY": img_to_data_uri("16_attitude_intermediate_axis_instability.png"),
       "IMG_ATTITUDE_GROWTH_COMPARISON": img_to_data_uri("16_attitude_perturbation_growth_comparison.png"),
+      "IMG_SK_SAWTOOTH": img_to_data_uri("17_station_keeping_raan_sawtooth.png"),
+      "IMG_SK_DELTA_V_BUDGET": img_to_data_uri("17_station_keeping_delta_v_budget.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -326,6 +360,7 @@ def main():
   values.update(compute_orbit_determination())
   values.update(compute_low_thrust_transfer())
   values.update(compute_attitude_dynamics())
+  values.update(compute_station_keeping())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

@@ -6,15 +6,16 @@ constellations/constellation_coverage.py,
 constellations/intersatellite_link_visibility.py,
 missions/patched_conic_interplanetary.py, missions/clohessy_wiltshire_rendezvous.py,
 missions/orbit_determination.py, missions/low_thrust_transfer.py,
-attitude/torque_free_rigid_body.py 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
-도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
+attitude/torque_free_rigid_body.py, missions/station_keeping.py 시뮬레이션이
+남긴 결과 CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로
+보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 위 13개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 14개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~16, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~17, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -27,7 +28,8 @@ attitude/torque_free_rigid_body.py 시뮬레이션이 남긴 결과 CSV를 그�
       results/13_cw_approximation_validity.png, results/14_orbit_determination_noise_sensitivity.png,
       results/14_orbit_determination_observation_count.png, results/15_low_thrust_spiral_trajectory.png,
       results/15_low_thrust_transfer_time_vs_thrust.png, results/16_attitude_intermediate_axis_instability.png,
-      results/16_attitude_perturbation_growth_comparison.png
+      results/16_attitude_perturbation_growth_comparison.png, results/17_station_keeping_raan_sawtooth.png,
+      results/17_station_keeping_delta_v_budget.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -760,6 +762,65 @@ def plot_attitude_perturbation_growth_comparison():
   print(f"[저장됨] {out_path}")
 
 
+def plot_station_keeping_raan_sawtooth():
+  csv_path = os.path.join(RESULTS_DIR, "station_keeping_raan_history.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/station_keeping.py를 실행하세요.")
+    return
+
+  times_days, errors_deg = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      times_days.append(float(row["t_sec"]) / 86400)
+      errors_deg.append(float(row["raan_error_deg"]))
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  ax.plot(times_days, errors_deg, color="tab:blue", linewidth=1.5, marker="o", markersize=3)
+  ax.set_xlabel("Time (days)")
+  ax.set_ylabel("Residual RAAN error (deg)")
+  ax.set_title("Station-keeping: periodic burns keep residual RAAN error bounded (sawtooth)")
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "17_station_keeping_raan_sawtooth.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_station_keeping_delta_v_budget():
+  csv_path = os.path.join(RESULTS_DIR, "station_keeping_delta_v_budget.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/station_keeping.py를 실행하세요.")
+    return
+
+  tolerances, num_burns, total_dv = [], [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      tolerances.append(float(row["tolerance_deg"]))
+      num_burns.append(int(row["num_burns"]))
+      total_dv.append(float(row["total_delta_v_ms"]))
+
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 5))
+  ax1.plot(tolerances, num_burns, marker="o", linewidth=2, color="tab:orange")
+  ax1.set_xlabel("RAAN tolerance (deg)")
+  ax1.set_ylabel("Number of burns over mission")
+  ax1.set_title("Tighter tolerance needs more frequent burns")
+  ax1.grid(True, alpha=0.3)
+
+  ax2.plot(tolerances, total_dv, marker="o", linewidth=2, color="tab:green")
+  ax2.set_xlabel("RAAN tolerance (deg)")
+  ax2.set_ylabel("Total delta-V over mission (m/s)")
+  ax2.set_title("Total delta-V budget is roughly independent of tolerance")
+  ax2.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "17_station_keeping_delta_v_budget.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -785,3 +846,5 @@ if __name__ == "__main__":
   plot_low_thrust_transfer_time_vs_thrust()
   plot_attitude_intermediate_axis_instability()
   plot_attitude_perturbation_growth_comparison()
+  plot_station_keeping_raan_sawtooth()
+  plot_station_keeping_delta_v_budget()
