@@ -244,6 +244,24 @@ def compute_orbit_determination():
   return result
 
 
+def compute_low_thrust_transfer():
+  result = dict.fromkeys(
+      ["LOW_THRUST_A_ERROR_PCT", "LOW_THRUST_ECCENTRICITY", "LOW_THRUST_EDELBAUM_ERROR_PCT",
+       "LOW_THRUST_TIME_RATIO", "LOW_THRUST_DELTA_V_MS", "LOW_THRUST_HOHMANN_DELTA_V_MS"], "-")
+
+  summary_rows = read_csv_rows("low_thrust_transfer_summary.csv")
+  if summary_rows:
+    row = summary_rows[0]
+    result["LOW_THRUST_A_ERROR_PCT"] = f"{float(row['a_error_pct']):.4f}"
+    result["LOW_THRUST_ECCENTRICITY"] = f"{float(row['achieved_e']):.6f}"
+    result["LOW_THRUST_EDELBAUM_ERROR_PCT"] = f"{float(row['edelbaum_relative_error_pct']):.2f}"
+    result["LOW_THRUST_TIME_RATIO"] = f"{float(row['time_ratio']):.1f}"
+    result["LOW_THRUST_DELTA_V_MS"] = f"{float(row['numerical_delta_v_km_s']) * 1000:.2f}"
+    result["LOW_THRUST_HOHMANN_DELTA_V_MS"] = f"{float(row['hohmann_delta_v_km_s']) * 1000:.2f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -270,6 +288,8 @@ def main():
       "IMG_CW_APPROXIMATION": img_to_data_uri("13_cw_approximation_validity.png"),
       "IMG_OD_NOISE_SENSITIVITY": img_to_data_uri("14_orbit_determination_noise_sensitivity.png"),
       "IMG_OD_OBSERVATION_COUNT": img_to_data_uri("14_orbit_determination_observation_count.png"),
+      "IMG_LOW_THRUST_SPIRAL": img_to_data_uri("15_low_thrust_spiral_trajectory.png"),
+      "IMG_LOW_THRUST_TIME_VS_THRUST": img_to_data_uri("15_low_thrust_transfer_time_vs_thrust.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -285,6 +305,7 @@ def main():
   values.update(compute_patched_conic())
   values.update(compute_cw_rendezvous())
   values.update(compute_orbit_determination())
+  values.update(compute_low_thrust_transfer())
 
   for key, val in values.items():
     token = "{{" + key + "}}"
