@@ -509,13 +509,19 @@
         <div class="dash-value">{{DECAY_LIFETIME_DAYS}}일</div>
         <p class="dash-note">15번 저추력 상승 나선의 거울상 — 대기항력이 에너지를 빼앗아 재진입 근처에서 하강 속도가 {{DECAY_RATE_RATIO}}배 가속</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">3체 문제/라그랑주점</span><span class="dash-scripts">19</span></div>
+        <div class="dash-metric">L1/L2/L3(불안정) vs L4/L5(안정) 섭동 궤적 이탈거리 비율</div>
+        <div class="dash-value">{{LAGRANGE_L1_L4_DIVERGENCE_RATIO}}배</div>
+        <p class="dash-note">12번이 피했던 진짜 3체 문제를 원형 제한 3체 문제(CR3BP)로 정면 돌파 — 회전좌표계 선형화 고유값과 RK4 직접 적분이 같은 결론을 준다</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>열여덟 단계의 확장</h2>
+      <h2>열아홉 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -626,6 +632,12 @@
         <h3>궤도 재진입/대기항력 감쇠 (Orbital Decay)</h3>
         <p>15번(저추력 전기추진)이 접선방향 연속 추력으로 원궤도를 서서히 밀어 올렸다면, 이 스크립트는 정반대다 — 저궤도 위성은 완전한 진공이 아니라 극도로 희박한 대기 속을 지나가므로, 속도 반대방향으로 작용하는 미세한 항력이 계속 에너지를 빼앗아 고도가 서서히 떨어지다 결국 재진입한다. 지수함수 대기밀도 근사(ρ(h)=ρ0·exp(-(h-h0)/H))와 탄도계수 기반 항력 감속(a=-0.5·ρ(h)·v²/BC)을 15번의 "접선 추력" 항을 부호만 반전한 구조로 재사용한다. 대기밀도가 지수함수이므로 재진입 직전으로 갈수록 하강이 급격히 가속화되는 비선형 패턴이 나타나고, 탄도계수가 클수록(무겁고 단면적이 작은 위성) 수명이 길어지며, 초기 고도가 조금만 높아져도 수명이 기하급수적으로 늘어난다 — "폐기위성을 낮은 고도로만 유도해도 자연스럽게 몇 년 안에 재진입한다"는 실제 우주 쓰레기 정책의 물리적 근거를 수치로 보여준다.</p>
         <div class="phase-scripts"><span class="chip">18</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">12번이 피했던 진짜 3체 문제를 정면으로 연다</span>
+        <h3>3체 문제와 라그랑주점 (CR3BP)</h3>
+        <p>01~18번은 모두 "하나의 중심천체 + 작은 섭동/추력/항력"이라는 공통 골격이었고, 12번(Patched Conic)은 태양-지구-화성이라는 진짜 3체 문제를 세 개의 독립된 2체 문제로 이어붙여 피했다. 이 스크립트는 12번이 피했던 문제를 원형 제한 3체 문제(CR3BP)로 정면으로 연다 — 지구-달처럼 두 개의 큰 천체가 만드는 회전 중력장 안에서, 질량이 무시할 만한 세 번째 물체가 정지해 있을 수 있는 5개의 평형점(라그랑주점)을 찾는다. 회전좌표계 운동방정식에 이 프로젝트 최초로 원심력과 코리올리 힘이 등장하고, 무차원화(질량비 mu 하나로 계 전체가 결정됨)를 쓴다는 점에서 이전 스크립트들과 근본적으로 다르다. L1/L2/L3(콜린스)는 이분법으로 푼 5차 방정식의 근, L4/L5(삼각)는 두 주천체와 항상 정삼각형을 이루는 닫힌 공식으로 구하고, 각 점에서 선형화한 야코비 행렬의 고유값으로 안정성을 판정한다 — 지구-달 질량비에서 L4/L5는 안정(고유값이 순허수), L1/L2/L3는 불안정(고유값에 양의 실수부)임을 확인하고, 같은 크기의 섭동을 준 RK4 직접 적분 궤적으로도 L4는 유계, L1은 훨씬 크게 발산하는 것을 재확인한다.</p>
+        <div class="phase-scripts"><span class="chip">19</span></div>
       </div>
     </div>
   </section>
@@ -779,6 +791,17 @@
       <div class="result">
         <img id="img-decay-lifetime" src="{{IMG_DECAY_LIFETIME}}" alt="탄도계수와 초기 고도 각각에 따른 궤도 수명 변화를 나란히 그린 그래프">
         <div class="result-caption"><strong>탄도계수/초기고도 vs 궤도 수명</strong> — 탄도계수와는 선형 비례, 초기 고도와는 기하급수적 관계를 보인다.</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-lagrange-layout" src="{{IMG_LAGRANGE_LAYOUT}}" alt="회전좌표계에서 지구, 달, 다섯 라그랑주점의 배치를 나타낸 그래프">
+        <div class="result-caption"><strong>지구-달계 라그랑주점 배치</strong> — L1/L2/L3(빨강, 불안정)는 일직선 위에, L4/L5(초록, 안정)는 정삼각형 꼭짓점에 위치한다.</div>
+      </div>
+      <div class="result">
+        <img id="img-lagrange-stability" src="{{IMG_LAGRANGE_STABILITY}}" alt="L4와 L1 근처에 같은 크기의 섭동을 준 궤적을 나란히 비교한 그래프">
+        <div class="result-caption"><strong>같은 섭동, 다른 운명</strong> — L4 근처 궤적은 좁게 유계로 머물지만, L1 근처 궤적은 훨씬 넓게 발산한다.</div>
       </div>
     </div>
   </section>
@@ -962,6 +985,20 @@
             <td class="num">둘 다 단조 증가</td>
             <td><span class="pill good">탄도계수는 선형, 고도는 기하급수적 증가</span></td>
           </tr>
+          <tr>
+            <td>라그랑주점: L1 위치(문헌값과 비교)</td>
+            <td class="num">지구 중심 기준</td>
+            <td class="num">{{LAGRANGE_L1_KM}}km</td>
+            <td class="num">약 320,000~330,000km</td>
+            <td><span class="pill good">이분법으로 푼 5차 방정식 근이 문헌값과 일치</span></td>
+          </tr>
+          <tr>
+            <td>라그랑주점: L4/L1 선형 안정성(최대 고유값 실수부)</td>
+            <td class="num">L4 / L1</td>
+            <td class="num">{{LAGRANGE_L4_MAX_REAL_EIGENVALUE}} / {{LAGRANGE_L1_MAX_REAL_EIGENVALUE}}</td>
+            <td class="num">L4≈0, L1&gt;0</td>
+            <td><span class="pill good">L4는 순허수(안정), L1은 양의 실수부(불안정)</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -969,7 +1006,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–18 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–19 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>

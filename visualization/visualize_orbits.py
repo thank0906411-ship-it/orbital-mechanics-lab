@@ -7,15 +7,16 @@ constellations/intersatellite_link_visibility.py,
 missions/patched_conic_interplanetary.py, missions/clohessy_wiltshire_rendezvous.py,
 missions/orbit_determination.py, missions/low_thrust_transfer.py,
 attitude/torque_free_rigid_body.py, missions/station_keeping.py,
-missions/orbital_decay.py 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는 도구.
-시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
+missions/orbital_decay.py, missions/lagrange_points.py 시뮬레이션이 남긴 결과
+CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기
+위한" 별도 스크립트다.
 
-실행 전에 먼저 위 15개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 16개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~18, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~19, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -30,7 +31,8 @@ missions/orbital_decay.py 시뮬레이션이 남긴 결과 CSV를 그래프로 �
       results/15_low_thrust_transfer_time_vs_thrust.png, results/16_attitude_intermediate_axis_instability.png,
       results/16_attitude_perturbation_growth_comparison.png, results/17_station_keeping_raan_sawtooth.png,
       results/17_station_keeping_delta_v_budget.png, results/18_orbital_decay_trajectory.png,
-      results/18_orbital_decay_lifetime_comparison.png
+      results/18_orbital_decay_lifetime_comparison.png, results/19_lagrange_points_layout.png,
+      results/19_lagrange_points_stability_trajectories.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -856,6 +858,91 @@ def plot_orbital_decay_trajectory():
   print(f"[저장됨] {out_path}")
 
 
+def plot_lagrange_points_layout():
+  csv_path = os.path.join(RESULTS_DIR, "lagrange_points_positions.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/lagrange_points.py를 실행하세요.")
+    return
+
+  positions = {}
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      positions[row["point"]] = (float(row["x_dimensionless"]), float(row["y_dimensionless"]))
+
+  mu_row_path = os.path.join(RESULTS_DIR, "lagrange_points_triangle_check.csv")
+  mu = 0.012150585
+  if os.path.exists(mu_row_path):
+    with open(mu_row_path, newline="", encoding="utf-8") as f:
+      mu = float(next(csv.DictReader(f))["mass_ratio"])
+
+  fig, ax = plt.subplots(figsize=(8, 8))
+  ax.scatter([-mu], [0], color="tab:blue", s=300, zorder=3, label="M1 (Earth)")
+  ax.scatter([1 - mu], [0], color="tab:gray", s=100, zorder=3, label="M2 (Moon)")
+  for name, (x, y) in positions.items():
+    color = "tab:green" if name in ("L4", "L5") else "tab:red"
+    ax.scatter([x], [y], color=color, s=60, zorder=3)
+    ax.annotate(name, (x, y), textcoords="offset points", xytext=(8, 8), fontsize=11)
+  ax.axhline(0, color="black", linewidth=0.5)
+  ax.set_xlabel("x (dimensionless, corotating frame)")
+  ax.set_ylabel("y (dimensionless, corotating frame)")
+  ax.set_title("CR3BP Lagrange points in the Earth-Moon corotating frame\n(L4/L5 stable in green, L1/L2/L3 unstable in red)")
+  ax.set_aspect("equal")
+  ax.legend(loc="lower left")
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "19_lagrange_points_layout.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_lagrange_points_stability_trajectories():
+  l4_csv = os.path.join(RESULTS_DIR, "lagrange_points_l4_trajectory.csv")
+  l1_csv = os.path.join(RESULTS_DIR, "lagrange_points_l1_trajectory.csv")
+  if not os.path.exists(l4_csv) or not os.path.exists(l1_csv):
+    print(f"[건너뜀] {l4_csv} 또는 {l1_csv} 없음 — 먼저 missions/lagrange_points.py를 실행하세요.")
+    return
+
+  def read_xy(path):
+    xs, ys = [], []
+    with open(path, newline="", encoding="utf-8") as f:
+      for row in csv.DictReader(f):
+        xs.append(float(row["x"]))
+        ys.append(float(row["y"]))
+    return xs, ys
+
+  l4_xs, l4_ys = read_xy(l4_csv)
+  l1_xs, l1_ys = read_xy(l1_csv)
+
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+  ax1.plot(l4_xs, l4_ys, color="tab:green", linewidth=1.0)
+  ax1.scatter([l4_xs[0]], [l4_ys[0]], color="black", s=60, zorder=3, label="L4 (start)")
+  ax1.set_xlabel("x (dimensionless)")
+  ax1.set_ylabel("y (dimensionless)")
+  ax1.set_title("Near L4: perturbed trajectory stays bounded (stable)")
+  ax1.set_aspect("equal")
+  ax1.legend()
+  ax1.grid(True, alpha=0.3)
+
+  ax2.plot(l1_xs, l1_ys, color="tab:red", linewidth=1.0)
+  ax2.scatter([l1_xs[0]], [l1_ys[0]], color="black", s=60, zorder=3, label="L1 (start)")
+  ax2.set_xlabel("x (dimensionless)")
+  ax2.set_ylabel("y (dimensionless)")
+  ax2.set_title("Near L1: perturbed trajectory diverges (unstable)")
+  ax2.set_aspect("equal")
+  ax2.legend()
+  ax2.grid(True, alpha=0.3)
+
+  fig.suptitle("Same perturbation size, opposite fate: L4 (stable) vs L1 (unstable)")
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "19_lagrange_points_stability_trajectories.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 def plot_orbital_decay_lifetime_comparison():
   bc_csv = os.path.join(RESULTS_DIR, "orbital_decay_ballistic_coefficient_vs_lifetime.csv")
   altitude_csv = os.path.join(RESULTS_DIR, "orbital_decay_altitude_vs_lifetime.csv")
@@ -925,3 +1012,5 @@ if __name__ == "__main__":
   plot_station_keeping_delta_v_budget()
   plot_orbital_decay_trajectory()
   plot_orbital_decay_lifetime_comparison()
+  plot_lagrange_points_layout()
+  plot_lagrange_points_stability_trajectories()

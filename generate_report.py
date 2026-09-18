@@ -335,6 +335,41 @@ def compute_orbital_decay():
   return result
 
 
+def compute_lagrange_points():
+  result = dict.fromkeys(
+      ["LAGRANGE_L1_KM", "LAGRANGE_L4_MAX_REAL_EIGENVALUE", "LAGRANGE_L1_MAX_REAL_EIGENVALUE",
+       "LAGRANGE_L1_L4_DIVERGENCE_RATIO"], "-")
+
+  positions_rows = read_csv_rows("lagrange_points_positions.csv")
+  if positions_rows:
+    l1_row = next((row for row in positions_rows if row["point"] == "L1"), None)
+    if l1_row:
+      result["LAGRANGE_L1_KM"] = f"{float(l1_row['x_km']):,.0f}"
+
+  stability_rows = read_csv_rows("lagrange_points_stability.csv")
+  if stability_rows:
+    l1_row = next((row for row in stability_rows if row["point"] == "L1"), None)
+    l4_row = next((row for row in stability_rows if row["point"] == "L4"), None)
+    if l1_row:
+      result["LAGRANGE_L1_MAX_REAL_EIGENVALUE"] = f"{float(l1_row['max_real_eigenvalue']):.4f}"
+    if l4_row:
+      result["LAGRANGE_L4_MAX_REAL_EIGENVALUE"] = f"{float(l4_row['max_real_eigenvalue']):.6f}"
+
+  l4_trajectory_rows = read_csv_rows("lagrange_points_l4_trajectory.csv")
+  l1_trajectory_rows = read_csv_rows("lagrange_points_l1_trajectory.csv")
+  if l4_trajectory_rows and l1_trajectory_rows:
+    (x_l4, y_l4) = (float(l4_trajectory_rows[0]["x"]), float(l4_trajectory_rows[0]["y"]))
+    (x_l1, y_l1) = (float(l1_trajectory_rows[0]["x"]), float(l1_trajectory_rows[0]["y"]))
+    l4_max_dist = max(((float(r["x"]) - x_l4) ** 2 + (float(r["y"]) - y_l4) ** 2) ** 0.5
+                       for r in l4_trajectory_rows)
+    l1_max_dist = max(((float(r["x"]) - x_l1) ** 2 + (float(r["y"]) - y_l1) ** 2) ** 0.5
+                       for r in l1_trajectory_rows)
+    if l4_max_dist > 0:
+      result["LAGRANGE_L1_L4_DIVERGENCE_RATIO"] = f"{l1_max_dist / l4_max_dist:.1f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -369,6 +404,8 @@ def main():
       "IMG_SK_DELTA_V_BUDGET": img_to_data_uri("17_station_keeping_delta_v_budget.png"),
       "IMG_DECAY_TRAJECTORY": img_to_data_uri("18_orbital_decay_trajectory.png"),
       "IMG_DECAY_LIFETIME": img_to_data_uri("18_orbital_decay_lifetime_comparison.png"),
+      "IMG_LAGRANGE_LAYOUT": img_to_data_uri("19_lagrange_points_layout.png"),
+      "IMG_LAGRANGE_STABILITY": img_to_data_uri("19_lagrange_points_stability_trajectories.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -388,6 +425,7 @@ def main():
   values.update(compute_attitude_dynamics())
   values.update(compute_station_keeping())
   values.update(compute_orbital_decay())
+  values.update(compute_lagrange_points())
 
   for key, val in values.items():
     token = "{{" + key + "}}"
