@@ -503,13 +503,19 @@
         <div class="dash-value">편차 {{SK_DELTA_V_SPREAD_PCT}}%</div>
         <p class="dash-note">07번 J2 세차의 잔여 오차를 평면 변경 기동으로 주기 보정 — 1년에 {{SK_NUM_BURNS_1YR}}회, 기동당 {{SK_BURN_DELTA_V_MS}}m/s</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">궤도 재진입/대기항력 감쇠</span><span class="dash-scripts">18</span></div>
+        <div class="dash-metric">고도 200km→100km 재진입까지 걸리는 시간</div>
+        <div class="dash-value">{{DECAY_LIFETIME_DAYS}}일</div>
+        <p class="dash-note">15번 저추력 상승 나선의 거울상 — 대기항력이 에너지를 빼앗아 재진입 근처에서 하강 속도가 {{DECAY_RATE_RATIO}}배 가속</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>열일곱 단계의 확장</h2>
+      <h2>열여덟 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -614,6 +620,12 @@
         <h3>궤도 유지 비용 (Station-Keeping)</h3>
         <p>07번(J2 섭동)은 궤도면(RAAN)이 서서히 흐트러진다는 것을 보여줬지만, 그 드리프트를 방치한 결과만 계산했다. 실제 위성은 이걸 방치하지 않고 주기적으로 작은 기동(임펄스)으로 되돌리는데, 07번의 예측 세차율 자체는(태양동기궤도라면) 오히려 의도된 값이라 보정 대상이 아니다 — 실제로 보정하는 것은 그 예측과 실측 사이의 작은 잔여 오차뿐이다. 이 스크립트는 RAAN을 되돌리는 데 필요한 평면 변경(plane-change) 델타-V 공식(Δv=2*v*sin(각도/2), 06번 호만 전이의 반지름 변경 공식과는 다른 종류)을 새로 정의하고, 허용 오차에 도달할 때마다 기동해 RAAN 오차가 톱니파 형태로 유계에 머무는 것을 확인한다. 허용 오차를 10배까지 바꿔도 임무 기간 총 델타-V 예산은 거의 그대로다 — 자주 보정하면 한 번에 쓰는 델타-V는 작지만 횟수가 늘고, 드물게 보정하면 그 반대라 서로 상쇄되기 때문이다.</p>
         <div class="phase-scripts"><span class="chip">17</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">15번과 정확히 거울상</span>
+        <h3>궤도 재진입/대기항력 감쇠 (Orbital Decay)</h3>
+        <p>15번(저추력 전기추진)이 접선방향 연속 추력으로 원궤도를 서서히 밀어 올렸다면, 이 스크립트는 정반대다 — 저궤도 위성은 완전한 진공이 아니라 극도로 희박한 대기 속을 지나가므로, 속도 반대방향으로 작용하는 미세한 항력이 계속 에너지를 빼앗아 고도가 서서히 떨어지다 결국 재진입한다. 지수함수 대기밀도 근사(ρ(h)=ρ0·exp(-(h-h0)/H))와 탄도계수 기반 항력 감속(a=-0.5·ρ(h)·v²/BC)을 15번의 "접선 추력" 항을 부호만 반전한 구조로 재사용한다. 대기밀도가 지수함수이므로 재진입 직전으로 갈수록 하강이 급격히 가속화되는 비선형 패턴이 나타나고, 탄도계수가 클수록(무겁고 단면적이 작은 위성) 수명이 길어지며, 초기 고도가 조금만 높아져도 수명이 기하급수적으로 늘어난다 — "폐기위성을 낮은 고도로만 유도해도 자연스럽게 몇 년 안에 재진입한다"는 실제 우주 쓰레기 정책의 물리적 근거를 수치로 보여준다.</p>
+        <div class="phase-scripts"><span class="chip">18</span></div>
       </div>
     </div>
   </section>
@@ -756,6 +768,17 @@
       <div class="result">
         <img id="img-sk-budget" src="{{IMG_SK_DELTA_V_BUDGET}}" alt="RAAN 허용 오차에 따른 기동 횟수와 임무 기간 총 델타-V를 나란히 그린 그래프">
         <div class="result-caption"><strong>허용 오차 vs 기동 빈도/델타-V</strong> — 기동 횟수는 허용 오차에 반비례하지만 총 델타-V는 거의 일정하다.</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-decay-trajectory" src="{{IMG_DECAY_TRAJECTORY}}" alt="시간에 따른 고도 감소를 나타낸 그래프, 재진입에 가까워질수록 하강이 가속화됨">
+        <div class="result-caption"><strong>대기항력에 의한 고도 하강</strong> — 초기에는 완만하지만 재진입 고도에 가까워질수록 하강 속도가 급격히 빨라진다.</div>
+      </div>
+      <div class="result">
+        <img id="img-decay-lifetime" src="{{IMG_DECAY_LIFETIME}}" alt="탄도계수와 초기 고도 각각에 따른 궤도 수명 변화를 나란히 그린 그래프">
+        <div class="result-caption"><strong>탄도계수/초기고도 vs 궤도 수명</strong> — 탄도계수와는 선형 비례, 초기 고도와는 기하급수적 관계를 보인다.</div>
       </div>
     </div>
   </section>
@@ -925,6 +948,20 @@
             <td class="num">&lt; 20%</td>
             <td><span class="pill good">허용 오차 선택과 거의 무관</span></td>
           </tr>
+          <tr>
+            <td>궤도 재진입: 가속 하강(전반부 대비 후반부 감소율)</td>
+            <td class="num">배율</td>
+            <td class="num">{{DECAY_RATE_RATIO}}배</td>
+            <td class="num">후반부 &gt; 전반부 x2</td>
+            <td><span class="pill good">지수함수 밀도 모델대로 재진입 근처에서 가속</span></td>
+          </tr>
+          <tr>
+            <td>궤도 재진입: 탄도계수/초기고도별 수명 범위</td>
+            <td class="num">최소~최대(일)</td>
+            <td class="num">{{DECAY_BC_MIN_LIFETIME_DAYS}}〜{{DECAY_BC_MAX_LIFETIME_DAYS}} / {{DECAY_ALT_MIN_LIFETIME_DAYS}}〜{{DECAY_ALT_MAX_LIFETIME_DAYS}}</td>
+            <td class="num">둘 다 단조 증가</td>
+            <td><span class="pill good">탄도계수는 선형, 고도는 기하급수적 증가</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -932,7 +969,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–17 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–18 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>

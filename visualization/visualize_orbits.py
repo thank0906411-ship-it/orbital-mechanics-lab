@@ -6,16 +6,16 @@ constellations/constellation_coverage.py,
 constellations/intersatellite_link_visibility.py,
 missions/patched_conic_interplanetary.py, missions/clohessy_wiltshire_rendezvous.py,
 missions/orbit_determination.py, missions/low_thrust_transfer.py,
-attitude/torque_free_rigid_body.py, missions/station_keeping.py 시뮬레이션이
-남긴 결과 CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로
-보기 위한" 별도 스크립트다.
+attitude/torque_free_rigid_body.py, missions/station_keeping.py,
+missions/orbital_decay.py 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는 도구.
+시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 위 14개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 15개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~17, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~18, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -29,7 +29,8 @@ attitude/torque_free_rigid_body.py, missions/station_keeping.py 시뮬레이션�
       results/14_orbit_determination_observation_count.png, results/15_low_thrust_spiral_trajectory.png,
       results/15_low_thrust_transfer_time_vs_thrust.png, results/16_attitude_intermediate_axis_instability.png,
       results/16_attitude_perturbation_growth_comparison.png, results/17_station_keeping_raan_sawtooth.png,
-      results/17_station_keeping_delta_v_budget.png
+      results/17_station_keeping_delta_v_budget.png, results/18_orbital_decay_trajectory.png,
+      results/18_orbital_decay_lifetime_comparison.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -821,6 +822,80 @@ def plot_station_keeping_delta_v_budget():
   print(f"[저장됨] {out_path}")
 
 
+def plot_orbital_decay_trajectory():
+  csv_path = os.path.join(RESULTS_DIR, "orbital_decay_trajectory.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/orbital_decay.py를 실행하세요.")
+    return
+
+  # 지구 반지름(~6378km) 대비 고도 변화(200km->100km)가 상대적으로 작아서
+  # x-y 평면에 그대로 그리면 두꺼운 원 하나로 뭉개져 나선이 안 보인다(15번의
+  # 저추력 상승 나선은 반지름이 60% 가까이 바뀌어 뚜렷했지만, 이 하강은 지구
+  # 반지름 대비 1.5%p 안팎의 변화라 그렇다) — 그래서 x-y 평면 대신 시간에 따른
+  # 고도 자체를 직접 그린다.
+  times_hr, altitudes_km = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      times_hr.append(float(row["t_sec"]) / 3600)
+      altitudes_km.append(float(row["altitude_km"]))
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  ax.plot(times_hr, altitudes_km, color="tab:red", linewidth=1.5)
+  ax.scatter([times_hr[0]], [altitudes_km[0]], color="tab:green", s=80, zorder=3, label="Start (circular orbit)")
+  ax.scatter([times_hr[-1]], [altitudes_km[-1]], color="black", s=80, zorder=3, label="Reentry")
+  ax.set_xlabel("Time (hours)")
+  ax.set_ylabel("Altitude (km)")
+  ax.set_title("Orbital decay: atmospheric drag slowly lowers altitude, accelerating near reentry")
+  ax.legend()
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "18_orbital_decay_trajectory.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_orbital_decay_lifetime_comparison():
+  bc_csv = os.path.join(RESULTS_DIR, "orbital_decay_ballistic_coefficient_vs_lifetime.csv")
+  altitude_csv = os.path.join(RESULTS_DIR, "orbital_decay_altitude_vs_lifetime.csv")
+  if not os.path.exists(bc_csv) or not os.path.exists(altitude_csv):
+    print(f"[건너뜀] {bc_csv} 또는 {altitude_csv} 없음 — 먼저 missions/orbital_decay.py를 실행하세요.")
+    return
+
+  bcs, bc_lifetimes = [], []
+  with open(bc_csv, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      bcs.append(float(row["ballistic_coefficient_kg_m2"]))
+      bc_lifetimes.append(float(row["lifetime_days"]))
+
+  altitudes, alt_lifetimes = [], []
+  with open(altitude_csv, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      altitudes.append(float(row["initial_altitude_km"]))
+      alt_lifetimes.append(float(row["lifetime_days"]))
+
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 5))
+  ax1.plot(bcs, bc_lifetimes, marker="o", linewidth=2, color="tab:blue")
+  ax1.set_xlabel("Ballistic coefficient (kg/m^2)")
+  ax1.set_ylabel("Orbital lifetime (days)")
+  ax1.set_title("Larger ballistic coefficient extends lifetime")
+  ax1.grid(True, alpha=0.3)
+
+  ax2.plot(altitudes, alt_lifetimes, marker="o", linewidth=2, color="tab:purple")
+  ax2.set_yscale("log")
+  ax2.set_xlabel("Initial altitude (km)")
+  ax2.set_ylabel("Orbital lifetime (days, log scale)")
+  ax2.set_title("Lifetime grows exponentially with initial altitude")
+  ax2.grid(True, which="both", alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "18_orbital_decay_lifetime_comparison.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -848,3 +923,5 @@ if __name__ == "__main__":
   plot_attitude_perturbation_growth_comparison()
   plot_station_keeping_raan_sawtooth()
   plot_station_keeping_delta_v_budget()
+  plot_orbital_decay_trajectory()
+  plot_orbital_decay_lifetime_comparison()

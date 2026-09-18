@@ -311,6 +311,30 @@ def compute_station_keeping():
   return result
 
 
+def compute_orbital_decay():
+  result = dict.fromkeys(
+      ["DECAY_LIFETIME_DAYS", "DECAY_RATE_RATIO", "DECAY_BC_MIN_LIFETIME_DAYS",
+       "DECAY_BC_MAX_LIFETIME_DAYS", "DECAY_ALT_MIN_LIFETIME_DAYS", "DECAY_ALT_MAX_LIFETIME_DAYS"], "-")
+
+  summary_rows = read_csv_rows("orbital_decay_summary.csv")
+  if summary_rows:
+    row = summary_rows[0]
+    result["DECAY_LIFETIME_DAYS"] = f"{float(row['lifetime_days']):.2f}"
+    result["DECAY_RATE_RATIO"] = f"{float(row['rate_ratio']):.2f}"
+
+  bc_rows = read_csv_rows("orbital_decay_ballistic_coefficient_vs_lifetime.csv")
+  if bc_rows:
+    result["DECAY_BC_MIN_LIFETIME_DAYS"] = f"{float(bc_rows[0]['lifetime_days']):.2f}"
+    result["DECAY_BC_MAX_LIFETIME_DAYS"] = f"{float(bc_rows[-1]['lifetime_days']):.2f}"
+
+  altitude_rows = read_csv_rows("orbital_decay_altitude_vs_lifetime.csv")
+  if altitude_rows:
+    result["DECAY_ALT_MIN_LIFETIME_DAYS"] = f"{float(altitude_rows[0]['lifetime_days']):.2f}"
+    result["DECAY_ALT_MAX_LIFETIME_DAYS"] = f"{float(altitude_rows[-1]['lifetime_days']):.2f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -343,6 +367,8 @@ def main():
       "IMG_ATTITUDE_GROWTH_COMPARISON": img_to_data_uri("16_attitude_perturbation_growth_comparison.png"),
       "IMG_SK_SAWTOOTH": img_to_data_uri("17_station_keeping_raan_sawtooth.png"),
       "IMG_SK_DELTA_V_BUDGET": img_to_data_uri("17_station_keeping_delta_v_budget.png"),
+      "IMG_DECAY_TRAJECTORY": img_to_data_uri("18_orbital_decay_trajectory.png"),
+      "IMG_DECAY_LIFETIME": img_to_data_uri("18_orbital_decay_lifetime_comparison.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -361,6 +387,7 @@ def main():
   values.update(compute_low_thrust_transfer())
   values.update(compute_attitude_dynamics())
   values.update(compute_station_keeping())
+  values.update(compute_orbital_decay())
 
   for key, val in values.items():
     token = "{{" + key + "}}"
