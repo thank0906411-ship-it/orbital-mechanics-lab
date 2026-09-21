@@ -23,6 +23,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
 TEMPLATE_PATH = os.path.join(BASE_DIR, "report_template.html")
 OUTPUT_PATH = os.path.join(BASE_DIR, "report.html")
+EARTH_MOON_PERIOD_DAYS_FOR_REPORT = 27.321661  # missions/lagrange_points.py의 EARTH_MOON_PERIOD_DAYS와 동일
 
 
 def read_csv_rows(filename):
@@ -370,6 +371,35 @@ def compute_lagrange_points():
   return result
 
 
+def compute_lyapunov_orbits():
+  result = dict.fromkeys(
+      ["LYAPUNOV_L1_PERIOD_DAYS", "LYAPUNOV_MAX_DEVIATION_PCT",
+       "LYAPUNOV_L1_L2_PERIOD_RATIO"], "-")
+
+  family_rows = read_csv_rows("lyapunov_orbits_family.csv")
+  if family_rows:
+    l1_rows = [row for row in family_rows if row["libration_point"] == "L1" and row["period"]]
+    if l1_rows:
+      smallest = min(l1_rows, key=lambda r: float(r["amplitude"]))
+      largest = max(l1_rows, key=lambda r: float(r["amplitude"]))
+      period_days = float(smallest["period"]) * EARTH_MOON_PERIOD_DAYS_FOR_REPORT / (2 * 3.141592653589793)
+      result["LYAPUNOV_L1_PERIOD_DAYS"] = f"{period_days:.2f}"
+      linear_prediction = smallest.get("period_linear_prediction", "")
+      if linear_prediction:
+        linear_val = float(linear_prediction)
+        deviation_pct = abs(float(largest["period"]) - linear_val) / linear_val * 100
+        result["LYAPUNOV_MAX_DEVIATION_PCT"] = f"{deviation_pct:.3f}"
+
+    l1_l2_rows = [row for row in family_rows if row["libration_point"] in ("L1", "L2") and not row["period_linear_prediction"] and row["period"]]
+    l1_compare = next((row for row in l1_l2_rows if row["libration_point"] == "L1"), None)
+    l2_compare = next((row for row in l1_l2_rows if row["libration_point"] == "L2"), None)
+    if l1_compare and l2_compare:
+      ratio = float(l2_compare["period"]) / float(l1_compare["period"])
+      result["LYAPUNOV_L1_L2_PERIOD_RATIO"] = f"{ratio:.4f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -406,6 +436,8 @@ def main():
       "IMG_DECAY_LIFETIME": img_to_data_uri("18_orbital_decay_lifetime_comparison.png"),
       "IMG_LAGRANGE_LAYOUT": img_to_data_uri("19_lagrange_points_layout.png"),
       "IMG_LAGRANGE_STABILITY": img_to_data_uri("19_lagrange_points_stability_trajectories.png"),
+      "IMG_LYAPUNOV_TRAJECTORY": img_to_data_uri("20_lyapunov_orbit_trajectory.png"),
+      "IMG_LYAPUNOV_AMPLITUDE_PERIOD": img_to_data_uri("20_lyapunov_amplitude_vs_period.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -426,6 +458,7 @@ def main():
   values.update(compute_station_keeping())
   values.update(compute_orbital_decay())
   values.update(compute_lagrange_points())
+  values.update(compute_lyapunov_orbits())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

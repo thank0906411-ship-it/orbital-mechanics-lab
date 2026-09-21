@@ -7,16 +7,16 @@ constellations/intersatellite_link_visibility.py,
 missions/patched_conic_interplanetary.py, missions/clohessy_wiltshire_rendezvous.py,
 missions/orbit_determination.py, missions/low_thrust_transfer.py,
 attitude/torque_free_rigid_body.py, missions/station_keeping.py,
-missions/orbital_decay.py, missions/lagrange_points.py 시뮬레이션이 남긴 결과
-CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기
-위한" 별도 스크립트다.
+missions/orbital_decay.py, missions/lagrange_points.py, missions/lyapunov_orbits.py
+시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라
+"결과를 눈으로 보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 위 16개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 17개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~19, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~20, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -32,7 +32,8 @@ CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라 "�
       results/16_attitude_perturbation_growth_comparison.png, results/17_station_keeping_raan_sawtooth.png,
       results/17_station_keeping_delta_v_budget.png, results/18_orbital_decay_trajectory.png,
       results/18_orbital_decay_lifetime_comparison.png, results/19_lagrange_points_layout.png,
-      results/19_lagrange_points_stability_trajectories.png
+      results/19_lagrange_points_stability_trajectories.png, results/20_lyapunov_orbit_trajectory.png,
+      results/20_lyapunov_amplitude_vs_period.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -999,6 +1000,86 @@ def plot_orbital_decay_lifetime_comparison():
   print(f"[저장됨] {out_path}")
 
 
+def plot_lyapunov_orbit_trajectory():
+  trajectory_csv = os.path.join(RESULTS_DIR, "lyapunov_orbits_trajectory.csv")
+  reference_csv = os.path.join(RESULTS_DIR, "lyapunov_orbits_lagrange_reference.csv")
+  if not os.path.exists(trajectory_csv) or not os.path.exists(reference_csv):
+    print(f"[건너뜀] {trajectory_csv} 또는 {reference_csv} 없음 — 먼저 missions/lyapunov_orbits.py를 실행하세요.")
+    return
+
+  xs, ys = [], []
+  with open(trajectory_csv, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      xs.append(float(row["x"]))
+      ys.append(float(row["y"]))
+
+  reference_points = {}
+  with open(reference_csv, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      reference_points[row["point"]] = float(row["x_dimensionless"])
+
+  # 궤도 진폭(약 0.01 무차원)이 L1-달-L2 사이 거리(약 0.3 무차원)보다 훨씬
+  # 작아서, 그 넓은 범위를 다 보여주면 궤도 자체가 점처럼 뭉개진다 — 그래서
+  # 궤도 주변으로만 확대하고, 근처에 있는 라그랑주점(L1 또는 L2)만 함께 표시한다.
+  x_center = sum(xs) / len(xs)
+  nearest_point_name = min(("L1", "L2"), key=lambda name: abs(reference_points[name] - x_center))
+  nearest_x = reference_points[nearest_point_name]
+
+  fig, ax = plt.subplots(figsize=(10, 6))
+  ax.plot(xs, ys, color="tab:blue", linewidth=1.5, label="Corrected periodic orbit")
+  ax.scatter([xs[0]], [ys[0]], color="black", s=60, zorder=3, label="Start (y=0 crossing)")
+  ax.scatter([nearest_x], [0], color="tab:red", s=80, marker="x", zorder=3, label=f"{nearest_point_name} (libration point)")
+  ax.set_xlabel("x (dimensionless, corotating frame)")
+  ax.set_ylabel("y (dimensionless, corotating frame)")
+  ax.set_title(f"Lyapunov orbit around {nearest_point_name}: a closed periodic loop, not a single point")
+  ax.set_aspect("equal", adjustable="datalim")
+  ax.legend(loc="best", fontsize=10)
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "20_lyapunov_orbit_trajectory.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_lyapunov_amplitude_vs_period():
+  family_csv = os.path.join(RESULTS_DIR, "lyapunov_orbits_family.csv")
+  if not os.path.exists(family_csv):
+    print(f"[건너뜀] {family_csv} 없음 — 먼저 missions/lyapunov_orbits.py를 실행하세요.")
+    return
+
+  amplitudes, periods, linear_period = [], [], None
+  with open(family_csv, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      if row["libration_point"] != "L1" or not row["period"] or row["period_linear_prediction"] == "":
+        continue
+      amplitudes.append(float(row["amplitude"]))
+      periods.append(float(row["period"]))
+      if row["period_linear_prediction"]:
+        linear_period = float(row["period_linear_prediction"])
+
+  if not amplitudes:
+    print(f"[건너뜀] {family_csv}에 유효한 L1 궤도 가족 데이터 없음")
+    return
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  ax.plot(amplitudes, periods, marker="o", linewidth=2, color="tab:blue", label="Corrected nonlinear period")
+  if linear_period is not None:
+    ax.axhline(linear_period, color="tab:red", linestyle="--", linewidth=1.5, label="Linear prediction (2π/ω)")
+  ax.set_xlabel("Orbit amplitude (dimensionless)")
+  ax.set_ylabel("Period (dimensionless)")
+  ax.set_title("Lyapunov orbit family near L1: period drifts from the linear prediction")
+  ax.legend()
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "20_lyapunov_amplitude_vs_period.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -1030,3 +1111,5 @@ if __name__ == "__main__":
   plot_orbital_decay_lifetime_comparison()
   plot_lagrange_points_layout()
   plot_lagrange_points_stability_trajectories()
+  plot_lyapunov_orbit_trajectory()
+  plot_lyapunov_amplitude_vs_period()

@@ -524,13 +524,19 @@
         <div class="dash-value">{{LAGRANGE_L1_L4_DIVERGENCE_RATIO}}배</div>
         <p class="dash-note">12번이 피했던 진짜 3체 문제를 원형 제한 3체 문제(CR3BP)로 정면 돌파 — 회전좌표계 선형화 고유값과 RK4 직접 적분이 같은 결론을 준다</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">평면 리아푸노프 궤도</span><span class="dash-scripts">20</span></div>
+        <div class="dash-metric">L1 주위 진폭 스윕에서 선형 예측 대비 최대 주기 편차</div>
+        <div class="dash-value">{{LYAPUNOV_MAX_DEVIATION_PCT}}%</div>
+        <p class="dash-note">19번의 라그랑주점이 "점"이었다면, 이건 그 주위를 도는 "주기궤도" — 선형 고유벡터 추정치를 상태천이행렬 기반 미분수정으로 완성한다</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>열아홉 단계의 확장</h2>
+      <h2>스무 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -647,6 +653,12 @@
         <h3>3체 문제와 라그랑주점 (CR3BP)</h3>
         <p>01~18번은 모두 "하나의 중심천체 + 작은 섭동/추력/항력"이라는 공통 골격이었고, 12번(Patched Conic)은 태양-지구-화성이라는 진짜 3체 문제를 세 개의 독립된 2체 문제로 이어붙여 피했다. 이 스크립트는 12번이 피했던 문제를 원형 제한 3체 문제(CR3BP)로 정면으로 연다 — 지구-달처럼 두 개의 큰 천체가 만드는 회전 중력장 안에서, 질량이 무시할 만한 세 번째 물체가 정지해 있을 수 있는 5개의 평형점(라그랑주점)을 찾는다. 회전좌표계 운동방정식에 이 프로젝트 최초로 원심력과 코리올리 힘이 등장하고, 무차원화(질량비 mu 하나로 계 전체가 결정됨)를 쓴다는 점에서 이전 스크립트들과 근본적으로 다르다. L1/L2/L3(콜린스)는 이분법으로 푼 5차 방정식의 근, L4/L5(삼각)는 두 주천체와 항상 정삼각형을 이루는 닫힌 공식으로 구하고, 각 점에서 선형화한 야코비 행렬의 고유값으로 안정성을 판정한다 — 지구-달 질량비에서 L4/L5는 안정(고유값이 순허수), L1/L2/L3는 불안정(고유값에 양의 실수부)임을 확인하고, 같은 크기의 섭동을 준 RK4 직접 적분 궤적으로도 L4는 유계, L1은 훨씬 크게 발산하는 것을 재확인한다.</p>
         <div class="phase-scripts"><span class="chip">19</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">라그랑주점이 "점"이라면, 이건 그 주위를 도는 "궤도"</span>
+        <h3>평면 리아푸노프 궤도 (Lyapunov Orbits)</h3>
+        <p>19번은 라그랑주점의 위치와 선형 안정성까지만 다뤘다 — 그 스크립트 docstring이 명시적으로 "헤일로 궤도 같은 CR3BP의 실전 응용은 다루지 않는다"고 범위를 그었다. 이 스크립트는 그다음 단계로, 라그랑주점 자체가 아니라 그 주위를 도는 주기궤도 가족이 존재한다는 것을 보여준다 — 실제 L1/L2 임무(SOHO, JWST 등)가 정확히 라그랑주점에 위성을 두지 않고 그 주위의 작은 주기궤도에 두는 이유의 수학적 근거다. 3차원 헤일로 궤도는 Richardson 3차 근사 계수 전사 실수 위험이 커서, 범위를 평면(2차원) 리아푸노프 궤도로 좁혔다. 19번이 만든 4x4 평면 야코비안의 순허수 고유벡터(중심 방향) 섭동을 초기 추정치로 삼아, 상태천이행렬(STM)을 상태와 함께 20차원으로 결합 적분하고, x축 대칭(y=0에서 vx=0)을 이용한 단일 슈팅 미분수정으로 진짜 비선형 주기궤도를 완성한다. 진폭이 커질수록 실제 주기가 선형 예측(2π/ω)에서 점점 벗어나는 것을 직접 확인해, "선형 근사는 시작점일 뿐, 진짜 주기궤도는 미분수정으로 완성해야 한다"는 핵심 메시지를 수치로 보여준다.</p>
+        <div class="phase-scripts"><span class="chip">20</span></div>
       </div>
     </div>
   </section>
@@ -811,6 +823,17 @@
       <div class="result">
         <img id="img-lagrange-stability" src="{{IMG_LAGRANGE_STABILITY}}" alt="L4와 L1 근처에 같은 크기의 섭동을 준 궤적을 나란히 비교한 그래프">
         <div class="result-caption"><strong>같은 섭동, 다른 운명</strong> — L4 근처 궤적은 좁게 유계로 머물지만, L1 근처 궤적은 훨씬 넓게 발산한다.</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-lyapunov-trajectory" src="{{IMG_LYAPUNOV_TRAJECTORY}}" alt="L1 주위를 도는 타원형 폐곡선 리아푸노프 궤도 그래프">
+        <div class="result-caption"><strong>미분수정으로 완성한 리아푸노프 궤도</strong> — 라그랑주점(빨강 X)은 점이지만, 실제 궤도는 그 주위를 도는 닫힌 타원 궤적이다.</div>
+      </div>
+      <div class="result">
+        <img id="img-lyapunov-amplitude-period" src="{{IMG_LYAPUNOV_AMPLITUDE_PERIOD}}" alt="진폭에 따른 리아푸노프 궤도 주기 변화, 선형 예측 수평선과 비교">
+        <div class="result-caption"><strong>진폭 vs 주기</strong> — 진폭이 커질수록 실제 주기가 선형 예측(빨간 점선)에서 점점 벗어난다.</div>
       </div>
     </div>
   </section>
@@ -1008,6 +1031,20 @@
             <td class="num">L4≈0, L1&gt;0</td>
             <td><span class="pill good">L4는 순허수(안정), L1은 양의 실수부(불안정)</span></td>
           </tr>
+          <tr>
+            <td>리아푸노프 궤도: L1 주기(선형 예측 대비 최대 편차)</td>
+            <td class="num">진폭 스윕 최대 편차</td>
+            <td class="num">{{LYAPUNOV_MAX_DEVIATION_PCT}}%</td>
+            <td class="num">진폭 클수록 편차 증가</td>
+            <td><span class="pill good">비선형 효과로 선형 예측에서 점점 벗어남</span></td>
+          </tr>
+          <tr>
+            <td>리아푸노프 궤도: L1/L2 주기 비율(같은 진폭)</td>
+            <td class="num">L2/L1</td>
+            <td class="num">{{LYAPUNOV_L1_L2_PERIOD_RATIO}}</td>
+            <td class="num">둘 다 수렴, 같은 자릿수</td>
+            <td><span class="pill good">같은 방법이 L1/L2 양쪽에서 일반화됨</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1015,7 +1052,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–19 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–20 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>
