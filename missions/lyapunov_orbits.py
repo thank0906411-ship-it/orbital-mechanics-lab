@@ -212,13 +212,15 @@ def differential_correct_lyapunov_orbit(x_eq, mu, amplitude, dt=0.002,
     stm_half = crossing["stm_half"]
     ax_half = _planar_derivative(state_half, mu)[2]  # vx의 시간미분(가속도)
     vy_half = state_half[3]
-    denom = stm_half[2, 3] - stm_half[0, 3] * ax_half / vy_half if abs(vy_half) > 1e-14 else stm_half[2, 3]
+    # 교차 조건 y=0을 유지하려면 δt = -Φ[y,vy0]·δvy0/vy 이므로 d(vx)/d(vy0) = Φ[vx,vy0] - Φ[y,vy0]·ax/vy
+    denom = stm_half[2, 3] - stm_half[1, 3] * ax_half / vy_half if abs(vy_half) > 1e-14 else stm_half[2, 3]
     if abs(denom) < 1e-12:
       return {"x0": x0, "vy0": vy0, "half_period": crossing["t_half"],
               "converged": False, "iterations": iteration + 1,
               "residual_vx": abs(vx_half), "residual_history": residual_history}
     vy0 = vy0 - vx_half / denom
 
+  # 마지막 반복에서 vy0를 갱신했으므로 residual_vx는 갱신 전 vy0 기준이다
   return {"x0": x0, "vy0": vy0, "half_period": None, "converged": False,
           "iterations": max_iterations, "residual_vx": residual_history[-1],
           "residual_history": residual_history}

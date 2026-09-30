@@ -115,3 +115,15 @@ def test_method_converges_at_both_l1_and_l2():
   assert result_l1["converged"]
   assert result_l2["converged"]
   assert result_l1["half_period"] != pytest.approx(result_l2["half_period"], rel=1e-3)
+
+
+def test_newton_correction_converges_quadratically():
+  """보정 분모에 올바른 STM 원소(Φ[y,vy0])를 쓰면 뉴턴법이 2차 수렴해 몇 번
+  만에 끝나야 한다 — 잘못된 원소(Φ[x,vy0])를 쓰면 선형 수렴으로 20~40회가
+  걸려 반복 한도에 걸리기 직전까지 간다."""
+  mu = m.EARTH_MOON_MASS_RATIO
+  x_l1, x_l2, _ = m.find_collinear_lagrange_points(mu)
+  for x_eq, amplitude in [(x_l1, 0.01), (x_l1, 0.05), (x_l2, 0.02)]:
+    result = m.differential_correct_lyapunov_orbit(x_eq, mu, amplitude)
+    assert result["converged"]
+    assert result["iterations"] <= 8
