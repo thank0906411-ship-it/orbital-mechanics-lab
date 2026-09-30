@@ -26,7 +26,7 @@ def test_center_eigenvector_omega_matches_jacobian_eigenvalue():
 
 
 def test_linear_guess_orbit_closes_near_starting_point():
-  """중심 고유벡터 방향의 작은 섭동을 선형화된 계에서 예측 주기(2π/ω)만큼
+  """중심 고유벡터 방향의 작은 섭동을 (비선형) CR3BP로 선형 예측 주기(2π/ω)만큼
   적분하면 시작점 근처로 돌아와야 한다(진폭이 작을수록 더 정확)."""
   mu = m.EARTH_MOON_MASS_RATIO
   x_l1, _, _ = m.find_collinear_lagrange_points(mu)
@@ -127,3 +127,27 @@ def test_newton_correction_converges_quadratically():
     result = m.differential_correct_lyapunov_orbit(x_eq, mu, amplitude)
     assert result["converged"]
     assert result["iterations"] <= 8
+
+
+def test_center_eigenvector_starts_on_x_axis_perpendicular():
+  """위상 정렬 후 실수 방향은 x축을 수직으로 지나는 출발점([x, 0, 0, vy])이어야
+  하고, 진폭의 대부분이 x·vy 성분에 실려야 한다(고유벡터 위상에 무관)."""
+  mu = m.EARTH_MOON_MASS_RATIO
+  x_l1, x_l2, _ = m.find_collinear_lagrange_points(mu)
+  for x_eq in (x_l1, x_l2):
+    _, direction = m.planar_center_eigenvector(x_eq, 0.0, mu)
+    assert direction[0] > 0
+    assert abs(direction[1]) < 1e-12 and abs(direction[2]) < 1e-12
+    assert abs(direction[3]) > 0
+
+
+def test_non_converged_result_reports_last_evaluated_state():
+  """반복 한도에 걸려 수렴하지 못하면, 반환된 vy0로 다시 평가한 잔여 vx가
+  residual_vx와 일치해야 한다(갱신만 되고 평가되지 않은 vy0를 돌려주면 안 됨)."""
+  mu = m.EARTH_MOON_MASS_RATIO
+  x_l1, _, _ = m.find_collinear_lagrange_points(mu)
+  result = m.differential_correct_lyapunov_orbit(x_l1, mu, 0.01, max_iterations=2)
+  assert not result["converged"]
+  crossing = m.find_half_period_crossing(result["x0"], result["vy0"], mu, 0.002)
+  assert abs(crossing["state_half"][2]) == pytest.approx(result["residual_vx"], rel=1e-12)
+  assert result["half_period"] == pytest.approx(crossing["t_half"], rel=1e-12)

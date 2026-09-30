@@ -93,9 +93,11 @@ def planar_center_eigenvector(x_eq, y_eq, mu):
   idx = center_indices[0]
   omega = eigenvalues[idx].imag
   v_complex = eigenvectors[:, idx]
+  # 고유벡터의 복소 위상은 임의라(LAPACK 정규화에 의존) 실수부가 x축 대칭 출발점이
+  # 된다는 보장이 없다. x 성분이 양의 실수가 되도록 위상을 돌리면, 중심 모드에서
+  # y·vx는 x와 90° 위상차라 순허수가 되어 실수부가 항상 [x, 0, 0, vy] 꼴이 된다.
+  v_complex = v_complex * np.conj(v_complex[0]) / abs(v_complex[0])
   direction = v_complex.real
-  if np.linalg.norm(direction) < 1e-8:
-    direction = v_complex.imag
   return omega, direction
 
 
@@ -204,6 +206,7 @@ def differential_correct_lyapunov_orbit(x_eq, mu, amplitude, dt=0.002,
     vx_half = state_half[2]
     residual_history.append(abs(vx_half))
 
+    last_vy0, last_t_half = vy0, crossing["t_half"]
     if abs(vx_half) < tol:
       return {"x0": x0, "vy0": vy0, "half_period": crossing["t_half"],
               "converged": True, "iterations": iteration + 1,
@@ -220,8 +223,8 @@ def differential_correct_lyapunov_orbit(x_eq, mu, amplitude, dt=0.002,
               "residual_vx": abs(vx_half), "residual_history": residual_history}
     vy0 = vy0 - vx_half / denom
 
-  # 마지막 반복에서 vy0를 갱신했으므로 residual_vx는 갱신 전 vy0 기준이다
-  return {"x0": x0, "vy0": vy0, "half_period": None, "converged": False,
+  # 마지막 갱신 뒤의 vy0는 평가되지 않았으므로, residual_vx와 짝이 맞는 마지막 평가 지점을 반환한다
+  return {"x0": x0, "vy0": last_vy0, "half_period": last_t_half, "converged": False,
           "iterations": max_iterations, "residual_vx": residual_history[-1],
           "residual_history": residual_history}
 
@@ -269,8 +272,9 @@ def lyapunov_family(x_eq, mu, amplitudes, dt=0.002):
 
 
 def demo_linear_guess_matches_predicted_period():
-  """작은 진폭에서 선형화된 계를 1주기(T=2π/ω) 적분해 타원이 닫히고 주기가
-  예측과 일치하는지 확인한다 - 고유벡터 선택과 ω 자체의 정합성 검증,
+  """작은 진폭의 선형 추정 초기조건을 (비선형) CR3BP로 선형 예측 주기(T=2π/ω)만큼
+  적분해 궤적이 닫히는지 확인한다 - 진폭이 작아 비선형 항이 미미하므로 선형 예측과
+  일치해야 한다 - 고유벡터 선택과 ω 자체의 정합성 검증,
   비선형 미분수정 이전 단계."""
   print("=" * 70)
   print("[1] 선형 추정: 중심 고유벡터 방향 섭동이 예측 주기로 닫히는가")
@@ -293,7 +297,7 @@ def demo_linear_guess_matches_predicted_period():
   print(f"1주기 적분 후 시작점과의 거리: {distance_from_start:.6e} (진폭 {amplitude}의 {distance_from_start / amplitude * 100:.2f}%)")
 
   assert distance_from_start < amplitude * 0.05, "선형 추정 궤도는 1주기 후 진폭의 5% 이내로 시작점에 복귀해야 함"
-  print("\n(중심 고유벡터 방향으로 섭동시킨 선형화 궤적이 예측 주기 2π/ω 후")
+  print("\n(중심 고유벡터 방향으로 섭동시킨 궤적이 선형 예측 주기 2π/ω 후")
   print(" 거의 정확히 시작점으로 돌아온다 - 고유벡터 선택과 ω 계산이 올바르다는 신호다.")
   print(" 완전히 0이 아닌 이유는 비선형 항 때문이며, 이걸 없애는 게 다음 단계인 미분수정이다.)")
   return {"mu": mu, "x_l1": x_l1, "omega": omega, "period_predicted": period_predicted,
