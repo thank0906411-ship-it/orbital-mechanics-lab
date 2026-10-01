@@ -1,5 +1,12 @@
+# simulation
 numpy>=1.26
+
+# visualization
 matplotlib>=3.8
+
+# test
 pytest>=8.0
 pytest-cov>=5.0
+
+# lint
 ruff>=0.6
