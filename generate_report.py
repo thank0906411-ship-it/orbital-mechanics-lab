@@ -437,6 +437,24 @@ def compute_orbit_raise_and_reorient():
   return result
 
 
+def compute_third_body_perturbation():
+  result = dict.fromkeys(
+      ["THIRD_BODY_LUNAR_SOLAR_RATIO", "THIRD_BODY_RATIO_AT_LEO_PCT",
+       "THIRD_BODY_RATIO_AT_GEO_PCT"], "-")
+
+  magnitude_rows = read_csv_rows("third_body_sun_vs_moon_magnitude.csv")
+  if magnitude_rows:
+    by_body = {row["body"]: float(row["acceleration_km_s2"]) for row in magnitude_rows}
+    result["THIRD_BODY_LUNAR_SOLAR_RATIO"] = f"{by_body['moon'] / by_body['sun']:.2f}"
+
+  altitude_rows = read_csv_rows("third_body_j2_vs_altitude.csv")
+  if altitude_rows:
+    result["THIRD_BODY_RATIO_AT_LEO_PCT"] = f"{float(altitude_rows[0]['ratio_lunisolar_to_j2']) * 100:.4f}"
+    result["THIRD_BODY_RATIO_AT_GEO_PCT"] = f"{float(altitude_rows[-1]['ratio_lunisolar_to_j2']) * 100:.2f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -478,6 +496,8 @@ def main():
       "IMG_PID_POINT_AND_HOLD": img_to_data_uri("21_pid_point_and_hold_error.png"),
       "IMG_PID_TUMBLE_COMPARISON": img_to_data_uri("21_pid_intermediate_axis_comparison.png"),
       "IMG_MISSION_TIMELINE": img_to_data_uri("22_mission_timeline_combined.png"),
+      "IMG_THIRD_BODY_CROSSOVER": img_to_data_uri("23_third_body_j2_crossover.png"),
+      "IMG_THIRD_BODY_OSCILLATION": img_to_data_uri("23_third_body_oscillation.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -501,6 +521,7 @@ def main():
   values.update(compute_lyapunov_orbits())
   values.update(compute_pid_attitude_control())
   values.update(compute_orbit_raise_and_reorient())
+  values.update(compute_third_body_perturbation())
 
   for key, val in values.items():
     token = "{{" + key + "}}"
