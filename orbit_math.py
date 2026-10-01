@@ -1,11 +1,16 @@
 """
-02, 04, 05, 07번이 공유하는 3축 회전행렬과 지구 반지름 상수.
+propagation/orbital_elements_and_energy.py, frames/coordinate_frame_transforms.py,
+missions/ground_station_visibility.py, perturbations/j2_perturbation.py,
+constellations/intersatellite_link_visibility.py,
+missions/patched_conic_interplanetary.py, missions/orbit_determination.py,
+missions/orbital_decay.py가 공유하는 3축 회전행렬과 지구 반지름 상수.
 
-04번을 개발하며 SEZ 좌표변환에서 흔히 인용되는 회전 부호(Ry(90-lat)*Rz(+theta))가
-이 프로젝트의 회전행렬 정의(능동회전 관례)와 맞지 않아 천정 고도각이 90도로 나오지
-않는 버그를 실제로 겪었다 — 회전행렬 자체를 여러 파일에 복사해두면 이런 부호
-문제를 한 곳에서만 고치고 다른 복사본은 놓치기 쉽다. 그래서 회전행렬 구현을
-이 모듈 하나로 모으고, 02/04/05/07은 전부 여기서 import해서 쓴다.
+04번(coordinate_frame_transforms.py)을 개발하며 SEZ 좌표변환에서 흔히 인용되는
+회전 부호(Ry(90-lat)*Rz(+theta))가 이 프로젝트의 회전행렬 정의(능동회전 관례)와
+맞지 않아 천정 고도각이 90도로 나오지 않는 버그를 실제로 겪었다 — 회전행렬
+자체를 여러 파일에 복사해두면 이런 부호 문제를 한 곳에서만 고치고 다른 복사본은
+놓치기 쉽다. 그래서 회전행렬 구현을 이 모듈 하나로 모으고, 위 스크립트들은 전부
+여기서 import해서 쓴다.
 """
 
 import numpy as np
