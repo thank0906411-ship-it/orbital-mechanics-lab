@@ -530,13 +530,19 @@
         <div class="dash-value">{{LYAPUNOV_MAX_DEVIATION_PCT}}%</div>
         <p class="dash-note">19번의 라그랑주점이 "점"이었다면, 이건 그 주위를 도는 "주기궤도" — 선형 고유벡터 추정치를 상태천이행렬 기반 미분수정으로 완성한다</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">PID 자세제어</span><span class="dash-scripts">21</span></div>
+        <div class="dash-metric">16번 중간축 텀블링의 최대 자세 오차 억제 배율</div>
+        <div class="dash-value">{{PID_TUMBLE_SUPPRESSION_RATIO}}배</div>
+        <p class="dash-note">16번이 "순수 동역학만, 제어는 범위 밖"이라 정했던 경계를 의도적으로 뒤집는다 — 쿼터니언 오차 기반 PD 피드백이 중간축 불안정 텀블링을 거의 완전히 정지시킨다</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>스무 단계의 확장</h2>
+      <h2>스물한 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -659,6 +665,12 @@
         <h3>평면 리아푸노프 궤도 (Lyapunov Orbits)</h3>
         <p>19번은 라그랑주점의 위치와 선형 안정성까지만 다뤘다 — 그 스크립트 docstring이 명시적으로 "헤일로 궤도 같은 CR3BP의 실전 응용은 다루지 않는다"고 범위를 그었다. 이 스크립트는 그다음 단계로, 라그랑주점 자체가 아니라 그 주위를 도는 주기궤도 가족이 존재한다는 것을 보여준다 — 실제 L1/L2 임무(SOHO, JWST 등)가 정확히 라그랑주점에 위성을 두지 않고 그 주위의 작은 주기궤도에 두는 이유의 수학적 근거다. 3차원 헤일로 궤도는 Richardson 3차 근사 계수 전사 실수 위험이 커서, 범위를 평면(2차원) 리아푸노프 궤도로 좁혔다. 19번이 만든 4x4 평면 야코비안의 순허수 고유벡터(중심 방향) 섭동을 초기 추정치로 삼아, 상태천이행렬(STM)을 상태와 함께 20차원으로 결합 적분하고, x축 대칭(y=0에서 vx=0)을 이용한 단일 슈팅 미분수정으로 진짜 비선형 주기궤도를 완성한다. 진폭이 커질수록 실제 주기가 선형 예측(2π/ω)에서 점점 벗어나는 것을 직접 확인해, "선형 근사는 시작점일 뿐, 진짜 주기궤도는 미분수정으로 완성해야 한다"는 핵심 메시지를 수치로 보여준다.</p>
         <div class="phase-scripts"><span class="chip">20</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">16번의 경계를 의도적으로 뒤집는다</span>
+        <h3>PID 자세제어 (Quaternion Attitude Control)</h3>
+        <p>16번은 토크 없는 강체 자유회전(오일러 방정식)만 다뤘고, 그 스크립트 docstring이 명시적으로 "쿼터니언 자세 전파나 피드백 제어는 범위 밖으로 남겨둔다"고 선을 그었다. 이 스크립트는 그 경계를 의도적으로 뒤집어, 목표 자세로 수렴시키는 PD 피드백 제어 루프를 연다. 16번은 각속도만 적분했지 자세(방향) 자체는 추적하지 않았으므로, scalar-first 쿼터니언과 그 운동학(dq/dt)이 이 스크립트에서 처음 등장하는 새 인프라다. 현재 자세와 목표 자세의 오차는 q_err=conj(q_target)⊗q로 정의하는데, q와 -q가 같은 자세를 나타내는 이중성 때문에 q_err의 스칼라부가 음수면 전체 부호를 뒤집어야 한다 — 안 그러면 제어기가 먼 길로 돌아간다. PD 게인은 임의의 값이 아니라 원하는 정착시간과 감쇠비에서 2차 시스템 공식(ωn=4/(ζ·ts), Kp=2·I·ωn², Kd=2·ζ·ωn·I)으로 직접 역산한다. 가장 직접적인 증명은 16번과 정확히 같은 중간축 섭동 설정에 PD 제어기를 적용하는 것 — 제어 없이는 180도까지 반복적으로 텀블링하던 회전이, 제어가 있으면 몇 도 이내로 거의 완전히 정지한다.</p>
+        <div class="phase-scripts"><span class="chip">21</span></div>
       </div>
     </div>
   </section>
@@ -834,6 +846,17 @@
       <div class="result">
         <img id="img-lyapunov-amplitude-period" src="{{IMG_LYAPUNOV_AMPLITUDE_PERIOD}}" alt="진폭에 따른 리아푸노프 궤도 주기 변화, 선형 예측 수평선과 비교">
         <div class="result-caption"><strong>진폭 vs 주기</strong> — 진폭이 커질수록 실제 주기가 선형 예측(빨간 점선)에서 점점 벗어난다.</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-pid-point-and-hold" src="{{IMG_PID_POINT_AND_HOLD}}" alt="PD 제어기의 자세 오차가 시간에 따라 정착 임계값 아래로 수렴하는 그래프">
+        <div class="result-caption"><strong>PD 자세유지 정착 곡선</strong> — 35도 초기 오차가 정착시간/감쇠비에서 역산한 게인으로 매끄럽게 수렴한다.</div>
+      </div>
+      <div class="result">
+        <img id="img-pid-tumble-comparison" src="{{IMG_PID_TUMBLE_COMPARISON}}" alt="중간축 텀블링을 제어 없음과 PD 제어 있음으로 비교한 그래프">
+        <div class="result-caption"><strong>16번 중간축 텀블링 길들이기</strong> — 제어 없음(빨강)은 180도까지 반복 발산하지만, PD 제어(초록)는 거의 0도에 머문다.</div>
       </div>
     </div>
   </section>
@@ -1045,6 +1068,20 @@
             <td class="num">둘 다 수렴, 같은 자릿수</td>
             <td><span class="pill good">같은 방법이 L1/L2 양쪽에서 일반화됨</span></td>
           </tr>
+          <tr>
+            <td>PID 자세제어: point-and-hold 최종 오차(35도 초기 오차)</td>
+            <td class="num">3배 정착시간 후 오차</td>
+            <td class="num">{{PID_FINAL_ERROR_DEG}}도</td>
+            <td class="num">&lt; 2도</td>
+            <td><span class="pill good">정착시간/감쇠비 공식대로 매끄럽게 수렴</span></td>
+          </tr>
+          <tr>
+            <td>PID 자세제어: 16번 중간축 텀블링 억제(최대 오차)</td>
+            <td class="num">제어없음 / 제어있음</td>
+            <td class="num">{{PID_TUMBLE_UNCONTROLLED_DEG}}도 / {{PID_TUMBLE_CONTROLLED_DEG}}도</td>
+            <td class="num">5배 이상 억제</td>
+            <td><span class="pill good">PD 제어가 불안정한 텀블링을 거의 완전히 정지시킴</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1052,7 +1089,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–20 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–21 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>

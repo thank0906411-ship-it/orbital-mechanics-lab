@@ -400,6 +400,25 @@ def compute_lyapunov_orbits():
   return result
 
 
+def compute_pid_attitude_control():
+  result = dict.fromkeys(
+      ["PID_FINAL_ERROR_DEG", "PID_TUMBLE_UNCONTROLLED_DEG", "PID_TUMBLE_CONTROLLED_DEG",
+       "PID_TUMBLE_SUPPRESSION_RATIO"], "-")
+
+  summary_rows = read_csv_rows("pid_summary.csv")
+  if summary_rows:
+    row = summary_rows[0]
+    result["PID_FINAL_ERROR_DEG"] = f"{float(row['final_error_deg']):.3f}"
+    uncontrolled = float(row["tumble_max_uncontrolled_deg"])
+    controlled = float(row["tumble_max_controlled_deg"])
+    result["PID_TUMBLE_UNCONTROLLED_DEG"] = f"{uncontrolled:.1f}"
+    result["PID_TUMBLE_CONTROLLED_DEG"] = f"{controlled:.1f}"
+    if controlled > 0:
+      result["PID_TUMBLE_SUPPRESSION_RATIO"] = f"{uncontrolled / controlled:.1f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -438,6 +457,8 @@ def main():
       "IMG_LAGRANGE_STABILITY": img_to_data_uri("19_lagrange_points_stability_trajectories.png"),
       "IMG_LYAPUNOV_TRAJECTORY": img_to_data_uri("20_lyapunov_orbit_trajectory.png"),
       "IMG_LYAPUNOV_AMPLITUDE_PERIOD": img_to_data_uri("20_lyapunov_amplitude_vs_period.png"),
+      "IMG_PID_POINT_AND_HOLD": img_to_data_uri("21_pid_point_and_hold_error.png"),
+      "IMG_PID_TUMBLE_COMPARISON": img_to_data_uri("21_pid_intermediate_axis_comparison.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -459,6 +480,7 @@ def main():
   values.update(compute_orbital_decay())
   values.update(compute_lagrange_points())
   values.update(compute_lyapunov_orbits())
+  values.update(compute_pid_attitude_control())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

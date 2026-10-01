@@ -7,16 +7,16 @@ constellations/intersatellite_link_visibility.py,
 missions/patched_conic_interplanetary.py, missions/clohessy_wiltshire_rendezvous.py,
 missions/orbit_determination.py, missions/low_thrust_transfer.py,
 attitude/torque_free_rigid_body.py, missions/station_keeping.py,
-missions/orbital_decay.py, missions/lagrange_points.py, missions/lyapunov_orbits.py
-시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라
-"결과를 눈으로 보기 위한" 별도 스크립트다.
+missions/orbital_decay.py, missions/lagrange_points.py, missions/lyapunov_orbits.py,
+attitude/pid_attitude_control.py 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
+도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 위 17개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 18개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~20, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~21, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -33,7 +33,8 @@ missions/orbital_decay.py, missions/lagrange_points.py, missions/lyapunov_orbits
       results/17_station_keeping_delta_v_budget.png, results/18_orbital_decay_trajectory.png,
       results/18_orbital_decay_lifetime_comparison.png, results/19_lagrange_points_layout.png,
       results/19_lagrange_points_stability_trajectories.png, results/20_lyapunov_orbit_trajectory.png,
-      results/20_lyapunov_amplitude_vs_period.png
+      results/20_lyapunov_amplitude_vs_period.png, results/21_pid_point_and_hold_error.png,
+      results/21_pid_intermediate_axis_comparison.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -1080,6 +1081,63 @@ def plot_lyapunov_amplitude_vs_period():
   print(f"[저장됨] {out_path}")
 
 
+def plot_pid_point_and_hold_error():
+  csv_path = os.path.join(RESULTS_DIR, "pid_point_and_hold_error_history.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 attitude/pid_attitude_control.py를 실행하세요.")
+    return
+
+  times, errors = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      times.append(float(row["t_sec"]))
+      errors.append(float(row["error_angle_deg"]))
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  ax.plot(times, errors, color="tab:blue", linewidth=1.5)
+  ax.axhline(2.0, color="tab:red", linestyle="--", linewidth=1.5, label="Settled threshold (2 deg)")
+  ax.set_xlabel("Time (s)")
+  ax.set_ylabel("Attitude error angle (deg)")
+  ax.set_title("PD point-and-hold: attitude error settles toward the target quaternion")
+  ax.legend()
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "21_pid_point_and_hold_error.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_pid_intermediate_axis_comparison():
+  csv_path = os.path.join(RESULTS_DIR, "pid_intermediate_axis_comparison.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 attitude/pid_attitude_control.py를 실행하세요.")
+    return
+
+  times, errors_uncontrolled, errors_controlled = [], [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      times.append(float(row["t_sec"]))
+      errors_uncontrolled.append(float(row["error_angle_deg_uncontrolled"]))
+      errors_controlled.append(float(row["error_angle_deg_controlled"]))
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  ax.plot(times, errors_uncontrolled, color="tab:red", linewidth=1.5, label="Without control (tumbles)")
+  ax.plot(times, errors_controlled, color="tab:green", linewidth=1.5, label="With PD control")
+  ax.set_xlabel("Time (s)")
+  ax.set_ylabel("Attitude error angle (deg)")
+  ax.set_title("PD control tames the intermediate-axis tumble from script 16")
+  ax.legend()
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "21_pid_intermediate_axis_comparison.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -1113,3 +1171,5 @@ if __name__ == "__main__":
   plot_lagrange_points_stability_trajectories()
   plot_lyapunov_orbit_trajectory()
   plot_lyapunov_amplitude_vs_period()
+  plot_pid_point_and_hold_error()
+  plot_pid_intermediate_axis_comparison()
