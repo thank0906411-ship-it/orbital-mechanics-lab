@@ -8,15 +8,16 @@ missions/patched_conic_interplanetary.py, missions/clohessy_wiltshire_rendezvous
 missions/orbit_determination.py, missions/low_thrust_transfer.py,
 attitude/torque_free_rigid_body.py, missions/station_keeping.py,
 missions/orbital_decay.py, missions/lagrange_points.py, missions/lyapunov_orbits.py,
-attitude/pid_attitude_control.py 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는
-도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
+attitude/pid_attitude_control.py, missions/orbit_raise_and_reorient.py 시뮬레이션이
+남긴 결과 CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로
+보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 위 18개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 19개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~21, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~22, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -34,7 +35,7 @@ attitude/pid_attitude_control.py 시뮬레이션이 남긴 결과 CSV를 그래�
       results/18_orbital_decay_lifetime_comparison.png, results/19_lagrange_points_layout.png,
       results/19_lagrange_points_stability_trajectories.png, results/20_lyapunov_orbit_trajectory.png,
       results/20_lyapunov_amplitude_vs_period.png, results/21_pid_point_and_hold_error.png,
-      results/21_pid_intermediate_axis_comparison.png
+      results/21_pid_intermediate_axis_comparison.png, results/22_mission_timeline_combined.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -1138,6 +1139,59 @@ def plot_pid_intermediate_axis_comparison():
   print(f"[저장됨] {out_path}")
 
 
+def plot_mission_timeline_combined():
+  csv_path = os.path.join(RESULTS_DIR, "orbit_raise_and_reorient_timeline.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/orbit_raise_and_reorient.py를 실행하세요.")
+    return
+
+  # 궤도 전이(수십 분)와 자세 재정렬(수십 초)의 시간축 스케일이 1000배 가까이
+  # 달라, 하나의 선형 시간축에 억지로 합치면 자세 곡선이 오른쪽 끝에 수직선으로
+  # 뭉개진다 — 17번 station-keeping 델타-V 그래프처럼 좌우 분리된 독립 x축
+  # 서브플롯으로 나누고, 하나의 suptitle로만 내러티브를 통합한다.
+  orbit_t_min, orbit_r_km = [], []
+  attitude_t_abs_sec, attitude_error_deg = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      if row["phase"] == "orbit":
+        orbit_t_min.append(float(row["t_sec"]) / 60)
+        orbit_r_km.append(float(row["metric_value"]))
+      elif row["phase"] == "attitude":
+        attitude_t_abs_sec.append(float(row["t_sec"]))
+        attitude_error_deg.append(float(row["metric_value"]))
+
+  transfer_time_min = orbit_t_min[-1] if orbit_t_min else 0.0
+  # attitude 단계의 t_sec는 궤도 전이 완료 시각(t_offset_sec)이 이미 더해진
+  # 절대 임무시각이므로, 전이 완료 후 경과시간으로 보려면 t_offset을 다시 뺀다.
+  t_offset_sec = transfer_time_min * 60
+  attitude_t_sec = [t - t_offset_sec for t in attitude_t_abs_sec]
+  fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+
+  ax1.plot(orbit_t_min, orbit_r_km, marker="o", linestyle="--", color="tab:blue",
+           linewidth=2, label="Hohmann transfer burn")
+  ax1.set_xlabel("Mission time (minutes)")
+  ax1.set_ylabel("Orbit radius (km)")
+  ax1.set_title("Orbit raise phase")
+  ax1.legend()
+  ax1.grid(True, alpha=0.3)
+
+  ax2.plot(attitude_t_sec, attitude_error_deg, color="tab:purple", linewidth=1.5)
+  ax2.axhline(2.0, color="tab:red", linestyle="--", linewidth=1.5, label="Settled threshold (2 deg)")
+  ax2.set_xlabel(f"Time since orbit raise completion (s)\n(mission clock starts at T+{transfer_time_min:.1f}min)")
+  ax2.set_ylabel("Attitude error angle (deg)")
+  ax2.set_title("Attitude reorientation phase")
+  ax2.legend()
+  ax2.grid(True, alpha=0.3)
+
+  fig.suptitle("Integrated mission timeline: orbit raise -> attitude reorientation")
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "22_mission_timeline_combined.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -1173,3 +1227,4 @@ if __name__ == "__main__":
   plot_lyapunov_amplitude_vs_period()
   plot_pid_point_and_hold_error()
   plot_pid_intermediate_axis_comparison()
+  plot_mission_timeline_combined()

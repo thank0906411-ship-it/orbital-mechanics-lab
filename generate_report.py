@@ -419,6 +419,24 @@ def compute_pid_attitude_control():
   return result
 
 
+def compute_orbit_raise_and_reorient():
+  result = dict.fromkeys(
+      ["MISSION_ORBIT_DELTA_V_MS", "MISSION_ORBIT_TRANSFER_HOURS",
+       "MISSION_ATTITUDE_SETTLING_SEC", "MISSION_ATTITUDE_FINAL_ERROR_DEG",
+       "MISSION_TOTAL_TIME_HOURS"], "-")
+
+  rows = read_csv_rows("orbit_raise_and_reorient_handoff.csv")
+  if rows:
+    row = rows[0]
+    result["MISSION_ORBIT_DELTA_V_MS"] = f"{float(row['orbit_delta_v_km_s']) * 1000:.2f}"
+    result["MISSION_ORBIT_TRANSFER_HOURS"] = f"{float(row['orbit_transfer_time_sec']) / 3600:.2f}"
+    result["MISSION_ATTITUDE_SETTLING_SEC"] = f"{float(row['attitude_settling_time_sec']):.1f}"
+    result["MISSION_ATTITUDE_FINAL_ERROR_DEG"] = f"{float(row['attitude_final_error_deg']):.3f}"
+    result["MISSION_TOTAL_TIME_HOURS"] = f"{float(row['total_mission_time_sec']) / 3600:.2f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -459,6 +477,7 @@ def main():
       "IMG_LYAPUNOV_AMPLITUDE_PERIOD": img_to_data_uri("20_lyapunov_amplitude_vs_period.png"),
       "IMG_PID_POINT_AND_HOLD": img_to_data_uri("21_pid_point_and_hold_error.png"),
       "IMG_PID_TUMBLE_COMPARISON": img_to_data_uri("21_pid_intermediate_axis_comparison.png"),
+      "IMG_MISSION_TIMELINE": img_to_data_uri("22_mission_timeline_combined.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -481,6 +500,7 @@ def main():
   values.update(compute_lagrange_points())
   values.update(compute_lyapunov_orbits())
   values.update(compute_pid_attitude_control())
+  values.update(compute_orbit_raise_and_reorient())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

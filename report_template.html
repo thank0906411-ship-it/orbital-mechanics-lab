@@ -536,13 +536,19 @@
         <div class="dash-value">{{PID_TUMBLE_SUPPRESSION_RATIO}}배</div>
         <p class="dash-note">16번이 "순수 동역학만, 제어는 범위 밖"이라 정했던 경계를 의도적으로 뒤집는다 — 쿼터니언 오차 기반 PD 피드백이 중간축 불안정 텀블링을 거의 완전히 정지시킨다</p>
       </div>
+      <div class="dash-card">
+        <div class="dash-head"><span class="dash-layer">궤도+자세 통합 임무</span><span class="dash-scripts">22</span></div>
+        <div class="dash-metric">궤도 전이 델타-V/시간 vs 자세 재정렬 시간</div>
+        <div class="dash-value">{{MISSION_ORBIT_DELTA_V_MS}}m/s, {{MISSION_ORBIT_TRANSFER_HOURS}}시간 → {{MISSION_ATTITUDE_SETTLING_SEC}}초</div>
+        <p class="dash-note">06번 호만 전이와 21번 PID 자세제어를 새 물리 없이 하나의 임무 타임라인으로 잇는다 — 델타-V를 다 쓴 궤도전이도 몇 초~몇십 초의 자세 재정렬 없이는 쓸모없는 자산으로 남는다</p>
+      </div>
     </div>
   </section>
 
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>스물한 단계의 확장</h2>
+      <h2>스물두 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <div class="phases">
@@ -671,6 +677,12 @@
         <h3>PID 자세제어 (Quaternion Attitude Control)</h3>
         <p>16번은 토크 없는 강체 자유회전(오일러 방정식)만 다뤘고, 그 스크립트 docstring이 명시적으로 "쿼터니언 자세 전파나 피드백 제어는 범위 밖으로 남겨둔다"고 선을 그었다. 이 스크립트는 그 경계를 의도적으로 뒤집어, 목표 자세로 수렴시키는 PD 피드백 제어 루프를 연다. 16번은 각속도만 적분했지 자세(방향) 자체는 추적하지 않았으므로, scalar-first 쿼터니언과 그 운동학(dq/dt)이 이 스크립트에서 처음 등장하는 새 인프라다. 현재 자세와 목표 자세의 오차는 q_err=conj(q_target)⊗q로 정의하는데, q와 -q가 같은 자세를 나타내는 이중성 때문에 q_err의 스칼라부가 음수면 전체 부호를 뒤집어야 한다 — 안 그러면 제어기가 먼 길로 돌아간다. PD 게인은 임의의 값이 아니라 원하는 정착시간과 감쇠비에서 2차 시스템 공식(ωn=4/(ζ·ts), Kp=2·I·ωn², Kd=2·ζ·ωn·I)으로 직접 역산한다. 가장 직접적인 증명은 16번과 정확히 같은 중간축 섭동 설정에 PD 제어기를 적용하는 것 — 제어 없이는 180도까지 반복적으로 텀블링하던 회전이, 제어가 있으면 몇 도 이내로 거의 완전히 정지한다.</p>
         <div class="phase-scripts"><span class="chip">21</span></div>
+      </div>
+      <div class="phase">
+        <span class="phase-tag">06번과 21번을 하나의 임무 타임라인으로 잇는다</span>
+        <h3>궤도+자세 통합 임무 시나리오</h3>
+        <p>01~21번은 궤도역학(병진운동)과 자세동역학(회전운동)을 서로 독립된 두 영역으로 다뤘다. 이 스크립트는 새 물리를 전혀 추가하지 않고, 이미 완성된 두 스크립트(06번 호만 전이, 21번 PID 자세제어)를 하나의 임무 타임라인으로 이어붙인다 — 위성이 주차궤도에서 임의의 텀블링 자세로 시작해, 호만 전이로 목표 임무궤도에 오른 뒤("on station"), PD 제어기로 지구지향 자세로 재정렬한다. 궤도 전이(수십 분)와 자세 재정렬(수십 초)의 시간축 스케일이 1000배 가까이 달라, 자세 재정렬 단계는 궤도 전이 완료 시각을 오프셋으로 기록해 별도 시간축을 하나의 타임라인에 잇는다. 자세 재정렬 단계의 첫 쿼터니언이 궤도 전이 완료 시점에 선언한 바로 그 임의 자세와 정확히 같다는 것으로 상태가 단계 경계를 실제로 통과함을 확인하고, 이 스크립트의 순수 토크 제어 모델에서는 자세 재정렬이 델타-V를 전혀 소모하지 않음을 보여 두 단계가 물리적으로 독립된 자원(추진제 vs 제어 시간)을 소모한다는 것을 증명한다. 지상국 접촉창(05번) 단계는 처음엔 포함하려 했지만, 궤도면 전체 기하를 다시 복제해야 해서 이 스크립트의 핵심 주장과 무관한 범위 확장이라 판단해 뺐다.</p>
+        <div class="phase-scripts"><span class="chip">22</span></div>
       </div>
     </div>
   </section>
@@ -857,6 +869,13 @@
       <div class="result">
         <img id="img-pid-tumble-comparison" src="{{IMG_PID_TUMBLE_COMPARISON}}" alt="중간축 텀블링을 제어 없음과 PD 제어 있음으로 비교한 그래프">
         <div class="result-caption"><strong>16번 중간축 텀블링 길들이기</strong> — 제어 없음(빨강)은 180도까지 반복 발산하지만, PD 제어(초록)는 거의 0도에 머문다.</div>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-mission-timeline" src="{{IMG_MISSION_TIMELINE}}" alt="궤도 전이 단계와 자세 재정렬 단계를 좌우로 나란히 보여주는 결합 임무 타임라인 그래프">
+        <div class="result-caption"><strong>통합 임무 타임라인</strong> — 왼쪽은 궤도 전이(분 단위), 오른쪽은 전이 완료 직후 시작하는 자세 재정렬(초 단위) — 두 단계가 하나의 임무로 이어진다.</div>
       </div>
     </div>
   </section>
@@ -1082,6 +1101,20 @@
             <td class="num">5배 이상 억제</td>
             <td><span class="pill good">PD 제어가 불안정한 텀블링을 거의 완전히 정지시킴</span></td>
           </tr>
+          <tr>
+            <td>통합 임무: 궤도 전이 완료 후 자세 재정렬 최종 오차</td>
+            <td class="num">정착시간 {{MISSION_ATTITUDE_SETTLING_SEC}}초의 3배 적분 후</td>
+            <td class="num">{{MISSION_ATTITUDE_FINAL_ERROR_DEG}}도</td>
+            <td class="num">&lt; 2도</td>
+            <td><span class="pill good">핸드오프 상태에서 시작해도 동일한 수렴 기준을 만족</span></td>
+          </tr>
+          <tr>
+            <td>통합 임무: 총 임무시간(궤도전이+자세정렬)</td>
+            <td class="num">궤도 전이 {{MISSION_ORBIT_TRANSFER_HOURS}}시간 + 자세 재정렬</td>
+            <td class="num">{{MISSION_TOTAL_TIME_HOURS}}시간</td>
+            <td class="num">두 단계 시간의 합과 일치</td>
+            <td><span class="pill good">총 임무시간 = 궤도 전이시간 + 자세 재정렬 적분시간</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1089,7 +1122,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–21 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–22 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>
