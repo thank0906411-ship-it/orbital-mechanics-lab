@@ -12,6 +12,7 @@ import base64
 import csv
 import datetime
 import os
+import re
 import subprocess
 import sys
 
@@ -84,6 +85,23 @@ def count_simulation_scripts():
     if first_arg not in excluded:
       count += 1
   return str(count)
+
+
+def count_validation_extra_rows():
+  """검증표의 숨겨진(접힌) tbody 안 행 개수를 템플릿 자체에서 직접 센다
+  (하드코딩 방지) - "나머지 N개 더 보기" 버튼 문구가 실제 숨겨진 행 수와
+  항상 일치하도록, 검증 항목이 추가/삭제될 때마다 수동으로 맞출 필요가 없다."""
+  try:
+    with open(TEMPLATE_PATH, encoding="utf-8") as f:
+      html = f.read()
+  except OSError as exc:
+    print(f"[경고] report_template.html 읽기 실패({exc}), VALIDATION_EXTRA_ROW_COUNT를 '-'로 표시합니다.")
+    return "-"
+
+  match = re.search(r'<tbody class="extra-rows" hidden>(.*?)</tbody>', html, re.DOTALL)
+  if not match:
+    return "0"
+  return str(len(re.findall(r"<tr>", match.group(1))))
 
 
 def compute_kepler_convergence():
@@ -508,6 +526,7 @@ def main():
       "RUN_DATE": datetime.date.today().isoformat(),
       "TEST_COUNT": count_pytest_tests(),
       "SCRIPT_COUNT": count_simulation_scripts(),
+      "VALIDATION_EXTRA_ROW_COUNT": count_validation_extra_rows(),
       "IMG_ORBIT_SHAPE": img_to_data_uri("01_kepler_orbit_shape.png"),
       "IMG_SECOND_LAW": img_to_data_uri("01_kepler_second_law_areas.png"),
       "IMG_ZENITH": img_to_data_uri("04_zenith_and_horizon_cases.png"),

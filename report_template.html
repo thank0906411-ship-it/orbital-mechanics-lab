@@ -132,7 +132,43 @@
     white-space: nowrap;
   }
 
-  section { margin-bottom: 56px; }
+  .section-nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    background: var(--bg);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 0;
+    margin: 0 0 40px;
+    /* 스크롤바를 항상 보이게 하면 좁은 화면에서 "여기 더 있다"는 힌트가 되지만,
+       데스크탑처럼 다 들어오는 화면에서는 안 보이므로 레이아웃에 영향 없다. */
+    scrollbar-width: thin;
+  }
+
+  .section-nav a {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .section-nav a:hover { background: var(--surface-2); color: var(--ink); }
+
+  .section-nav a.active {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+
+  section { margin-bottom: 56px; scroll-margin-top: 64px; }
 
   .section-head {
     display: flex;
@@ -344,6 +380,24 @@
   .pill.good { color: var(--good); background: var(--good-soft); }
   .pill.warn { color: var(--warn); background: var(--warn-soft); }
 
+  .validation-toggle {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    color: var(--accent-ink);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .validation-toggle:hover { background: var(--surface-2); }
+
   footer {
     margin-top: 64px;
     padding-top: 20px;
@@ -377,6 +431,14 @@
       <span class="mono">{{RUN_DATE}}</span>
     </div>
   </header>
+
+  <nav class="section-nav" id="section-nav">
+    <a href="#overview">한눈에 보기</a>
+    <a href="#dashboard">핵심 검증</a>
+    <a href="#phases">확장 단계</a>
+    <a href="#gallery">결과 그래프</a>
+    <a href="#validation">대조 요약</a>
+  </nav>
 
   <section id="overview">
     <div class="section-head">
@@ -986,6 +1048,8 @@
             <td class="num">0.0</td>
             <td><span class="pill good">이론과 일치</span></td>
           </tr>
+        </tbody>
+        <tbody class="extra-rows" hidden>
           <tr>
             <td>란베르트 문제: 06번 호만 전이와 교차검증</td>
             <td class="num">델타-V 오차(km/s)</td>
@@ -1192,6 +1256,9 @@
         </tbody>
       </table>
     </div>
+    <button type="button" class="validation-toggle" id="validation-toggle" aria-expanded="false">
+      나머지 {{VALIDATION_EXTRA_ROW_COUNT}}개 검증 항목 더 보기
+    </button>
   </section>
 
   <footer>
@@ -1200,3 +1267,53 @@
   </footer>
 
 </div>
+
+<script>
+  // 스크롤 위치에 따라 상단 네비게이션에서 현재 보고 있는 섹션을 강조한다.
+  // IntersectionObserver의 rootMargin을 "화면 상단부터 40%는 무시"로 잡으면,
+  // 섹션이 뷰포트 위쪽 근처에 걸렸을 때(사용자가 실제로 읽기 시작하는 지점)만
+  // active로 바뀌어, 섹션이 그냥 화면 아래쪽 끝에 살짝 보이기 시작하자마자
+  // 전환되는 산만한 효과를 피한다.
+  (function () {
+    var navLinks = document.querySelectorAll(".section-nav a");
+    if (!navLinks.length || !("IntersectionObserver" in window)) return;
+
+    var linkByHref = {};
+    navLinks.forEach(function (link) {
+      linkByHref[link.getAttribute("href").slice(1)] = link;
+    });
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        var link = linkByHref[entry.target.id];
+        if (!link) return;
+        if (entry.isIntersecting) {
+          navLinks.forEach(function (l) { l.classList.remove("active"); });
+          link.classList.add("active");
+        }
+      });
+    }, { rootMargin: "-40% 0px -55% 0px" });
+
+    Object.keys(linkByHref).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+  })();
+
+  // 대조 요약 표가 스크립트 수만큼 계속 길어져 "요약"이라 부르기 민망해진 문제 —
+  // 상위 항목(01~07번 핵심 스크립트)만 기본으로 보이고, 나머지는 버튼을 눌러야
+  // 펼쳐지는 별도 tbody에 숨겨둔다.
+  (function () {
+    var toggle = document.getElementById("validation-toggle");
+    var extraRows = document.querySelector(".extra-rows");
+    if (!toggle || !extraRows) return;
+    var expandedLabel = "검증 항목 접기";
+    var collapsedLabel = toggle.textContent.trim();
+    toggle.addEventListener("click", function () {
+      var expanded = toggle.getAttribute("aria-expanded") === "true";
+      extraRows.hidden = expanded;
+      toggle.setAttribute("aria-expanded", String(!expanded));
+      toggle.textContent = expanded ? collapsedLabel : expandedLabel;
+    });
+  })();
+</script>
