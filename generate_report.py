@@ -61,6 +61,31 @@ def count_pytest_tests():
   return str(len(collected))
 
 
+def count_simulation_scripts():
+  """run_all.sh에 등록된 시뮬레이션 스크립트 개수를 직접 센다 (하드코딩 방지).
+  run_all.sh의 invoke_step 호출 중 pytest/visualize_orbits.py/generate_report.py는
+  시뮬레이션 스크립트가 아니라 사전검증/시각화/리포트 단계이므로 제외한다 - 새
+  스크립트가 추가될 때마다 이 숫자를 수동으로 맞출 필요가 없도록 run_all.sh 자체를
+  소스 오브 트루스로 삼는다."""
+  run_all_path = os.path.join(BASE_DIR, "run_all.sh")
+  try:
+    with open(run_all_path, encoding="utf-8") as f:
+      lines = f.readlines()
+  except OSError as exc:
+    print(f"[경고] run_all.sh 읽기 실패({exc}), SCRIPT_COUNT를 '-'로 표시합니다.")
+    return "-"
+
+  excluded = {"pytest", "visualization/visualize_orbits.py", "generate_report.py"}
+  count = 0
+  for line in lines:
+    if not line.startswith("invoke_step "):
+      continue
+    first_arg = line.split('"')[1]
+    if first_arg not in excluded:
+      count += 1
+  return str(count)
+
+
 def compute_kepler_convergence():
   rows = read_csv_rows("kepler_convergence.csv")
   if not rows:
@@ -482,6 +507,7 @@ def main():
   values = {
       "RUN_DATE": datetime.date.today().isoformat(),
       "TEST_COUNT": count_pytest_tests(),
+      "SCRIPT_COUNT": count_simulation_scripts(),
       "IMG_ORBIT_SHAPE": img_to_data_uri("01_kepler_orbit_shape.png"),
       "IMG_SECOND_LAW": img_to_data_uri("01_kepler_second_law_areas.png"),
       "IMG_ZENITH": img_to_data_uri("04_zenith_and_horizon_cases.png"),
