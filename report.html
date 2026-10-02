@@ -262,6 +262,53 @@
     padding: 3px 7px;
   }
 
+  .dash-group {
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .dash-group-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .dash-group-summary::-webkit-details-marker { display: none; }
+
+  /* 화살표는 별도 span으로 둬서 title/count와의 순서(화살표가 항상 맨 앞)가
+     flex 정렬에 영향받지 않게 한다 - details[open]일 때 90도 돌아 펼침을 보여준다. */
+  .dash-group-arrow {
+    color: var(--ink-faint);
+    font-size: 12px;
+    transition: transform 0.15s;
+    flex-shrink: 0;
+  }
+
+  .dash-group[open] .dash-group-arrow { transform: rotate(90deg); }
+
+  .dash-group-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+    flex-grow: 1;
+  }
+
+  .dash-group-count {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-faint);
+  }
+
+  .dash-group-body { padding: 0 18px 18px; }
+
   .dash-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -471,152 +518,221 @@
       <h2>핵심 물리 검증 한눈에 보기</h2>
     </div>
     <p class="lede">이 프로젝트의 핵심 차별점은 근사 대신 실제 궤도역학 공식을 직접 구현하고, 그 결과가 잘 알려진 물리 법칙 및 표준 문헌값과 일치하는지 매 스크립트에서 검증한다는 것이다.</p>
-    <div class="dash-grid">
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">케플러 방정식</span><span class="dash-scripts">01</span></div>
-        <div class="dash-metric">뉴턴-랍슨 수렴 (이심률 0 vs 0.99)</div>
-        <div class="dash-value">e=0: 1회 → e=0.99: 6회</div>
-        <p class="dash-note">원궤도는 초기값 자체가 정답, 이심률이 커질수록 반복이 늘어남</p>
+    <details class="dash-group" open>
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">기초 전파 — 궤도의 가장 기본이 되는 수학/좌표계</span>
+        <span class="dash-group-count">4개 · 01–04</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">케플러 방정식</span><span class="dash-scripts">01</span></div>
+            <div class="dash-metric">뉴턴-랍슨 수렴 (이심률 0 vs 0.99)</div>
+            <div class="dash-value">e=0: 1회 → e=0.99: 6회</div>
+            <p class="dash-note">원궤도는 초기값 자체가 정답, 이심률이 커질수록 반복이 늘어남</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">보존량</span><span class="dash-scripts">02</span></div>
+            <div class="dash-metric">궤도 전체에서 비에너지/비각운동량 오차</div>
+            <div class="dash-value">최대 오차 0.00e+00</div>
+            <p class="dash-note">2체 문제의 핵심 물리 법칙이 수치정밀도 수준에서 보존됨</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">수치적분 (RK4)</span><span class="dash-scripts">03</span></div>
+            <div class="dash-metric">스텝 절반 시 오차 감소율 (이론값 16배)</div>
+            <div class="dash-value">평균 약 16.5배</div>
+            <p class="dash-note">RK4가 이론대로 4차 정확도(O(h^4))로 수렴함을 확인</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">좌표변환</span><span class="dash-scripts">04</span></div>
+            <div class="dash-metric">천정(머리 위) 위성의 고도각</div>
+            <div class="dash-value">90.0000도 (이론값 90도)</div>
+            <p class="dash-note">ECI→SEZ 회전 부호를 실제로 겪은 버그를 통해 고정</p>
+          </div>
+        </div>
       </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">보존량</span><span class="dash-scripts">02</span></div>
-        <div class="dash-metric">궤도 전체에서 비에너지/비각운동량 오차</div>
-        <div class="dash-value">최대 오차 0.00e+00</div>
-        <p class="dash-note">2체 문제의 핵심 물리 법칙이 수치정밀도 수준에서 보존됨</p>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">임무 설계 — 궤도 전이와 접촉, 운용 시나리오</span>
+        <span class="dash-group-count">8개 · 05,06,09,12–15,22</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">지상국 가시성</span><span class="dash-scripts">05</span></div>
+            <div class="dash-metric">3궤도 주기 동안 발견된 접촉 창</div>
+            <div class="dash-value">3개, 최대 고도각 80.0도</div>
+            <p class="dash-note">사각파 근사가 아니라 실제 궤도 전파로 계산된 접촉 창</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">호만 전이</span><span class="dash-scripts">06</span></div>
+            <div class="dash-metric">LEO→GEO 델타-V (교과서 참고값 약 3.9km/s)</div>
+            <div class="dash-value">3.893km/s, 전이시간 5.28시간</div>
+            <p class="dash-note">01번 실제 궤도 전파로 전이 도착 시각을 재검증함</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">란베르트 문제</span><span class="dash-scripts">09</span></div>
+            <div class="dash-metric">일반해 vs 06번 호만 전이 특수해 델타-V 오차</div>
+            <div class="dash-value">0.0000km/s</div>
+            <p class="dash-note">유니버설 변수 반복법과 닫힌 공식이 서로 다른 방법으로 같은 답에 수렴</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">행성간 궤적</span><span class="dash-scripts">12</span></div>
+            <div class="dash-metric">지구→화성 Patched Conic 전이시간·총 델타-V</div>
+            <div class="dash-value">258.9일, 5.68km/s</div>
+            <p class="dash-note">06번 호만 전이 공식을 태양 GM으로 그대로 재사용해 실제 임무 값 재현</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">도킹/랑데부</span><span class="dash-scripts">13</span></div>
+            <div class="dash-metric">근접 옵셋(0.1km) vs 원거리 옵셋(500km) CW 근사 오차</div>
+            <div class="dash-value">0.0004% vs 2.19%</div>
+            <p class="dash-note">Clohessy-Wiltshire 선형화는 근접 운용에서만 정확함을 실측으로 확인</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">궤도 결정</span><span class="dash-scripts">14</span></div>
+            <div class="dash-metric">관측 2개 vs 30개 평균 경사각 오차(노이즈 1도)</div>
+            <div class="dash-value">0.4360도 → 0.1348도</div>
+            <p class="dash-note">노이즈 낀 레이더 관측만으로 02번 궤도요소를 거꾸로 복원, 관측이 늘수록 안정화</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">저추력 전기추진</span><span class="dash-scripts">15</span></div>
+            <div class="dash-metric">저추력 전이가 호만 전이보다 걸리는 시간 배율</div>
+            <div class="dash-value">약 11.0배</div>
+            <p class="dash-note">델타-V는 161.00m/s로 호만(160.76m/s)과 비슷해도 시간은 압도적으로 오래 걸림</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">궤도+자세 통합 임무</span><span class="dash-scripts">22</span></div>
+            <div class="dash-metric">궤도 전이 델타-V/시간 vs 자세 재정렬 시간</div>
+            <div class="dash-value">207.69m/s, 0.84시간 → 10.0초</div>
+            <p class="dash-note">06번 호만 전이와 21번 PID 자세제어를 새 물리 없이 하나의 임무 타임라인으로 잇는다 — 델타-V를 다 쓴 궤도전이도 몇 초~몇십 초의 자세 재정렬 없이는 쓸모없는 자산으로 남는다</p>
+          </div>
+        </div>
       </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">수치적분 (RK4)</span><span class="dash-scripts">03</span></div>
-        <div class="dash-metric">스텝 절반 시 오차 감소율 (이론값 16배)</div>
-        <div class="dash-value">평균 약 16.5배</div>
-        <p class="dash-note">RK4가 이론대로 4차 정확도(O(h^4))로 수렴함을 확인</p>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">섭동 — 완전한 2체 문제에서 벗어나는 요인들</span>
+        <span class="dash-group-count">6개 · 07×2,17,18,23,24</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">J2 섭동</span><span class="dash-scripts">07</span></div>
+            <div class="dash-metric">임계경사각(약 63.4도)에서 근점편각 세차율</div>
+            <div class="dash-value">0.000000도/일 (이론값 0)</div>
+            <p class="dash-note">몰니야 궤도가 이 경사각을 쓰는 이유를 수치로 재현</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">SSO 근처 RAAN 세차</span><span class="dash-scripts">07</span></div>
+            <div class="dash-metric">30일 동안 누적된 RAAN 드리프트</div>
+            <div class="dash-value">약 27.81도</div>
+            <p class="dash-note">지구 편평도(J2)가 궤도면 자체를 서서히 회전시킴</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">궤도 유지 비용</span><span class="dash-scripts">17</span></div>
+            <div class="dash-metric">허용 오차 10배 차이에도 거의 일정한 5년 총 델타-V</div>
+            <div class="dash-value">편차 10.0%</div>
+            <p class="dash-note">07번 J2 세차의 잔여 오차를 평면 변경 기동으로 주기 보정 — 1년에 6회, 기동당 13.17m/s</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">궤도 재진입/대기항력 감쇠</span><span class="dash-scripts">18</span></div>
+            <div class="dash-metric">고도 200km→100km 재진입까지 걸리는 시간</div>
+            <div class="dash-value">3.93일</div>
+            <p class="dash-note">15번 저추력 상승 나선의 거울상 — 대기항력이 에너지를 빼앗아 재진입 근처에서 하강 속도가 2.20배 가속</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">3체(태양/달) 섭동</span><span class="dash-scripts">23</span></div>
+            <div class="dash-metric">GEO 고도에서 3체 섭동 대 J2 가속도 비율</div>
+            <div class="dash-value">144.31% (LEO에서는 0.0129%)</div>
+            <p class="dash-note">17번이 "모델링하지 않는 요인"으로만 언급했던 태양/달 중력을 실제로 계산한다 — 달의 섭동이 태양보다 2.24배 크고, LEO에서는 무시 가능하지만 GEO 근처에서는 J2를 능가한다</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">태양복사압(SRP) 섭동</span><span class="dash-scripts">24</span></div>
+            <div class="dash-metric">SRP가 대기항력을 넘어서는 고도</div>
+            <div class="dash-value">800.0km (식 비율 36.4%)</div>
+            <p class="dash-note">9번(대기항력)과 거울상 — 고도가 높아지면 대기는 사라져도 태양빛은 남는다. 저고도에서는 항력이 압도적이지만, 이 고도를 넘으면 SRP가 유일하게 남는 비중력 섭동이 된다</p>
+          </div>
+        </div>
       </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">좌표변환</span><span class="dash-scripts">04</span></div>
-        <div class="dash-metric">천정(머리 위) 위성의 고도각</div>
-        <div class="dash-value">90.0000도 (이론값 90도)</div>
-        <p class="dash-note">ECI→SEZ 회전 부호를 실제로 겪은 버그를 통해 고정</p>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">다중 위성 — 성좌 커버리지와 위성간 링크</span>
+        <span class="dash-group-count">2개 · 10,11</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">성좌 커버리지</span><span class="dash-scripts">10</span></div>
+            <div class="dash-metric">단일 평면 vs 다중 평면 최대 공백 시간(같은 지점 기준)</div>
+            <div class="dash-value">1.7분 vs 10.8분</div>
+            <p class="dash-note">"평면을 나누면 항상 좋다"는 직관이 지점 하나 기준에서는 뒤집힘(감추지 않음)</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">위성간 링크(ISL)</span><span class="dash-scripts">11</span></div>
+            <div class="dash-metric">같은 평면 vs 극/적도 교차 평면 가려짐 비율</div>
+            <div class="dash-value">0.0% vs 59.0%</div>
+            <p class="dash-note">두 위성을 잇는 선분과 지구 중심 사이 최근접 거리로 기하학적 판정</p>
+          </div>
+        </div>
       </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">지상국 가시성</span><span class="dash-scripts">05</span></div>
-        <div class="dash-metric">3궤도 주기 동안 발견된 접촉 창</div>
-        <div class="dash-value">3개, 최대 고도각 80.0도</div>
-        <p class="dash-note">사각파 근사가 아니라 실제 궤도 전파로 계산된 접촉 창</p>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">3체 문제 — 라그랑주점과 그 주위 주기궤도</span>
+        <span class="dash-group-count">2개 · 19,20</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">3체 문제/라그랑주점</span><span class="dash-scripts">19</span></div>
+            <div class="dash-metric">L1/L2/L3(불안정) vs L4/L5(안정) 섭동 궤적 이탈거리 비율</div>
+            <div class="dash-value">6.2배</div>
+            <p class="dash-note">12번이 피했던 진짜 3체 문제를 원형 제한 3체 문제(CR3BP)로 정면 돌파 — 회전좌표계 선형화 고유값과 RK4 직접 적분이 같은 결론을 준다</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">평면 리아푸노프 궤도</span><span class="dash-scripts">20</span></div>
+            <div class="dash-metric">L1 주위 진폭 스윕에서 선형 예측 대비 최대 주기 편차</div>
+            <div class="dash-value">0.244%</div>
+            <p class="dash-note">19번의 라그랑주점이 "점"이었다면, 이건 그 주위를 도는 "주기궤도" — 선형 고유벡터 추정치를 상태천이행렬 기반 미분수정으로 완성한다</p>
+          </div>
+        </div>
       </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">호만 전이</span><span class="dash-scripts">06</span></div>
-        <div class="dash-metric">LEO→GEO 델타-V (교과서 참고값 약 3.9km/s)</div>
-        <div class="dash-value">3.893km/s, 전이시간 5.28시간</div>
-        <p class="dash-note">01번 실제 궤도 전파로 전이 도착 시각을 재검증함</p>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">자세동역학 — 궤도가 아닌 위성 자체의 회전</span>
+        <span class="dash-group-count">2개 · 16,21</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">자세동역학</span><span class="dash-scripts">16</span></div>
+            <div class="dash-metric">중간축 vs 최소/최대축 섭동 성장 배율</div>
+            <div class="dash-value">100.0배 vs 2.0/1.4배</div>
+            <p class="dash-note">토크 없는 자유회전에서 중간축만 작은 섭동에도 크게 발산함을 오일러 방정식으로 재현(중간축 정리)</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">PID 자세제어</span><span class="dash-scripts">21</span></div>
+            <div class="dash-metric">16번 중간축 텀블링의 최대 자세 오차 억제 배율</div>
+            <div class="dash-value">26.4배</div>
+            <p class="dash-note">16번이 "순수 동역학만, 제어는 범위 밖"이라 정했던 경계를 의도적으로 뒤집는다 — 쿼터니언 오차 기반 PD 피드백이 중간축 불안정 텀블링을 거의 완전히 정지시킨다</p>
+          </div>
+        </div>
       </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">J2 섭동</span><span class="dash-scripts">07</span></div>
-        <div class="dash-metric">임계경사각(약 63.4도)에서 근점편각 세차율</div>
-        <div class="dash-value">0.000000도/일 (이론값 0)</div>
-        <p class="dash-note">몰니야 궤도가 이 경사각을 쓰는 이유를 수치로 재현</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">SSO 근처 RAAN 세차</span><span class="dash-scripts">07</span></div>
-        <div class="dash-metric">30일 동안 누적된 RAAN 드리프트</div>
-        <div class="dash-value">약 27.81도</div>
-        <p class="dash-note">지구 편평도(J2)가 궤도면 자체를 서서히 회전시킴</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">란베르트 문제</span><span class="dash-scripts">09</span></div>
-        <div class="dash-metric">일반해 vs 06번 호만 전이 특수해 델타-V 오차</div>
-        <div class="dash-value">0.0000km/s</div>
-        <p class="dash-note">유니버설 변수 반복법과 닫힌 공식이 서로 다른 방법으로 같은 답에 수렴</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">성좌 커버리지</span><span class="dash-scripts">10</span></div>
-        <div class="dash-metric">단일 평면 vs 다중 평면 최대 공백 시간(같은 지점 기준)</div>
-        <div class="dash-value">1.7분 vs 10.8분</div>
-        <p class="dash-note">"평면을 나누면 항상 좋다"는 직관이 지점 하나 기준에서는 뒤집힘(감추지 않음)</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">위성간 링크(ISL)</span><span class="dash-scripts">11</span></div>
-        <div class="dash-metric">같은 평면 vs 극/적도 교차 평면 가려짐 비율</div>
-        <div class="dash-value">0.0% vs 59.0%</div>
-        <p class="dash-note">두 위성을 잇는 선분과 지구 중심 사이 최근접 거리로 기하학적 판정</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">행성간 궤적</span><span class="dash-scripts">12</span></div>
-        <div class="dash-metric">지구→화성 Patched Conic 전이시간·총 델타-V</div>
-        <div class="dash-value">258.9일, 5.68km/s</div>
-        <p class="dash-note">06번 호만 전이 공식을 태양 GM으로 그대로 재사용해 실제 임무 값 재현</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">도킹/랑데부</span><span class="dash-scripts">13</span></div>
-        <div class="dash-metric">근접 옵셋(0.1km) vs 원거리 옵셋(500km) CW 근사 오차</div>
-        <div class="dash-value">0.0004% vs 2.19%</div>
-        <p class="dash-note">Clohessy-Wiltshire 선형화는 근접 운용에서만 정확함을 실측으로 확인</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">궤도 결정</span><span class="dash-scripts">14</span></div>
-        <div class="dash-metric">관측 2개 vs 30개 평균 경사각 오차(노이즈 1도)</div>
-        <div class="dash-value">0.4360도 → 0.1348도</div>
-        <p class="dash-note">노이즈 낀 레이더 관측만으로 02번 궤도요소를 거꾸로 복원, 관측이 늘수록 안정화</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">저추력 전기추진</span><span class="dash-scripts">15</span></div>
-        <div class="dash-metric">저추력 전이가 호만 전이보다 걸리는 시간 배율</div>
-        <div class="dash-value">약 11.0배</div>
-        <p class="dash-note">델타-V는 161.00m/s로 호만(160.76m/s)과 비슷해도 시간은 압도적으로 오래 걸림</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">자세동역학</span><span class="dash-scripts">16</span></div>
-        <div class="dash-metric">중간축 vs 최소/최대축 섭동 성장 배율</div>
-        <div class="dash-value">100.0배 vs 2.0/1.4배</div>
-        <p class="dash-note">토크 없는 자유회전에서 중간축만 작은 섭동에도 크게 발산함을 오일러 방정식으로 재현(중간축 정리)</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">궤도 유지 비용</span><span class="dash-scripts">17</span></div>
-        <div class="dash-metric">허용 오차 10배 차이에도 거의 일정한 5년 총 델타-V</div>
-        <div class="dash-value">편차 10.0%</div>
-        <p class="dash-note">07번 J2 세차의 잔여 오차를 평면 변경 기동으로 주기 보정 — 1년에 6회, 기동당 13.17m/s</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">궤도 재진입/대기항력 감쇠</span><span class="dash-scripts">18</span></div>
-        <div class="dash-metric">고도 200km→100km 재진입까지 걸리는 시간</div>
-        <div class="dash-value">3.93일</div>
-        <p class="dash-note">15번 저추력 상승 나선의 거울상 — 대기항력이 에너지를 빼앗아 재진입 근처에서 하강 속도가 2.20배 가속</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">3체 문제/라그랑주점</span><span class="dash-scripts">19</span></div>
-        <div class="dash-metric">L1/L2/L3(불안정) vs L4/L5(안정) 섭동 궤적 이탈거리 비율</div>
-        <div class="dash-value">6.2배</div>
-        <p class="dash-note">12번이 피했던 진짜 3체 문제를 원형 제한 3체 문제(CR3BP)로 정면 돌파 — 회전좌표계 선형화 고유값과 RK4 직접 적분이 같은 결론을 준다</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">평면 리아푸노프 궤도</span><span class="dash-scripts">20</span></div>
-        <div class="dash-metric">L1 주위 진폭 스윕에서 선형 예측 대비 최대 주기 편차</div>
-        <div class="dash-value">0.244%</div>
-        <p class="dash-note">19번의 라그랑주점이 "점"이었다면, 이건 그 주위를 도는 "주기궤도" — 선형 고유벡터 추정치를 상태천이행렬 기반 미분수정으로 완성한다</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">PID 자세제어</span><span class="dash-scripts">21</span></div>
-        <div class="dash-metric">16번 중간축 텀블링의 최대 자세 오차 억제 배율</div>
-        <div class="dash-value">26.4배</div>
-        <p class="dash-note">16번이 "순수 동역학만, 제어는 범위 밖"이라 정했던 경계를 의도적으로 뒤집는다 — 쿼터니언 오차 기반 PD 피드백이 중간축 불안정 텀블링을 거의 완전히 정지시킨다</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">궤도+자세 통합 임무</span><span class="dash-scripts">22</span></div>
-        <div class="dash-metric">궤도 전이 델타-V/시간 vs 자세 재정렬 시간</div>
-        <div class="dash-value">207.69m/s, 0.84시간 → 10.0초</div>
-        <p class="dash-note">06번 호만 전이와 21번 PID 자세제어를 새 물리 없이 하나의 임무 타임라인으로 잇는다 — 델타-V를 다 쓴 궤도전이도 몇 초~몇십 초의 자세 재정렬 없이는 쓸모없는 자산으로 남는다</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">3체(태양/달) 섭동</span><span class="dash-scripts">23</span></div>
-        <div class="dash-metric">GEO 고도에서 3체 섭동 대 J2 가속도 비율</div>
-        <div class="dash-value">144.31% (LEO에서는 0.0129%)</div>
-        <p class="dash-note">17번이 "모델링하지 않는 요인"으로만 언급했던 태양/달 중력을 실제로 계산한다 — 달의 섭동이 태양보다 2.24배 크고, LEO에서는 무시 가능하지만 GEO 근처에서는 J2를 능가한다</p>
-      </div>
-      <div class="dash-card">
-        <div class="dash-head"><span class="dash-layer">태양복사압(SRP) 섭동</span><span class="dash-scripts">24</span></div>
-        <div class="dash-metric">SRP가 대기항력을 넘어서는 고도</div>
-        <div class="dash-value">800.0km (식 비율 36.4%)</div>
-        <p class="dash-note">9번(대기항력)과 거울상 — 고도가 높아지면 대기는 사라져도 태양빛은 남는다. 저고도에서는 항력이 압도적이지만, 이 고도를 넘으면 SRP가 유일하게 남는 비중력 섭동이 된다</p>
-      </div>
-    </div>
+    </details>
   </section>
 
   <section id="phases">
