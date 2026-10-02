@@ -9,15 +9,16 @@ missions/orbit_determination.py, missions/low_thrust_transfer.py,
 attitude/torque_free_rigid_body.py, missions/station_keeping.py,
 missions/orbital_decay.py, missions/lagrange_points.py, missions/lyapunov_orbits.py,
 attitude/pid_attitude_control.py, missions/orbit_raise_and_reorient.py,
-perturbations/third_body_perturbation.py 시뮬레이션이 남긴 결과 CSV를 그래프로
-그려주는 도구. 시뮬레이션 코드가 아니라 "결과를 눈으로 보기 위한" 별도 스크립트다.
+perturbations/third_body_perturbation.py, perturbations/solar_radiation_pressure.py
+시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라
+"결과를 눈으로 보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 위 20개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 21개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~23, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~24, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -36,7 +37,8 @@ perturbations/third_body_perturbation.py 시뮬레이션이 남긴 결과 CSV를
       results/19_lagrange_points_stability_trajectories.png, results/20_lyapunov_orbit_trajectory.png,
       results/20_lyapunov_amplitude_vs_period.png, results/21_pid_point_and_hold_error.png,
       results/21_pid_intermediate_axis_comparison.png, results/22_mission_timeline_combined.png,
-      results/23_third_body_j2_crossover.png, results/23_third_body_oscillation.png
+      results/23_third_body_j2_crossover.png, results/23_third_body_oscillation.png,
+      results/24_srp_drag_crossover.png, results/24_srp_eclipse_timeseries.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -1248,6 +1250,61 @@ def plot_third_body_oscillating_perturbation():
   print(f"[저장됨] {out_path}")
 
 
+def plot_srp_drag_crossover():
+  csv_path = os.path.join(RESULTS_DIR, "solar_radiation_pressure_altitude_vs_drag.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 perturbations/solar_radiation_pressure.py를 실행하세요.")
+    return
+
+  altitudes, drag_accel, srp_accel = [], [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      altitudes.append(float(row["altitude_km"]))
+      drag_accel.append(float(row["drag_accel_km_s2"]))
+      srp_accel.append(float(row["srp_accel_km_s2"]))
+
+  fig, ax = plt.subplots(figsize=(11, 5))
+  ax.semilogy(altitudes, drag_accel, marker="o", color="tab:blue", linewidth=1.5, label="Atmospheric drag")
+  ax.semilogy(altitudes, srp_accel, marker="o", color="tab:red", linewidth=1.5, label="Solar radiation pressure")
+  ax.set_xlabel("Altitude (km)")
+  ax.set_ylabel("Acceleration magnitude (km/s^2, log scale)")
+  ax.set_title("Drag dominates at low altitude; SRP dominates at high altitude")
+  ax.legend()
+  ax.grid(True, alpha=0.3, which="both")
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "24_srp_drag_crossover.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_srp_eclipse_timeseries():
+  csv_path = os.path.join(RESULTS_DIR, "solar_radiation_pressure_eclipse_trajectory.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 perturbations/solar_radiation_pressure.py를 실행하세요.")
+    return
+
+  times_min, accel_mags = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      times_min.append(float(row["t_sec"]) / 60)
+      accel_mags.append(float(row["srp_accel_mag_km_s2"]))
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  ax.plot(times_min, accel_mags, color="tab:green", linewidth=1.5, drawstyle="steps-post")
+  ax.set_xlabel("Time (minutes)")
+  ax.set_ylabel("SRP acceleration magnitude (km/s^2)")
+  ax.set_title("Solar radiation pressure drops to exactly zero during eclipse passes")
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "24_srp_eclipse_timeseries.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -1286,3 +1343,5 @@ if __name__ == "__main__":
   plot_mission_timeline_combined()
   plot_third_body_j2_crossover()
   plot_third_body_oscillating_perturbation()
+  plot_srp_drag_crossover()
+  plot_srp_eclipse_timeseries()

@@ -455,6 +455,26 @@ def compute_third_body_perturbation():
   return result
 
 
+def compute_solar_radiation_pressure():
+  result = dict.fromkeys(
+      ["SRP_CROSSOVER_ALTITUDE_KM", "SRP_MAGNITUDE_KM_S2", "SRP_ECLIPSE_FRACTION_PCT"], "-")
+
+  altitude_rows = read_csv_rows("solar_radiation_pressure_altitude_vs_drag.csv")
+  if altitude_rows:
+    for row in altitude_rows:
+      if float(row["ratio_srp_to_drag"]) >= 1.0:
+        result["SRP_CROSSOVER_ALTITUDE_KM"] = row["altitude_km"]
+        break
+    result["SRP_MAGNITUDE_KM_S2"] = f"{float(altitude_rows[-1]['srp_accel_km_s2']):.3e}"
+
+  eclipse_rows = read_csv_rows("solar_radiation_pressure_eclipse_trajectory.csv")
+  if eclipse_rows:
+    in_shadow_count = sum(1 for r in eclipse_rows if r["in_shadow"] == "True")
+    result["SRP_ECLIPSE_FRACTION_PCT"] = f"{in_shadow_count / len(eclipse_rows) * 100:.1f}"
+
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -498,6 +518,8 @@ def main():
       "IMG_MISSION_TIMELINE": img_to_data_uri("22_mission_timeline_combined.png"),
       "IMG_THIRD_BODY_CROSSOVER": img_to_data_uri("23_third_body_j2_crossover.png"),
       "IMG_THIRD_BODY_OSCILLATION": img_to_data_uri("23_third_body_oscillation.png"),
+      "IMG_SRP_CROSSOVER": img_to_data_uri("24_srp_drag_crossover.png"),
+      "IMG_SRP_ECLIPSE": img_to_data_uri("24_srp_eclipse_timeseries.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -522,6 +544,7 @@ def main():
   values.update(compute_pid_attitude_control())
   values.update(compute_orbit_raise_and_reorient())
   values.update(compute_third_body_perturbation())
+  values.update(compute_solar_radiation_pressure())
 
   for key, val in values.items():
     token = "{{" + key + "}}"
