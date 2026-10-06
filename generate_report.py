@@ -531,6 +531,20 @@ def compute_reaction_wheel_desaturation():
   return result
 
 
+def compute_attitude_dependent_srp():
+  result = dict.fromkeys(
+      ["ATTITUDE_SRP_STD_PCT_OF_MAX", "ATTITUDE_SRP_SUN_POINTING_MIN_RATIO_PCT",
+       "ATTITUDE_SRP_ORBIT_DIFF_M"], "-")
+  rows = read_csv_rows("attitude_dependent_srp_summary.csv")
+  if rows:
+    row = rows[0]
+    cannonball = float(row["cannonball_srp_km_s2"])
+    result["ATTITUDE_SRP_STD_PCT_OF_MAX"] = f"{float(row['tumbling_srp_std_km_s2']) / cannonball * 100:.1f}"
+    result["ATTITUDE_SRP_SUN_POINTING_MIN_RATIO_PCT"] = f"{float(row['sun_pointing_min_ratio_pct']):.2f}"
+    result["ATTITUDE_SRP_ORBIT_DIFF_M"] = f"{float(row['final_position_diff_km']) * 1000:.2f}"
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -580,6 +594,8 @@ def main():
       "IMG_SRP_ECLIPSE": img_to_data_uri("24_srp_eclipse_timeseries.png"),
       "IMG_WHEEL_SATURATION": img_to_data_uri("25_reaction_wheel_saturation_momentum.png"),
       "IMG_WHEEL_POINTING_ERROR": img_to_data_uri("25_reaction_wheel_pointing_error.png"),
+      "IMG_ATTITUDE_SRP_OSCILLATION": img_to_data_uri("26_attitude_srp_tumbling_oscillation.png"),
+      "IMG_ATTITUDE_SRP_DIVERGENCE": img_to_data_uri("26_attitude_srp_orbit_divergence.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -606,6 +622,7 @@ def main():
   values.update(compute_third_body_perturbation())
   values.update(compute_solar_radiation_pressure())
   values.update(compute_reaction_wheel_desaturation())
+  values.update(compute_attitude_dependent_srp())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

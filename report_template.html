@@ -618,7 +618,7 @@
       <summary class="dash-group-summary">
         <span class="dash-group-arrow">▸</span>
         <span class="dash-group-title">섭동 — 완전한 2체 문제에서 벗어나는 요인들</span>
-        <span class="dash-group-count">6개 · 07×2,17,18,23,24</span>
+        <span class="dash-group-count">7개 · 07×2,17,18,23,24,26</span>
       </summary>
       <div class="dash-group-body">
         <div class="dash-grid">
@@ -657,6 +657,12 @@
             <div class="dash-metric">SRP가 대기항력을 넘어서는 고도</div>
             <div class="dash-value">{{SRP_CROSSOVER_ALTITUDE_KM}}km (식 비율 {{SRP_ECLIPSE_FRACTION_PCT}}%)</div>
             <p class="dash-note">9번(대기항력)과 거울상 — 고도가 높아지면 대기는 사라져도 태양빛은 남는다. 저고도에서는 항력이 압도적이지만, 이 고도를 넘으면 SRP가 유일하게 남는 비중력 섭동이 된다</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">자세 의존 태양복사압</span><span class="dash-scripts">26</span></div>
+            <div class="dash-metric">텀블링 시 유효 SRP 변동폭(캐논볼 최댓값 대비)</div>
+            <div class="dash-value">{{ATTITUDE_SRP_STD_PCT_OF_MAX}}% (태양지향 제어 시 최소 {{ATTITUDE_SRP_SUN_POINTING_MIN_RATIO_PCT}}% 유지)</div>
+            <p class="dash-note">24번의 캐논볼 모델(자세 무관 단면적)을 넘어, 21번의 쿼터니언 자세를 결합해 평판 패널의 코사인 법칙 유효 단면적을 계산 — 텀블링하면 SRP가 진동하지만 태양지향 제어는 캐논볼 최댓값 근처를 유지</p>
           </div>
         </div>
       </div>
@@ -744,7 +750,7 @@
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>스물다섯 단계의 확장</h2>
+      <h2>스물여섯 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <details class="dash-group" open>
@@ -853,7 +859,7 @@
       <summary class="dash-group-summary">
         <span class="dash-group-arrow">▸</span>
         <span class="dash-group-title">섭동 — 완전한 2체 문제에서 벗어나는 요인들</span>
-        <span class="dash-group-count">5개 · 07,17,18,23,24</span>
+        <span class="dash-group-count">6개 · 07,17,18,23,24,26</span>
       </summary>
       <div class="dash-group-body">
         <div class="phases">
@@ -886,6 +892,12 @@
             <h3>태양복사압(SRP) 섭동</h3>
             <p>9번(orbital_decay.py)은 저궤도에서 지배적인 대기항력 감쇠를 다뤘다. 이 스크립트는 그 거울상이다 — 대기가 사실상 없는 고궤도에서는 태양복사압(SRP)이 남는 유일한 비중력 섭동이 된다. 단순화된 구형(cannonball) 모델에서 가속도는 a_srp = P_sr·Cr·(A/m)·unit(r_sat-r_sun)으로 주어진다 — 방향은 태양→위성 방향(태양 반대쪽)이며, 부호가 뒤집히면 태양 쪽으로 끌리는 물리적 오류가 되므로 이 부호 자체를 항등식 테스트로 검증했다. 처음엔 23번처럼 J2나 3체 섭동과 비교하려 했지만, 실제로 계산해보니 SRP는 태양까지의 거리(~1AU)에만 의존해 위성의 지구 중심 거리와 거의 무관하다는 것을 발견했다 — GEO에서도 J2 대비 비율이 1% 미만에 불과해 23번 같은 흥미로운 교차점이 나오지 않았다. 대신 9번의 지수함수 대기밀도 모델을 그대로 재사용해 항력과 비교하니, 200km에서는 항력이 압도적이지만 3000km에서는 SRP가 압도적이며 약 550~800km 사이에서 실제 교차점이 나온다는 것을 확인했다 — 실제 위성 궤도수명 연구가 약 600~800km 이하에서만 항력을 신경 쓰는 이유와 정확히 일치한다. 또한 태양-지구 축 기준 원통형 그림자 근사(두 조건 모두 필요: 태양 반대쪽 AND 축에서 수직거리가 지구 반지름 이내)를 도입해, 궤도면을 태양 방향과 일치시킨 특수 기하(베타각 0도)에서 궤도의 약 36%가 그림자에 들어가 SRP가 정확히 0이 되는 것을 직접 적분으로 확인했다 — 이 식 비율은 일반적인 궤도의 주장이 아니라 이 특수 기하에만 해당한다는 것을 명시한다.</p>
             <div class="phase-scripts"><span class="chip">24</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">24번의 캐논볼 모델을 넘어 자세를 결합한다</span>
+            <h3>자세 의존 태양복사압(SRP)</h3>
+            <p>24번(solar_radiation_pressure.py)은 명시적으로 캐논볼 모델(구형 위성, 자세 무관 단면적)만 다뤘다 — 그 docstring이 "실제 위성의 비구형 형상에 따른 자세 의존 단면적 변화는 다루지 않는다"고 범위를 그었다. 이 스크립트는 그 갭을 연다 — 21번(pid_attitude_control.py)의 쿼터니언 자세 상태를 24번의 SRP 가속도 계산에 결합해, 평판 태양전지판처럼 자세에 따라 태양을 향한 유효 단면적이 달라지는(코사인 법칙, A_eff=A_max·max(0,cosθ)) 경우를 다룬다. 24번의 srp_acceleration/srp_acceleration_with_shadow는 area_to_mass_ratio_m2_kg를 단순 스칼라 곱으로만 쓴다는 것을 확인했으므로, 24번 자체는 전혀 수정하지 않고 자세로부터 계산한 "유효 A/m"만 그 함수에 그대로 넘긴다 — 22번이 06번/21번을 수정 없이 얇은 오케스트레이션 계층으로 결합한 것과 같은 설계 원칙이다. 쿼터니언으로 몸체좌표계 벡터를 관성좌표계로 회전시키는 함수(쿼터니언 샌드위치 v_inertial=q⊗[0,v]⊗conj(q))는 21번에도 없던 이 프로젝트 최초의 인프라라, 항등 회전과 알려진 90도 회전 두 경계 케이스로 먼저 검증했다. 토크 없는 자유회전으로 계속 텀블링하는 위성은 패널이 태양을 향했다 등졌다 반복해 유효 SRP 가속도가 뚜렷이 진동하지만(캐논볼의 "항상 일정"이라는 가정이 깨짐), 21번의 PD 제어로 패널을 태양 쪽으로 계속 향하게 유지하면 유효 SRP가 캐논볼 최댓값의 95% 이상에서 거의 일정하게 유지된다 — 태양지향 자세제어가 전력 생산뿐 아니라 SRP 예측 가능성에도 영향을 준다는 현실적 함의다. 궤도 주기(약 5829초)와 텀블링 회전 주기(약 13~63초)의 격차가 22번이 겪은 궤도전이-자세정착의 약 1000배 격차와 달리 두 자릿수(약 50~450배) 안에 들어온다는 것을 사전에 계산으로 확인해, 22번의 phase 컬럼 long-format CSV 없이 하나의 공유 시간축·단일 RK4로 궤도와 자세를 함께 적분했다. 5개 궤도 주기를 적분하면 텀블링 위성의 경로가 캐논볼 모델 경로에서 서서히 벌어지지만, SRP 자체의 절대 크기가 원래 작아(~1e-10km/s²) 그 편차도 반장축(7000km) 대비 0.0002% 수준(약 11.6m)에 머문다 — 과장하지 않는다.</p>
+            <div class="phase-scripts"><span class="chip">26</span></div>
           </div>
         </div>
       </div>
@@ -1193,6 +1205,16 @@
         <div class="result-caption"><strong>포화 직후 디새추레이션의 효과</strong> — 포화 전에는 포인팅 오차가 거의 0으로 유지되지만(조용히 쌓이는 문제), 포화되는 바로 그 시점에 즉시 디새추레이션하면 오차가 다시 무시할 수준으로 회복된다 — 대응이 10~20초만 늦어도 회복에 실패한다는 것을 스윕으로 확인했다.</div>
       </div>
     </div>
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-attitude-srp-oscillation" src="{{IMG_ATTITUDE_SRP_OSCILLATION}}" alt="텀블링하는 위성의 자세 의존 SRP 가속도가 캐논볼 모델의 일정한 값과 달리 0과 최댓값 사이를 오가며 진동하는 그래프">
+        <div class="result-caption"><strong>텀블링 위성의 SRP 진동</strong> — 캐논볼 모델(회색 점선)은 항상 일정하지만, 패널이 달린 실제 위성이 텀블링하면 패널이 태양을 향했다 등졌다 반복해 유효 SRP 가속도(주황)가 0과 캐논볼 최댓값 사이를 오간다.</div>
+      </div>
+      <div class="result">
+        <img id="img-attitude-srp-divergence" src="{{IMG_ATTITUDE_SRP_DIVERGENCE}}" alt="자세 의존 SRP로 적분한 궤도와 캐논볼 모델로 적분한 궤도의 위치 차이가 궤도 주기마다 오르내리며 시간에 따라 전체적으로 커지는 그래프">
+        <div class="result-caption"><strong>캐논볼 모델과의 궤도 경로 편차</strong> — 텀블링 위성과 캐논볼 모델을 같은 초기조건에서 나란히 적분하면 경로가 서서히 갈라지지만, SRP 자체가 약한 섭동이라 5개 궤도 주기 뒤에도 편차는 반장축 대비 미미한 수준(약 11.6m)에 머문다.</div>
+      </div>
+    </div>
   </section>
 
   <section id="validation">
@@ -1474,6 +1496,20 @@
             <td class="num">0 &lt; 비용 &lt; 호만 전이 델타-V</td>
             <td><span class="pill good">대응이 10~20초만 늦어도 회복 실패 — 타이밍에 민감</span></td>
           </tr>
+          <tr>
+            <td>자세 의존 SRP: 코사인 법칙 경계 케이스(0/60/90/180도)</td>
+            <td class="num">유효 A/m 대 max(0,cosθ)·max_A/m</td>
+            <td class="num">0도=100%, 60도=50%, 90도=0%, 180도=0%</td>
+            <td class="num">코사인 법칙과 정확히 일치</td>
+            <td><span class="pill good">패널 뒷면(cosθ&lt;0)은 항상 0으로 클램프</span></td>
+          </tr>
+          <tr>
+            <td>자세 의존 SRP: 텀블링 vs 태양지향 제어</td>
+            <td class="num">유효 SRP 변동폭 / 태양지향 유지 비율</td>
+            <td class="num">텀블링 {{ATTITUDE_SRP_STD_PCT_OF_MAX}}% 변동 / 태양지향 최소 {{ATTITUDE_SRP_SUN_POINTING_MIN_RATIO_PCT}}% 유지</td>
+            <td class="num">텀블링은 뚜렷이 진동, 태양지향은 95% 이상 유지</td>
+            <td><span class="pill good">캐논볼의 "항상 일정" 가정이 텀블링에서는 깨짐</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1484,7 +1520,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–25 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–26 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>
