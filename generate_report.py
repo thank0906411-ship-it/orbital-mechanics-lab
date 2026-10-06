@@ -518,6 +518,19 @@ def compute_solar_radiation_pressure():
   return result
 
 
+def compute_reaction_wheel_desaturation():
+  result = dict.fromkeys(
+      ["WHEEL_TIME_TO_SATURATION_SEC", "WHEEL_DESAT_DELTA_V_MM_S",
+       "WHEEL_DESAT_VS_ORBIT_RAISE_PCT"], "-")
+  rows = read_csv_rows("reaction_wheel_summary.csv")
+  if rows:
+    row = rows[0]
+    result["WHEEL_TIME_TO_SATURATION_SEC"] = f"{float(row['time_to_saturation_sec']):.1f}"
+    result["WHEEL_DESAT_DELTA_V_MM_S"] = f"{float(row['desaturation_delta_v_km_s']) * 1e6:.3f}"
+    result["WHEEL_DESAT_VS_ORBIT_RAISE_PCT"] = f"{float(row['desaturation_delta_v_km_s']) / float(row['orbit_raise_delta_v_km_s']) * 100:.4f}"
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -565,6 +578,8 @@ def main():
       "IMG_THIRD_BODY_OSCILLATION": img_to_data_uri("23_third_body_oscillation.png"),
       "IMG_SRP_CROSSOVER": img_to_data_uri("24_srp_drag_crossover.png"),
       "IMG_SRP_ECLIPSE": img_to_data_uri("24_srp_eclipse_timeseries.png"),
+      "IMG_WHEEL_SATURATION": img_to_data_uri("25_reaction_wheel_saturation_momentum.png"),
+      "IMG_WHEEL_POINTING_ERROR": img_to_data_uri("25_reaction_wheel_pointing_error.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -590,6 +605,7 @@ def main():
   values.update(compute_orbit_raise_and_reorient())
   values.update(compute_third_body_perturbation())
   values.update(compute_solar_radiation_pressure())
+  values.update(compute_reaction_wheel_desaturation())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

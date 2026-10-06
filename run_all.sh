@@ -33,87 +33,90 @@ invoke_step() {
 
 # results/를 매 실행 전에 비운다 — 안 그러면 예전에 스크립트를 리팩터링/삭제하면서 더
 # 이상 어떤 스크립트도 만들지 않는 CSV/PNG가 폴더에 계속 남아 최신 결과와 뒤섞인다.
-# 번호 있는 단계(1/26~)에 넣지 않은 이유: 이건 "시뮬레이션을 실행"하는 게 아니라 그
+# 번호 있는 단계(1/27~)에 넣지 않은 이유: 이건 "시뮬레이션을 실행"하는 게 아니라 그
 # 전에 실행 환경을 정리하는 준비 작업이라, 파이프라인 진행률 표시에 포함시키지 않는다.
 echo "[정리] results/의 이전 실행 잔재물을 비웁니다."
 rm -rf results
 
-write_section "1/26 자동 테스트 (pytest) - 코드가 깨진 상태로 시뮬레이션을 돌리지 않기 위한 사전 검증"
+write_section "1/27 자동 테스트 (pytest) - 코드가 깨진 상태로 시뮬레이션을 돌리지 않기 위한 사전 검증"
 invoke_step "pytest" python -m pytest tests/ -q
 
-write_section "2/26 케플러 방정식과 궤도 전파"
+write_section "2/27 케플러 방정식과 궤도 전파"
 invoke_step "propagation/kepler_orbit_propagation.py" python propagation/kepler_orbit_propagation.py
 
-write_section "3/26 궤도요소-상태벡터 변환과 보존량(에너지/각운동량)"
+write_section "3/27 궤도요소-상태벡터 변환과 보존량(에너지/각운동량)"
 invoke_step "propagation/orbital_elements_and_energy.py" python propagation/orbital_elements_and_energy.py
 
-write_section "4/26 2체 문제 수치적분(RK4)과 해석해 검증"
+write_section "4/27 2체 문제 수치적분(RK4)과 해석해 검증"
 invoke_step "propagation/two_body_numerical_integration.py" python propagation/two_body_numerical_integration.py
 
-write_section "5/26 좌표계 변환 (ECI/ECEF/SEZ)과 방위각/고도각"
+write_section "5/27 좌표계 변환 (ECI/ECEF/SEZ)과 방위각/고도각"
 invoke_step "frames/coordinate_frame_transforms.py" python frames/coordinate_frame_transforms.py
 
-write_section "6/26 지상국 가시성: 실측 궤도 전파로 계산하는 접촉 창"
+write_section "6/27 지상국 가시성: 실측 궤도 전파로 계산하는 접촉 창"
 invoke_step "missions/ground_station_visibility.py" python missions/ground_station_visibility.py
 
-write_section "7/26 호만 전이(Hohmann Transfer) 델타-V와 전이시간"
+write_section "7/27 호만 전이(Hohmann Transfer) 델타-V와 전이시간"
 invoke_step "missions/hohmann_transfer.py" python missions/hohmann_transfer.py
 
-write_section "8/26 저추력 전기추진 궤도 전이: 연속 접선 추력에 의한 나선 상승"
+write_section "8/27 저추력 전기추진 궤도 전이: 연속 접선 추력에 의한 나선 상승"
 invoke_step "missions/low_thrust_transfer.py" python missions/low_thrust_transfer.py
 
-write_section "9/26 궤도 재진입/대기항력 감쇠: 15번의 거울상, 나선 하강"
+write_section "9/27 궤도 재진입/대기항력 감쇠: 15번의 거울상, 나선 하강"
 invoke_step "missions/orbital_decay.py" python missions/orbital_decay.py
 
-write_section "10/26 J2 섭동: RAAN/근점편각 세차"
+write_section "10/27 J2 섭동: RAAN/근점편각 세차"
 invoke_step "perturbations/j2_perturbation.py" python perturbations/j2_perturbation.py
 
-write_section "11/26 궤도 유지 비용: 잔여 RAAN 오차를 주기적 기동으로 보정"
+write_section "11/27 궤도 유지 비용: 잔여 RAAN 오차를 주기적 기동으로 보정"
 invoke_step "missions/station_keeping.py" python missions/station_keeping.py
 
-write_section "12/26 란베르트 문제: 두 위치-비행시간으로 궤도 속도 계산"
+write_section "12/27 란베르트 문제: 두 위치-비행시간으로 궤도 속도 계산"
 invoke_step "missions/lambert_problem.py" python missions/lambert_problem.py
 
-write_section "13/26 다중 위성 성좌 커버리지: 워커 델타 패턴과 재방문 공백"
+write_section "13/27 다중 위성 성좌 커버리지: 워커 델타 패턴과 재방문 공백"
 invoke_step "constellations/constellation_coverage.py" python constellations/constellation_coverage.py
 
-write_section "14/26 위성간 링크(ISL) 가시선: 지구 차단 기하 판정"
+write_section "14/27 위성간 링크(ISL) 가시선: 지구 차단 기하 판정"
 invoke_step "constellations/intersatellite_link_visibility.py" python constellations/intersatellite_link_visibility.py
 
-write_section "15/26 행성간 궤적: Patched Conic 근사로 지구-화성 임무 델타-V"
+write_section "15/27 행성간 궤적: Patched Conic 근사로 지구-화성 임무 델타-V"
 invoke_step "missions/patched_conic_interplanetary.py" python missions/patched_conic_interplanetary.py
 
-write_section "16/26 3체 문제와 라그랑주점: 원형 제한 3체 문제(CR3BP)로 L1~L5 찾기"
+write_section "16/27 3체 문제와 라그랑주점: 원형 제한 3체 문제(CR3BP)로 L1~L5 찾기"
 invoke_step "missions/lagrange_points.py" python missions/lagrange_points.py
 
-write_section "17/26 평면 리아푸노프 궤도: 선형 추정을 미분수정으로 완성한 주기궤도"
+write_section "17/27 평면 리아푸노프 궤도: 선형 추정을 미분수정으로 완성한 주기궤도"
 invoke_step "missions/lyapunov_orbits.py" python missions/lyapunov_orbits.py
 
-write_section "18/26 도킹/랑데부: Clohessy-Wiltshire 근접 상대운동"
+write_section "18/27 도킹/랑데부: Clohessy-Wiltshire 근접 상대운동"
 invoke_step "missions/clohessy_wiltshire_rendezvous.py" python missions/clohessy_wiltshire_rendezvous.py
 
-write_section "19/26 궤도 결정: 노이즈 낀 레이더 관측값에서 궤도요소 역산"
+write_section "19/27 궤도 결정: 노이즈 낀 레이더 관측값에서 궤도요소 역산"
 invoke_step "missions/orbit_determination.py" python missions/orbit_determination.py
 
-write_section "20/26 자세동역학: 토크 없는 강체 자유회전, 중간축 정리"
+write_section "20/27 자세동역학: 토크 없는 강체 자유회전, 중간축 정리"
 invoke_step "attitude/torque_free_rigid_body.py" python attitude/torque_free_rigid_body.py
 
-write_section "21/26 PID 자세제어: 쿼터니언 오차 기반 PD 피드백으로 목표 자세 수렴"
+write_section "21/27 PID 자세제어: 쿼터니언 오차 기반 PD 피드백으로 목표 자세 수렴"
 invoke_step "attitude/pid_attitude_control.py" python attitude/pid_attitude_control.py
 
-write_section "22/26 궤도+자세 통합 임무: 06번 호만 전이 + 21번 PID 자세제어를 하나의 타임라인으로"
+write_section "22/27 궤도+자세 통합 임무: 06번 호만 전이 + 21번 PID 자세제어를 하나의 타임라인으로"
 invoke_step "missions/orbit_raise_and_reorient.py" python missions/orbit_raise_and_reorient.py
 
-write_section "23/26 3체(태양/달) 섭동: 17번이 모델링하지 않는다고 밝힌 요인을 실제로 계산"
+write_section "23/27 3체(태양/달) 섭동: 17번이 모델링하지 않는다고 밝힌 요인을 실제로 계산"
 invoke_step "perturbations/third_body_perturbation.py" python perturbations/third_body_perturbation.py
 
-write_section "24/26 태양복사압(SRP) 섭동: 9번(항력)과 거울상, 고고도에서 남는 비중력 섭동"
+write_section "24/27 태양복사압(SRP) 섭동: 9번(항력)과 거울상, 고고도에서 남는 비중력 섭동"
 invoke_step "perturbations/solar_radiation_pressure.py" python perturbations/solar_radiation_pressure.py
 
-write_section "25/26 결과 시각화 (results/*.png 생성)"
+write_section "25/27 반작용휠 모멘텀 저장과 디새추레이션: 22번이 모델링하지 않는다고 밝힌 델타-V를 실제로 계산"
+invoke_step "attitude/reaction_wheel_desaturation.py" python attitude/reaction_wheel_desaturation.py
+
+write_section "26/27 결과 시각화 (results/*.png 생성)"
 invoke_step "visualization/visualize_orbits.py" python visualization/visualize_orbits.py
 
-write_section "26/26 프로젝트 요약 리포트 생성 (report.html)"
+write_section "27/27 프로젝트 요약 리포트 생성 (report.html)"
 invoke_step "generate_report.py" python generate_report.py
 
 write_section "전체 시뮬레이션 실행 완료"

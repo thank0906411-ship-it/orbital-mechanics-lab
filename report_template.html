@@ -714,7 +714,7 @@
       <summary class="dash-group-summary">
         <span class="dash-group-arrow">▸</span>
         <span class="dash-group-title">자세동역학 — 궤도가 아닌 위성 자체의 회전</span>
-        <span class="dash-group-count">2개 · 16,21</span>
+        <span class="dash-group-count">3개 · 16,21,25</span>
       </summary>
       <div class="dash-group-body">
         <div class="dash-grid">
@@ -730,6 +730,12 @@
             <div class="dash-value">{{PID_TUMBLE_SUPPRESSION_RATIO}}배</div>
             <p class="dash-note">16번이 "순수 동역학만, 제어는 범위 밖"이라 정했던 경계를 의도적으로 뒤집는다 — 쿼터니언 오차 기반 PD 피드백이 중간축 불안정 텀블링을 거의 완전히 정지시킨다</p>
           </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">반작용휠 디새추레이션</span><span class="dash-scripts">25</span></div>
+            <div class="dash-metric">디새추레이션 델타-V vs 궤도 전이 델타-V</div>
+            <div class="dash-value">{{WHEEL_DESAT_DELTA_V_MM_S}}mm/s ({{WHEEL_DESAT_VS_ORBIT_RAISE_PCT}}%)</div>
+            <p class="dash-note">22번이 "반작용휠 디새추레이션 같은 추가 델타-V는 모델링하지 않음"이라 명시한 갭을 채운다 — 휠 포화 후 디새추레이션은 작지만 0이 아닌 델타-V가 든다</p>
+          </div>
         </div>
       </div>
     </details>
@@ -738,7 +744,7 @@
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>스물네 단계의 확장</h2>
+      <h2>스물다섯 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <details class="dash-group" open>
@@ -937,7 +943,7 @@
       <summary class="dash-group-summary">
         <span class="dash-group-arrow">▸</span>
         <span class="dash-group-title">자세동역학 — 궤도가 아닌 위성 자체의 회전</span>
-        <span class="dash-group-count">2개 · 16,21</span>
+        <span class="dash-group-count">3개 · 16,21,25</span>
       </summary>
       <div class="dash-group-body">
         <div class="phases">
@@ -952,6 +958,12 @@
             <h3>PID 자세제어 (Quaternion Attitude Control)</h3>
             <p>16번은 토크 없는 강체 자유회전(오일러 방정식)만 다뤘고, 그 스크립트 docstring이 명시적으로 "쿼터니언 자세 전파나 피드백 제어는 범위 밖으로 남겨둔다"고 선을 그었다. 이 스크립트는 그 경계를 의도적으로 뒤집어, 목표 자세로 수렴시키는 PD 피드백 제어 루프를 연다. 16번은 각속도만 적분했지 자세(방향) 자체는 추적하지 않았으므로, scalar-first 쿼터니언과 그 운동학(dq/dt)이 이 스크립트에서 처음 등장하는 새 인프라다. 현재 자세와 목표 자세의 오차는 q_err=conj(q_target)⊗q로 정의하는데, q와 -q가 같은 자세를 나타내는 이중성 때문에 q_err의 스칼라부가 음수면 전체 부호를 뒤집어야 한다 — 안 그러면 제어기가 먼 길로 돌아간다. PD 게인은 임의의 값이 아니라 원하는 정착시간과 감쇠비에서 2차 시스템 공식(ωn=4/(ζ·ts), Kp=2·I·ωn², Kd=2·ζ·ωn·I)으로 직접 역산한다. 가장 직접적인 증명은 16번과 정확히 같은 중간축 섭동 설정에 PD 제어기를 적용하는 것 — 제어 없이는 180도까지 반복적으로 텀블링하던 회전이, 제어가 있으면 몇 도 이내로 거의 완전히 정지한다.</p>
             <div class="phase-scripts"><span class="chip">21</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">22번의 "델타-V 0"이라는 주장에 현실적인 예외를 만든다</span>
+            <h3>반작용휠 모멘텀 저장과 디새추레이션</h3>
+            <p>22번(orbit_raise_and_reorient.py)은 "자세 재정렬은 이 스크립트의 PD 토크 제어 모델에서 델타-V를 전혀 소모하지 않는다(반작용휠 디새추레이션 같은 추가 델타-V는 모델링하지 않음)"이라고 명시적으로 인정한 갭이 있다. 이 스크립트는 그 갭을 실제로 채운다 — PD 법칙이 계산한 "몸체가 원하는 토크"는 추력기가 아니라 휠 모터가 만들고, 뉴턴 제3법칙에 의해 몸체는 정반대 부호의 반작용 토크를 받는다(torque_cmd = -tau_body_desired). 처음 구현에서 이 부호를 반대로 둬서 각속도가 10초 안에 발산하는 버그를 실제로 겪었다 — 올바른 부호로 고치자 21번과 동일한 수렴이 재현됐다. 외부 토크가 없으면 몸체+휠 총 각운동량의 "크기"가 보존되는지가 가장 강력한 검증이다(벡터 자체는 몸체가 회전하며 방향이 바뀌지만 크기는 보존). 상수 외란(예: 보정 안 된 중력경도 토크)이 지속되면 휠 모멘텀이 거의 정확히 선형으로 쌓이는 동안 포인팅 오차는 거의 0으로 유지돼 "조용히 쌓이는 문제"가 된다 — 포화 시점은 용량/외란 비율과 정확히 일치하고(실측 100.05초), 포화 후에는 포인팅이 완만하게가 아니라 180도까지 급격히 무너진다(하드 실패). 포화 축 클램프도 처음엔 "모멘텀을 줄이는 방향이면 통과"시키는 방향 인식 방식을 시도했는데, 자세 오차가 180도 근처(특이점)에서는 PD 법칙이 아주 큰 토크를 명령해 한 적분 스텝 만에 반대 극성으로 오버슈트하는 버그를 실측으로 발견해, 포화된 축은 방향 무관하게 전면 차단하는 방식으로 바꿨다. 포화 직후 신속하게 디새추레이션하면(몸체 각속도도 함께 리셋) 포인팅이 거의 완벽하게 유지되는 반면, 10초 넘게 방치하면 회복에 실패한다는 것도 확인했다. 디새추레이션 비용은 1.667mm/s로, 22번 기본 호만 전이(207.69m/s)의 약 0.0008%다 — 작지만 "정확히 0"이라는 22번의 주장에 현실적인 예외를 만든다. 외란이 멈추지 않는 한 휠은 같은 주기(용량/외란)마다 다시 포화되므로, 디새추레이션도 17번의 궤도 유지처럼 주기적으로 반복돼야 한다. 이것으로 자세동역학 3종(자유회전/PID 제어/휠 디새추레이션)이 모두 갖춰져 완성됐다.</p>
+            <div class="phase-scripts"><span class="chip">25</span></div>
           </div>
         </div>
       </div>
@@ -1169,6 +1181,16 @@
       <div class="result">
         <img id="img-srp-eclipse" src="{{IMG_SRP_ECLIPSE}}" alt="궤도가 지구 그림자를 지나는 동안 SRP 가속도가 정확히 0으로 떨어지는 계단형 그래프">
         <div class="result-caption"><strong>식(eclipse) 중 SRP 소멸</strong> — 궤도가 지구 그림자에 들어가면 SRP가 정확히 0으로 떨어지는 계단형 패턴 — 3체 섭동의 매끄러운 진동과 대비된다.</div>
+      </div>
+    </div>
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-wheel-saturation" src="{{IMG_WHEEL_SATURATION}}" alt="반작용휠 모멘텀이 선형으로 쌓이다 용량에서 포화되고 디새추레이션으로 리셋되는 톱니파 그래프">
+        <div class="result-caption"><strong>휠 모멘텀 포화와 디새추레이션</strong> — 지속적인 외란 토크가 휠 모멘텀(파랑)을 거의 선형으로 쌓고, 용량(빨강 점선)에 도달하면 디새추레이션 연소로 즉시 0으로 리셋된다 — 17번 RAAN 톱니파와 모양은 비슷하지만, 여기서 쌓이고 리셋되는 건 궤도요소가 아니라 휠의 각운동량이다.</div>
+      </div>
+      <div class="result">
+        <img id="img-wheel-pointing-error" src="{{IMG_WHEEL_POINTING_ERROR}}" alt="휠이 포화되기 전까지는 포인팅 오차가 거의 0으로 유지되다가, 포화 직후 즉시 디새추레이션하면 오차가 다시 거의 0으로 회복되는 그래프">
+        <div class="result-caption"><strong>포화 직후 디새추레이션의 효과</strong> — 포화 전에는 포인팅 오차가 거의 0으로 유지되지만(조용히 쌓이는 문제), 포화되는 바로 그 시점에 즉시 디새추레이션하면 오차가 다시 무시할 수준으로 회복된다 — 대응이 10~20초만 늦어도 회복에 실패한다는 것을 스윕으로 확인했다.</div>
       </div>
     </div>
   </section>
@@ -1438,6 +1460,20 @@
             <td class="num">약 30~40%(실제 LEO 전형값)</td>
             <td><span class="pill good">원통형 그림자 모델이 실측 LEO 식 비율과 일치</span></td>
           </tr>
+          <tr>
+            <td>반작용휠: 외부 토크 없을 때 총 각운동량 크기 보존</td>
+            <td class="num">|L_total(t)| 최대 드리프트</td>
+            <td class="num">5.1×10⁻¹⁶</td>
+            <td class="num">&lt; 1×10⁻⁶</td>
+            <td><span class="pill good">몸체-휠 반작용 부호가 맞아야만 성립하는 가장 엄격한 항등식</span></td>
+          </tr>
+          <tr>
+            <td>반작용휠: 포화 직후 디새추레이션으로 포인팅 회복</td>
+            <td class="num">디새추레이션 후 오차 / 비용 비교</td>
+            <td class="num">{{WHEEL_TIME_TO_SATURATION_SEC}}초에 포화 → 0.007도로 회복</td>
+            <td class="num">0 &lt; 비용 &lt; 호만 전이 델타-V</td>
+            <td><span class="pill good">대응이 10~20초만 늦어도 회복 실패 — 타이밍에 민감</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1448,7 +1484,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–24 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–25 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>
