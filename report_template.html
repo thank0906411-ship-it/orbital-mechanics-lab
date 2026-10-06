@@ -558,7 +558,7 @@
       <summary class="dash-group-summary">
         <span class="dash-group-arrow">▸</span>
         <span class="dash-group-title">임무 설계 — 궤도 전이와 접촉, 운용 시나리오</span>
-        <span class="dash-group-count">8개 · 05,06,09,12–15,22</span>
+        <span class="dash-group-count">9개 · 05,06,09,12–15,22,27</span>
       </summary>
       <div class="dash-group-body">
         <div class="dash-grid">
@@ -609,6 +609,12 @@
             <div class="dash-metric">궤도 전이 델타-V/시간 vs 자세 재정렬 시간</div>
             <div class="dash-value">{{MISSION_ORBIT_DELTA_V_MS}}m/s, {{MISSION_ORBIT_TRANSFER_HOURS}}시간 → {{MISSION_ATTITUDE_SETTLING_SEC}}초</div>
             <p class="dash-note">06번 호만 전이와 21번 PID 자세제어를 새 물리 없이 하나의 임무 타임라인으로 잇는다 — 델타-V를 다 쓴 궤도전이도 몇 초~몇십 초의 자세 재정렬 없이는 쓸모없는 자산으로 남는다</p>
+          </div>
+          <div class="dash-card">
+            <div class="dash-head"><span class="dash-layer">가우스법 궤도결정</span><span class="dash-scripts">27</span></div>
+            <div class="dash-metric">각도 전용 관측 3회로 복원한 반장축/이심률 오차</div>
+            <div class="dash-value">{{GAUSS_A_ERROR_PCT}}% / {{GAUSS_E_ERROR_ABS}} (반복 {{GAUSS_ITERATIONS_USED}}회 수렴)</div>
+            <p class="dash-note">14번이 "가우스법 등은 범위가 커진다"며 미뤘던 일반 타원궤도 결정 — 02번 범용 궤도요소 변환을 재사용해 14번이 다루지 못한 이심률·근점편각까지 복원</p>
           </div>
         </div>
       </div>
@@ -750,7 +756,7 @@
   <section id="phases">
     <div class="section-head">
       <span class="section-num">03</span>
-      <h2>스물여섯 단계의 확장</h2>
+      <h2>스물일곱 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
     <details class="dash-group" open>
@@ -799,7 +805,7 @@
       <summary class="dash-group-summary">
         <span class="dash-group-arrow">▸</span>
         <span class="dash-group-title">임무 설계 — 궤도 전이와 접촉, 운용 시나리오</span>
-        <span class="dash-group-count">8개 · 05,06,09,12–15,22</span>
+        <span class="dash-group-count">9개 · 05,06,09,12–15,22,27</span>
       </summary>
       <div class="dash-group-body">
         <div class="phases">
@@ -850,6 +856,12 @@
             <h3>궤도+자세 통합 임무 시나리오</h3>
             <p>01~21번은 궤도역학(병진운동)과 자세동역학(회전운동)을 서로 독립된 두 영역으로 다뤘다. 이 스크립트는 새 물리를 전혀 추가하지 않고, 이미 완성된 두 스크립트(06번 호만 전이, 21번 PID 자세제어)를 하나의 임무 타임라인으로 이어붙인다 — 위성이 주차궤도에서 임의의 텀블링 자세로 시작해, 호만 전이로 목표 임무궤도에 오른 뒤("on station"), PD 제어기로 지구지향 자세로 재정렬한다. 궤도 전이(수십 분)와 자세 재정렬(수십 초)의 시간축 스케일이 1000배 가까이 달라, 자세 재정렬 단계는 궤도 전이 완료 시각을 오프셋으로 기록해 별도 시간축을 하나의 타임라인에 잇는다. 자세 재정렬 단계의 첫 쿼터니언이 궤도 전이 완료 시점에 선언한 바로 그 임의 자세와 정확히 같다는 것으로 상태가 단계 경계를 실제로 통과함을 확인하고, 이 스크립트의 순수 토크 제어 모델에서는 자세 재정렬이 델타-V를 전혀 소모하지 않음을 보여 두 단계가 물리적으로 독립된 자원(추진제 vs 제어 시간)을 소모한다는 것을 증명한다. 지상국 접촉창(05번) 단계는 처음엔 포함하려 했지만, 궤도면 전체 기하를 다시 복제해야 해서 이 스크립트의 핵심 주장과 무관한 범위 확장이라 판단해 뺐다.</p>
             <div class="phase-scripts"><span class="chip">22</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">14번이 "범위가 커진다"며 미뤘던 일반 타원궤도 결정</span>
+            <h3>가우스법 궤도결정 (Gauss's Method)</h3>
+            <p>14번(orbit_determination.py)은 "이심률이 0인 원궤도만 다룬다 — 완전히 일반적인 케플러 궤도 피팅(가우스법 등)은 라그랑주 계수와 고차 다항식 풀이가 추가로 필요해 범위가 커진다"고 명시적으로 범위를 그었다. 이 스크립트는 바로 그 가우스법을 구현해, 방위각/고도각만(거리 없이) 측정한 3회 관측값으로 일반 타원궤도를 복원한다. 세 시선벡터와 관측자 위치로 세운 라그랑주 계수(f,g) 3차 테일러 전개가 미지의 속도를 소거해, 중간 관측 시점의 거리 r2 하나짜리 8차 다항식으로 귀결된다는 것이 핵심 구조다. 공식 자체는 Curtis 교재 Example 5.11의 정확한 수치로 먼저 재현해 검증했다(r2≈8402km, 기대값 ~8000km 근방과 합치). 그런데 합성 LEO 관측 시나리오로 넓게 스윕하자, "반복 없는" 1차 패스는 세 시선벡터의 스칼라 삼중곱 D0(공면성 척도)가 조금만 작아져도 계수가 수십만 단위로 터지며 어떤 근도 참값과 맞지 않는 극심한 불안정성을 보였다 — 특정 관측 간격 하나에서만 좁고 날카롭게 성공하고 그 근처에서도 수십~수백% 오차로 무너졌다. 계획 단계에서는 이 반복 자체를 "범위 밖"으로 미루려 했으나, 실측이 그 계획을 뒤집었다 — 최초 r2 추정값으로 라그랑주 계수를 반복 재계산하는 단순 고정점 반복(스텀프 함수 기반 완전 보편변수 공식 없이) 하나만 추가해도, 넓은 관측 간격 구간 전체에서 반장축 오차가 1~3%대로 안정되는 극적인 개선을 확인했다. 수렴한 위치/속도벡터를 02번의 범용 궤도요소 변환에 그대로 넘기면 14번이 전혀 다루지 못했던 이심률·근점편각까지 포함한 6개 요소 전부가 나온다. D0가 작은 관측 기하에서는 가우스법이 근본적으로 불안정하다는 것을 감추지 않고, 전용 데모로 그 한계를 직접 보여준다(9번 란베르트의 180도 특이점과 같은 이 프로젝트의 태도). 이것으로 14번의 원궤도 한계를 넘어 일반 타원궤도 궤도결정이 완성됐다.</p>
+            <div class="phase-scripts"><span class="chip">27</span></div>
           </div>
         </div>
       </div>
@@ -1215,6 +1227,16 @@
         <div class="result-caption"><strong>캐논볼 모델과의 궤도 경로 편차</strong> — 텀블링 위성과 캐논볼 모델을 같은 초기조건에서 나란히 적분하면 경로가 서서히 갈라지지만, SRP 자체가 약한 섭동이라 5개 궤도 주기 뒤에도 편차는 반장축 대비 미미한 수준(약 11.6m)에 머문다.</div>
       </div>
     </div>
+    <div class="result-grid">
+      <div class="result">
+        <img id="img-gauss-d0-sensitivity" src="{{IMG_GAUSS_D0_SENSITIVITY}}" alt="가우스법이 관측 기하가 거의 공면일 때는 아예 실패(X 표시)하고, 간격이 넓어질수록 반장축 복원 오차가 점점 커지는 그래프">
+        <div class="result-caption"><strong>D0 민감도: 거의 공면이면 아예 실패</strong> — 회색 X는 |D0|가 임계값 미만이라 ValueError가 발생한 지점, 빨간 선은 성공적으로 복원된 지점의 반장축 오차. 가우스법은 관측 기하가 거의 공면이면 근본적으로 풀 수 없다는 것을 감추지 않고 보여준다.</div>
+      </div>
+      <div class="result">
+        <img id="img-gauss-noise-sensitivity" src="{{IMG_GAUSS_NOISE_SENSITIVITY}}" alt="작은 각도 노이즈를 섞은 20회 시행에서 반장축 복원 오차가 평균 근처 좁은 범위(약 1.4~2.8퍼센트)에 안정적으로 분포하는 산점도">
+        <div class="result-caption"><strong>반복 개선 덕분에 안정적인 노이즈 내성</strong> — 각도 노이즈 0.01도를 20회 다른 시드로 주입해도 반장축 오차가 노이즈 없을 때와 비슷한 좁은 범위에 머문다 — 반복이 1차 패스의 불안정성을 흡수한다.</div>
+      </div>
+    </div>
   </section>
 
   <section id="validation">
@@ -1510,6 +1532,20 @@
             <td class="num">텀블링은 뚜렷이 진동, 태양지향은 95% 이상 유지</td>
             <td><span class="pill good">캐논볼의 "항상 일정" 가정이 텀블링에서는 깨짐</span></td>
           </tr>
+          <tr>
+            <td>가우스법: 이심률·근점편각 복원(14번이 못 다룬 요소)</td>
+            <td class="num">이심률 절대오차 / 근점편각 오차</td>
+            <td class="num">{{GAUSS_E_ERROR_ABS}} / {{GAUSS_ARGP_ERROR_DEG}}도</td>
+            <td class="num">이심률 &lt; 0.05, 근점편각 &lt; 5도</td>
+            <td><span class="pill good">02번 범용 궤도요소 변환 재사용, 14번은 추정 자체가 불가능했던 요소</span></td>
+          </tr>
+          <tr>
+            <td>가우스법: 거의 공면인 관측 기하에서 ValueError</td>
+            <td class="num">|D0|가 임계값 미만일 때 동작</td>
+            <td class="num">D0={{GAUSS_D0}} (기본 시나리오)</td>
+            <td class="num">임계값 미만이면 조용히 틀린 값 대신 명시적 예외</td>
+            <td><span class="pill good">가우스법의 근본적 기하 민감성을 감추지 않음</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1520,7 +1556,7 @@
 
   <footer>
     <span>궤도역학 실험실 — 형제 프로젝트 (데이터링크 계층 실험실과 별도)</span>
-    <span class="mono">01–26 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
+    <span class="mono">01–27 · pytest × {{TEST_COUNT}} · run_all.sh / run_all.ps1</span>
   </footer>
 
 </div>

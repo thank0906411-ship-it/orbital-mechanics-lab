@@ -545,6 +545,23 @@ def compute_attitude_dependent_srp():
   return result
 
 
+def compute_gauss_orbit_determination():
+  result = dict.fromkeys(
+      ["GAUSS_D0", "GAUSS_A_ERROR_PCT", "GAUSS_E_ERROR_ABS", "GAUSS_I_ERROR_DEG",
+       "GAUSS_RAAN_ERROR_DEG", "GAUSS_ARGP_ERROR_DEG", "GAUSS_ITERATIONS_USED"], "-")
+  recovery_rows = read_csv_rows("gauss_orbit_determination_recovery.csv")
+  if recovery_rows:
+    row = recovery_rows[0]
+    result["GAUSS_D0"] = f"{float(row['d0']):.4f}"
+    result["GAUSS_A_ERROR_PCT"] = f"{float(row['a_error_pct']):.2f}"
+    result["GAUSS_E_ERROR_ABS"] = f"{float(row['e_error_abs']):.4f}"
+    result["GAUSS_I_ERROR_DEG"] = f"{float(row['i_error_deg']):.2f}"
+    result["GAUSS_RAAN_ERROR_DEG"] = f"{float(row['raan_error_deg']):.2f}"
+    result["GAUSS_ARGP_ERROR_DEG"] = f"{float(row['argp_error_deg']):.2f}"
+    result["GAUSS_ITERATIONS_USED"] = row["iterations_used"]
+  return result
+
+
 def main():
   with open(TEMPLATE_PATH, encoding="utf-8") as f:
     html = f.read()
@@ -596,6 +613,8 @@ def main():
       "IMG_WHEEL_POINTING_ERROR": img_to_data_uri("25_reaction_wheel_pointing_error.png"),
       "IMG_ATTITUDE_SRP_OSCILLATION": img_to_data_uri("26_attitude_srp_tumbling_oscillation.png"),
       "IMG_ATTITUDE_SRP_DIVERGENCE": img_to_data_uri("26_attitude_srp_orbit_divergence.png"),
+      "IMG_GAUSS_D0_SENSITIVITY": img_to_data_uri("27_gauss_d0_sensitivity.png"),
+      "IMG_GAUSS_NOISE_SENSITIVITY": img_to_data_uri("27_gauss_noise_sensitivity.png"),
   }
   values.update(compute_kepler_convergence())
   values.update(compute_conservation())
@@ -623,6 +642,7 @@ def main():
   values.update(compute_solar_radiation_pressure())
   values.update(compute_reaction_wheel_desaturation())
   values.update(compute_attitude_dependent_srp())
+  values.update(compute_gauss_orbit_determination())
 
   for key, val in values.items():
     token = "{{" + key + "}}"

@@ -10,16 +10,17 @@ attitude/torque_free_rigid_body.py, missions/station_keeping.py,
 missions/orbital_decay.py, missions/lagrange_points.py, missions/lyapunov_orbits.py,
 attitude/pid_attitude_control.py, missions/orbit_raise_and_reorient.py,
 perturbations/third_body_perturbation.py, perturbations/solar_radiation_pressure.py,
-attitude/reaction_wheel_desaturation.py, perturbations/attitude_dependent_srp.py
+attitude/reaction_wheel_desaturation.py, perturbations/attitude_dependent_srp.py,
+missions/gauss_orbit_determination.py
 시뮬레이션이 남긴 결과 CSV를 그래프로 그려주는 도구. 시뮬레이션 코드가 아니라
 "결과를 눈으로 보기 위한" 별도 스크립트다.
 
-실행 전에 먼저 위 23개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
+실행 전에 먼저 위 24개 스크립트를 한 번 이상 실행해서 results/ 폴더에 CSV가
 생성되어 있어야 한다. (해당 CSV가 없는 항목은 건너뛰고 나머지만 그린다.)
 
 실행: python visualization/visualize_orbits.py
 출력 파일명은 어느 스크립트가 만든 결과인지 한눈에 알 수 있도록 원래 번호 체계
-(01~26, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
+(01~27, 스크립트 자체 파일명에서는 빠졌지만 결과물 파일명에는 남겨둠)를
 접두사로 붙인다(예: 01_kepler_orbit_shape.png는 케플러 전파 스크립트의 결과):
       results/01_kepler_orbit_shape.png, results/01_kepler_second_law_areas.png,
       results/04_zenith_and_horizon_cases.png, results/05_elevation_over_time.png,
@@ -41,7 +42,8 @@ attitude/reaction_wheel_desaturation.py, perturbations/attitude_dependent_srp.py
       results/23_third_body_j2_crossover.png, results/23_third_body_oscillation.png,
       results/24_srp_drag_crossover.png, results/24_srp_eclipse_timeseries.png,
       results/25_reaction_wheel_saturation_momentum.png, results/25_reaction_wheel_pointing_error.png,
-      results/26_attitude_srp_tumbling_oscillation.png, results/26_attitude_srp_orbit_divergence.png
+      results/26_attitude_srp_tumbling_oscillation.png, results/26_attitude_srp_orbit_divergence.png,
+      results/27_gauss_d0_sensitivity.png, results/27_gauss_noise_sensitivity.png
 
 참고: 이 스크립트가 만드는 그래프(축/제목/범례 라벨)는 의도적으로 영문으로 표기한다.
       나머지 콘솔 로그/주석은 한글이다.
@@ -1423,6 +1425,73 @@ def plot_attitude_srp_orbit_divergence():
   print(f"[저장됨] {out_path}")
 
 
+def plot_gauss_d0_sensitivity():
+  csv_path = os.path.join(RESULTS_DIR, "gauss_orbit_determination_d0_sensitivity.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/gauss_orbit_determination.py를 실행하세요.")
+    return
+
+  rows = []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      a_err = row["a_error_pct"]
+      rows.append({
+          "spacing_fraction": float(row["spacing_fraction"]),
+          "d0": float(row["d0"]),
+          "a_error_pct": float(a_err) if a_err and a_err != "nan" else None,
+      })
+
+  failed = [r for r in rows if r["a_error_pct"] is None]
+  succeeded = [r for r in rows if r["a_error_pct"] is not None]
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  if succeeded:
+    ax.plot([r["spacing_fraction"] for r in succeeded], [r["a_error_pct"] for r in succeeded],
+            marker="o", color="tab:red", linewidth=1.5, label="Recovered (|D0| above threshold)")
+  if failed:
+    ax.scatter([r["spacing_fraction"] for r in failed], [0] * len(failed),
+               marker="x", color="tab:gray", s=80, label="Rejected (|D0| below threshold, ValueError)", zorder=3)
+  ax.set_xlabel("Observation spacing fraction of visible window")
+  ax.set_ylabel("Semi-major axis error (%)")
+  ax.set_title("Gauss's method fails for near-coplanar geometry, degrades as spacing widens")
+  ax.legend()
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "27_gauss_d0_sensitivity.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
+def plot_gauss_noise_sensitivity():
+  csv_path = os.path.join(RESULTS_DIR, "gauss_orbit_determination_noise_sensitivity.csv")
+  if not os.path.exists(csv_path):
+    print(f"[건너뜀] {csv_path} 없음 — 먼저 missions/gauss_orbit_determination.py를 실행하세요.")
+    return
+
+  trials, a_errors = [], []
+  with open(csv_path, newline="", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+      trials.append(int(row["trial"]))
+      a_errors.append(float(row["a_error_pct"]))
+
+  fig, ax = plt.subplots(figsize=(10, 5))
+  ax.scatter(trials, a_errors, color="tab:blue")
+  ax.axhline(sum(a_errors) / len(a_errors), color="tab:orange", linestyle="--", linewidth=1.5, label="Mean")
+  ax.set_xlabel("Trial")
+  ax.set_ylabel("Semi-major axis error (%)")
+  ax.set_title("Iterative refinement keeps recovery error stable across noisy observation trials")
+  ax.legend()
+  ax.grid(True, alpha=0.3)
+  fig.tight_layout()
+
+  out_path = os.path.join(RESULTS_DIR, "27_gauss_noise_sensitivity.png")
+  fig.savefig(out_path, dpi=120)
+  plt.close(fig)
+  print(f"[저장됨] {out_path}")
+
+
 if __name__ == "__main__":
   os.makedirs(RESULTS_DIR, exist_ok=True)
   plot_kepler_orbit_shape()
@@ -1467,3 +1536,5 @@ if __name__ == "__main__":
   plot_reaction_wheel_pointing_error_through_saturation()
   plot_attitude_srp_tumbling_oscillation()
   plot_attitude_srp_orbit_divergence()
+  plot_gauss_d0_sensitivity()
+  plot_gauss_noise_sensitivity()
