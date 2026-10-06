@@ -475,7 +475,7 @@
     </div>
     <div class="meta">
       마지막 실행<br>
-      <span class="mono">2026-10-02</span>
+      <span class="mono">2026-10-06</span>
     </div>
   </header>
 
@@ -741,152 +741,221 @@
       <h2>스물네 단계의 확장</h2>
     </div>
     <p class="lede">각 단계는 처음부터 새로 만들지 않고 이전 단계의 인프라를 그대로 재사용한다 — 예를 들어 05, 06, 07번은 모두 01번의 solve_kepler_equation과 propagate_orbit을 import해서 쓴다.</p>
-    <div class="phases">
-      <div class="phase">
-        <span class="phase-tag">기초</span>
-        <h3>케플러 방정식과 궤도 전파</h3>
-        <p>M = E - e*sin(E)를 뉴턴-랍슨으로 풀어 시간과 궤도 위치를 잇는다. 이후 모든 스크립트가 이 모듈의 핵심 함수를 재사용한다.</p>
-        <div class="phase-scripts"><span class="chip">01</span></div>
+    <details class="dash-group" open>
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">기초 전파 — 궤도의 가장 기본이 되는 수학/좌표계</span>
+        <span class="dash-group-count">5개 · 01–04,08</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="phases">
+          <div class="phase">
+            <span class="phase-tag">기초</span>
+            <h3>케플러 방정식과 궤도 전파</h3>
+            <p>M = E - e*sin(E)를 뉴턴-랍슨으로 풀어 시간과 궤도 위치를 잇는다. 이후 모든 스크립트가 이 모듈의 핵심 함수를 재사용한다.</p>
+            <div class="phase-scripts"><span class="chip">01</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">3차원 확장</span>
+            <h3>궤도요소 ↔ 상태벡터, 보존량</h3>
+            <p>궤도면 2차원 위치를 3번의 회전으로 3차원 ECI 상태벡터로 확장하고, vis-viva 방정식과 비에너지/비각운동량 보존을 검증한다.</p>
+            <div class="phase-scripts"><span class="chip">02</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">수치적 기준선</span>
+            <h3>2체 문제 RK4 수치적분</h3>
+            <p>해석해 대신 운동방정식을 RK4로 직접 적분해 01/02번의 해석해와 대조하고, O(h^4) 수렴 차수와 에너지 드리프트를 확인한다 — 07번 섭동 모델의 신뢰성 기준선이 된다.</p>
+            <div class="phase-scripts"><span class="chip">03</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">관측 기하</span>
+            <h3>좌표계 변환 (ECI/ECEF/SEZ)</h3>
+            <p>지구 자전(ECI→ECEF)과 관측자 위치(위경도)를 반영해 궤도 위치를 방위각/고도각으로 바꾼다. 05번이 이 변환을 재사용한다.</p>
+            <div class="phase-scripts"><span class="chip">04</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">시각화</span>
+            <h3>궤도, 접촉 창, 전이궤도 그리기</h3>
+            <p>시뮬레이션 없이 앞선 스크립트들의 CSV만 읽어 궤도 형상, 고도각 시계열, 접촉 창 간트차트, 전이궤도, J2 세차를 그래프로 그린다.</p>
+            <div class="phase-scripts"><span class="chip">08</span></div>
+          </div>
+        </div>
       </div>
-      <div class="phase">
-        <span class="phase-tag">3차원 확장</span>
-        <h3>궤도요소 ↔ 상태벡터, 보존량</h3>
-        <p>궤도면 2차원 위치를 3번의 회전으로 3차원 ECI 상태벡터로 확장하고, vis-viva 방정식과 비에너지/비각운동량 보존을 검증한다.</p>
-        <div class="phase-scripts"><span class="chip">02</span></div>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">임무 설계 — 궤도 전이와 접촉, 운용 시나리오</span>
+        <span class="dash-group-count">8개 · 05,06,09,12–15,22</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="phases">
+          <div class="phase">
+            <span class="phase-tag">이 프로젝트의 핵심 차별점</span>
+            <h3>실측 지상국 가시성</h3>
+            <p>사각파 근사 대신, 01번의 실제 궤도 전파 + 04번의 좌표변환으로 매 순간 고도각을 계산해 실측 접촉 창(AOS/LOS)을 찾는다.</p>
+            <div class="phase-scripts"><span class="chip">05</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">임무 설계</span>
+            <h3>호만 전이</h3>
+            <p>최소 에너지로 궤도를 변경하는 두 번의 임펄스를 계산하고, LEO→GEO 델타-V가 교과서 값과 일치하는지, 01번 전파로 전이 도착 시각이 정확한지 검증한다.</p>
+            <div class="phase-scripts"><span class="chip">06</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">역문제</span>
+            <h3>란베르트 문제</h3>
+            <p>궤도요소가 주어졌을 때 위치를 구하던 순문제를 뒤집어, 두 위치·비행시간으로 속도벡터를 구하는 역문제를 유니버설 변수·스텀프 함수로 푼다. 06번 호만 전이와 교차검증한다.</p>
+            <div class="phase-scripts"><span class="chip">09</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">태양 중심 확장</span>
+            <h3>행성간 궤적 (Patched Conic)</h3>
+            <p>지구 하나의 중력장을 벗어나, 지구 탈출-태양 중심 전이-화성 포획을 세 개의 독립된 2체 문제로 이어붙인다. 06번의 호만 전이 공식을 태양 GM으로 그대로 재사용하고, 중력권(SOI) 반지름이 전이거리에 비해 실제로 작은지 스스로 검증한다.</p>
+            <div class="phase-scripts"><span class="chip">12</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">근접 상대운동</span>
+            <h3>도킹/랑데부 (Clohessy-Wiltshire)</h3>
+            <p>09번의 큰 스케일 전이 다음 단계 — 목표 위성을 원점으로 한 상대좌표계에서 근접 운용 궤적을 선형화된 닫힌 해(상태천이행렬)로 구한다. 제로 드리프트 조건 없이는 진행 방향으로 선형 발산한다는 것과, 이 근사가 상대거리가 커지면 실제 비선형 궤도에서 벗어난다는 것을 01/02번 재전파로 검증한다.</p>
+            <div class="phase-scripts"><span class="chip">13</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">역문제, 노이즈 하에서</span>
+            <h3>궤도 결정 (Orbit Determination)</h3>
+            <p>02번(궤도요소→상태벡터)과 정반대 방향 — 지상 레이더의 노이즈 낀 거리/방위각/고도각 관측값"만"으로 원궤도의 반장축·경사각·RAAN을 역산한다. 04번 관측 기하 변환을 정확히 뒤집어 순간 위치를 복원하고, 여러 시점의 위치에 SVD로 궤도면을 최소자승 피팅한다. 관측 노이즈가 커질수록, 관측 개수가 적을수록 추정이 불안정해지는 것을 직접 확인한다.</p>
+            <div class="phase-scripts"><span class="chip">14</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">연속 저추력, 06번과의 대비</span>
+            <h3>저추력 전기추진 궤도 전이 (Low-Thrust Transfer)</h3>
+            <p>06번 호만 전이가 "순간 임펄스 두 번"으로 궤도를 바꿨다면, 이 스크립트는 정반대 축 — 이온엔진 같은 전기추진으로 훨씬 작은 가속도를 몇 시간〜며칠에 걸쳐 연속으로 가하는 전이를 다룬다. 03번 RK4 적분기의 중심력 가속도에 접선방향(진행방향) 추력 가속도를 더해 원궤도가 나선형으로 상승하는 과정을 직접 적분하고, 닫힌 형태 근사(Edelbaum 근사, Δv=|v1-v2|)와 대조해 검증한다. 06번과 같은 반지름 쌍에 대해 호만 전이와 델타-V/시간을 나란히 비교하면, 델타-V는 비슷한 수준이어도 걸리는 시간은 자릿수가 다르다는 실제 임무 설계의 트레이드오프가 드러난다.</p>
+            <div class="phase-scripts"><span class="chip">15</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">06번과 21번을 하나의 임무 타임라인으로 잇는다</span>
+            <h3>궤도+자세 통합 임무 시나리오</h3>
+            <p>01~21번은 궤도역학(병진운동)과 자세동역학(회전운동)을 서로 독립된 두 영역으로 다뤘다. 이 스크립트는 새 물리를 전혀 추가하지 않고, 이미 완성된 두 스크립트(06번 호만 전이, 21번 PID 자세제어)를 하나의 임무 타임라인으로 이어붙인다 — 위성이 주차궤도에서 임의의 텀블링 자세로 시작해, 호만 전이로 목표 임무궤도에 오른 뒤("on station"), PD 제어기로 지구지향 자세로 재정렬한다. 궤도 전이(수십 분)와 자세 재정렬(수십 초)의 시간축 스케일이 1000배 가까이 달라, 자세 재정렬 단계는 궤도 전이 완료 시각을 오프셋으로 기록해 별도 시간축을 하나의 타임라인에 잇는다. 자세 재정렬 단계의 첫 쿼터니언이 궤도 전이 완료 시점에 선언한 바로 그 임의 자세와 정확히 같다는 것으로 상태가 단계 경계를 실제로 통과함을 확인하고, 이 스크립트의 순수 토크 제어 모델에서는 자세 재정렬이 델타-V를 전혀 소모하지 않음을 보여 두 단계가 물리적으로 독립된 자원(추진제 vs 제어 시간)을 소모한다는 것을 증명한다. 지상국 접촉창(05번) 단계는 처음엔 포함하려 했지만, 궤도면 전체 기하를 다시 복제해야 해서 이 스크립트의 핵심 주장과 무관한 범위 확장이라 판단해 뺐다.</p>
+            <div class="phase-scripts"><span class="chip">22</span></div>
+          </div>
+        </div>
       </div>
-      <div class="phase">
-        <span class="phase-tag">수치적 기준선</span>
-        <h3>2체 문제 RK4 수치적분</h3>
-        <p>해석해 대신 운동방정식을 RK4로 직접 적분해 01/02번의 해석해와 대조하고, O(h^4) 수렴 차수와 에너지 드리프트를 확인한다 — 07번 섭동 모델의 신뢰성 기준선이 된다.</p>
-        <div class="phase-scripts"><span class="chip">03</span></div>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">섭동 — 완전한 2체 문제에서 벗어나는 요인들</span>
+        <span class="dash-group-count">5개 · 07,17,18,23,24</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="phases">
+          <div class="phase">
+            <span class="phase-tag">섭동</span>
+            <h3>J2 섭동 (RAAN/근점편각 세차)</h3>
+            <p>지구 편평도가 일으키는 궤도면 회전을 계산한다. 임계경사각에서 근점편각 세차가 0이 되는 것, 극궤도에서 RAAN 세차가 0이 되는 것을 직접 확인한다.</p>
+            <div class="phase-scripts"><span class="chip">07</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">07번의 방치된 드리프트를 실제로 보정</span>
+            <h3>궤도 유지 비용 (Station-Keeping)</h3>
+            <p>07번(J2 섭동)은 궤도면(RAAN)이 서서히 흐트러진다는 것을 보여줬지만, 그 드리프트를 방치한 결과만 계산했다. 실제 위성은 이걸 방치하지 않고 주기적으로 작은 기동(임펄스)으로 되돌리는데, 07번의 예측 세차율 자체는(태양동기궤도라면) 오히려 의도된 값이라 보정 대상이 아니다 — 실제로 보정하는 것은 그 예측과 실측 사이의 작은 잔여 오차뿐이다. 이 스크립트는 RAAN을 되돌리는 데 필요한 평면 변경(plane-change) 델타-V 공식(Δv=2*v*sin(각도/2), 06번 호만 전이의 반지름 변경 공식과는 다른 종류)을 새로 정의하고, 허용 오차에 도달할 때마다 기동해 RAAN 오차가 톱니파 형태로 유계에 머무는 것을 확인한다. 허용 오차를 10배까지 바꿔도 임무 기간 총 델타-V 예산은 거의 그대로다 — 자주 보정하면 한 번에 쓰는 델타-V는 작지만 횟수가 늘고, 드물게 보정하면 그 반대라 서로 상쇄되기 때문이다.</p>
+            <div class="phase-scripts"><span class="chip">17</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">15번과 정확히 거울상</span>
+            <h3>궤도 재진입/대기항력 감쇠 (Orbital Decay)</h3>
+            <p>15번(저추력 전기추진)이 접선방향 연속 추력으로 원궤도를 서서히 밀어 올렸다면, 이 스크립트는 정반대다 — 저궤도 위성은 완전한 진공이 아니라 극도로 희박한 대기 속을 지나가므로, 속도 반대방향으로 작용하는 미세한 항력이 계속 에너지를 빼앗아 고도가 서서히 떨어지다 결국 재진입한다. 지수함수 대기밀도 근사(ρ(h)=ρ0·exp(-(h-h0)/H))와 탄도계수 기반 항력 감속(a=-0.5·ρ(h)·v²/BC)을 15번의 "접선 추력" 항을 부호만 반전한 구조로 재사용한다. 대기밀도가 지수함수이므로 재진입 직전으로 갈수록 하강이 급격히 가속화되는 비선형 패턴이 나타나고, 탄도계수가 클수록(무겁고 단면적이 작은 위성) 수명이 길어지며, 초기 고도가 조금만 높아져도 수명이 기하급수적으로 늘어난다 — "폐기위성을 낮은 고도로만 유도해도 자연스럽게 몇 년 안에 재진입한다"는 실제 우주 쓰레기 정책의 물리적 근거를 수치로 보여준다.</p>
+            <div class="phase-scripts"><span class="chip">18</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">17번이 "모델링하지 않는 요인"이라 부른 것을 실제로 계산한다</span>
+            <h3>3체(태양/달) 섭동</h3>
+            <p>17번(station_keeping.py)의 docstring은 "세차율 계산 자체의 불확실성(더 높은 차수의 섭동, 대기항력, 태양/달의 중력 등 이 스크립트가 모델링하지 않는 요인들)"이라며 태양/달의 중력을 명시적으로 범위 밖으로 남겨뒀다. 이 스크립트는 그 요인을 실제로 계산 가능한 값으로 만든다 — 지구 중심 좌표계에서 위성이 받는 태양/달의 중력은 지구 자신도 같은 천체에 끌리므로 그 공통항을 뺀 상대(차분) 섭동이어야 한다(a_3rd = mu_body*[(r_body-r_sat)/|r_body-r_sat|^3 - r_body/|r_body|^3]) — 위성이 지구 중심에 있으면 두 항이 정확히 상쇄돼 0이 되는 항등식으로 공식 자체를 검증한다. 태양의 GM은 달의 2700만 배지만, 거리의 세제곱에 반비례하는 상대 섭동 공식 때문에 지구에 훨씬 가까운 달의 섭동이 실제로는 태양의 약 2.2배 크다는 교과서적 결과를 직접 재현한다. 07번(J2 섭동)과 같은 단위(가속도 크기)로 비교하면, LEO에서는 J2가 압도적이지만(비율 0.01% 수준) 고도가 높아질수록 격차가 줄어 GEO 부근에서는 3체 섭동이 J2를 능가한다 — 실제 GEO 위성 운용에서 태양/달 섭동이 J2보다 더 중요한 보정 대상인 이유를 수치로 보여준다. 태양과 달 모두 이심률 0인 원궤도, 지구 적도면과 같은 평면으로 단순화한다(황도 기울기와 달의 궤도경사는 무시) — 방향 정확도는 희생하지만 이 스크립트가 보여주려는 핵심(크기와 시간에 따른 변화)은 그대로 보존된다. 17번의 RAAN 세차율(rad/s)과 이 스크립트의 가속도(km/s²)는 단위가 달라 직접 변환하지 않는다 — 가우스 섭동방정식 기반 평균화가 필요한 별도 범위이기 때문이다.</p>
+            <div class="phase-scripts"><span class="chip">23</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">9번(항력)과 거울상 — 고도가 높아지면 대기는 사라져도 태양빛은 남는다</span>
+            <h3>태양복사압(SRP) 섭동</h3>
+            <p>9번(orbital_decay.py)은 저궤도에서 지배적인 대기항력 감쇠를 다뤘다. 이 스크립트는 그 거울상이다 — 대기가 사실상 없는 고궤도에서는 태양복사압(SRP)이 남는 유일한 비중력 섭동이 된다. 단순화된 구형(cannonball) 모델에서 가속도는 a_srp = P_sr·Cr·(A/m)·unit(r_sat-r_sun)으로 주어진다 — 방향은 태양→위성 방향(태양 반대쪽)이며, 부호가 뒤집히면 태양 쪽으로 끌리는 물리적 오류가 되므로 이 부호 자체를 항등식 테스트로 검증했다. 처음엔 23번처럼 J2나 3체 섭동과 비교하려 했지만, 실제로 계산해보니 SRP는 태양까지의 거리(~1AU)에만 의존해 위성의 지구 중심 거리와 거의 무관하다는 것을 발견했다 — GEO에서도 J2 대비 비율이 1% 미만에 불과해 23번 같은 흥미로운 교차점이 나오지 않았다. 대신 9번의 지수함수 대기밀도 모델을 그대로 재사용해 항력과 비교하니, 200km에서는 항력이 압도적이지만 3000km에서는 SRP가 압도적이며 약 550~800km 사이에서 실제 교차점이 나온다는 것을 확인했다 — 실제 위성 궤도수명 연구가 약 600~800km 이하에서만 항력을 신경 쓰는 이유와 정확히 일치한다. 또한 태양-지구 축 기준 원통형 그림자 근사(두 조건 모두 필요: 태양 반대쪽 AND 축에서 수직거리가 지구 반지름 이내)를 도입해, 궤도면을 태양 방향과 일치시킨 특수 기하(베타각 0도)에서 궤도의 약 36%가 그림자에 들어가 SRP가 정확히 0이 되는 것을 직접 적분으로 확인했다 — 이 식 비율은 일반적인 궤도의 주장이 아니라 이 특수 기하에만 해당한다는 것을 명시한다.</p>
+            <div class="phase-scripts"><span class="chip">24</span></div>
+          </div>
+        </div>
       </div>
-      <div class="phase">
-        <span class="phase-tag">관측 기하</span>
-        <h3>좌표계 변환 (ECI/ECEF/SEZ)</h3>
-        <p>지구 자전(ECI→ECEF)과 관측자 위치(위경도)를 반영해 궤도 위치를 방위각/고도각으로 바꾼다. 05번이 이 변환을 재사용한다.</p>
-        <div class="phase-scripts"><span class="chip">04</span></div>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">다중 위성 — 성좌 커버리지와 위성간 링크</span>
+        <span class="dash-group-count">2개 · 10,11</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="phases">
+          <div class="phase">
+            <span class="phase-tag">다중 위성 응용</span>
+            <h3>성좌 커버리지</h3>
+            <p>워커 델타 패턴으로 여러 위성을 배치하고, 05번의 접촉 창 계산을 "하나 이상 보임" 조건으로 일반화해 커버리지 공백을 계산한다. "평면을 나누면 항상 좋다"는 직관이 지점 하나 기준에서는 성립하지 않는다는 것을 실측으로 확인한다.</p>
+            <div class="phase-scripts"><span class="chip">10</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">위성-위성 기하</span>
+            <h3>위성간 링크(ISL) 가시선</h3>
+            <p>지상국이 아니라 위성-위성 사이의 시선을, 선분과 구(지구) 사이의 최근접 거리라는 순수 기하 문제로 판정한다. 정반대편(반드시 가려짐), 같은 평면(대부분 보임) 경계 케이스로 검증한다.</p>
+            <div class="phase-scripts"><span class="chip">11</span></div>
+          </div>
+        </div>
       </div>
-      <div class="phase">
-        <span class="phase-tag">이 프로젝트의 핵심 차별점</span>
-        <h3>실측 지상국 가시성</h3>
-        <p>사각파 근사 대신, 01번의 실제 궤도 전파 + 04번의 좌표변환으로 매 순간 고도각을 계산해 실측 접촉 창(AOS/LOS)을 찾는다.</p>
-        <div class="phase-scripts"><span class="chip">05</span></div>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">3체 문제 — 라그랑주점과 그 주위 주기궤도</span>
+        <span class="dash-group-count">2개 · 19,20</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="phases">
+          <div class="phase">
+            <span class="phase-tag">12번이 피했던 진짜 3체 문제를 정면으로 연다</span>
+            <h3>3체 문제와 라그랑주점 (CR3BP)</h3>
+            <p>01~18번은 모두 "하나의 중심천체 + 작은 섭동/추력/항력"이라는 공통 골격이었고, 12번(Patched Conic)은 태양-지구-화성이라는 진짜 3체 문제를 세 개의 독립된 2체 문제로 이어붙여 피했다. 이 스크립트는 12번이 피했던 문제를 원형 제한 3체 문제(CR3BP)로 정면으로 연다 — 지구-달처럼 두 개의 큰 천체가 만드는 회전 중력장 안에서, 질량이 무시할 만한 세 번째 물체가 정지해 있을 수 있는 5개의 평형점(라그랑주점)을 찾는다. 회전좌표계 운동방정식에 이 프로젝트 최초로 원심력과 코리올리 힘이 등장하고, 무차원화(질량비 mu 하나로 계 전체가 결정됨)를 쓴다는 점에서 이전 스크립트들과 근본적으로 다르다. L1/L2/L3(콜린스)는 이분법으로 푼 5차 방정식의 근, L4/L5(삼각)는 두 주천체와 항상 정삼각형을 이루는 닫힌 공식으로 구하고, 각 점에서 선형화한 야코비 행렬의 고유값으로 안정성을 판정한다 — 지구-달 질량비에서 L4/L5는 안정(고유값이 순허수), L1/L2/L3는 불안정(고유값에 양의 실수부)임을 확인하고, 같은 크기의 섭동을 준 RK4 직접 적분 궤적으로도 L4는 유계, L1은 훨씬 크게 발산하는 것을 재확인한다.</p>
+            <div class="phase-scripts"><span class="chip">19</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">라그랑주점이 "점"이라면, 이건 그 주위를 도는 "궤도"</span>
+            <h3>평면 리아푸노프 궤도 (Lyapunov Orbits)</h3>
+            <p>19번은 라그랑주점의 위치와 선형 안정성까지만 다뤘다 — 그 스크립트 docstring이 명시적으로 "헤일로 궤도 같은 CR3BP의 실전 응용은 다루지 않는다"고 범위를 그었다. 이 스크립트는 그다음 단계로, 라그랑주점 자체가 아니라 그 주위를 도는 주기궤도 가족이 존재한다는 것을 보여준다 — 실제 L1/L2 임무(SOHO, JWST 등)가 정확히 라그랑주점에 위성을 두지 않고 그 주위의 작은 주기궤도에 두는 이유의 수학적 근거다. 3차원 헤일로 궤도는 Richardson 3차 근사 계수 전사 실수 위험이 커서, 범위를 평면(2차원) 리아푸노프 궤도로 좁혔다. 19번이 만든 4x4 평면 야코비안의 순허수 고유벡터(중심 방향) 섭동을 초기 추정치로 삼아, 상태천이행렬(STM)을 상태와 함께 20차원으로 결합 적분하고, x축 대칭(y=0에서 vx=0)을 이용한 단일 슈팅 미분수정으로 진짜 비선형 주기궤도를 완성한다. 진폭이 커질수록 실제 주기가 선형 예측(2π/ω)에서 점점 벗어나는 것을 직접 확인해, "선형 근사는 시작점일 뿐, 진짜 주기궤도는 미분수정으로 완성해야 한다"는 핵심 메시지를 수치로 보여준다.</p>
+            <div class="phase-scripts"><span class="chip">20</span></div>
+          </div>
+        </div>
       </div>
-      <div class="phase">
-        <span class="phase-tag">임무 설계</span>
-        <h3>호만 전이</h3>
-        <p>최소 에너지로 궤도를 변경하는 두 번의 임펄스를 계산하고, LEO→GEO 델타-V가 교과서 값과 일치하는지, 01번 전파로 전이 도착 시각이 정확한지 검증한다.</p>
-        <div class="phase-scripts"><span class="chip">06</span></div>
+    </details>
+
+    <details class="dash-group">
+      <summary class="dash-group-summary">
+        <span class="dash-group-arrow">▸</span>
+        <span class="dash-group-title">자세동역학 — 궤도가 아닌 위성 자체의 회전</span>
+        <span class="dash-group-count">2개 · 16,21</span>
+      </summary>
+      <div class="dash-group-body">
+        <div class="phases">
+          <div class="phase">
+            <span class="phase-tag">새 물리 영역: 병진운동에서 회전운동으로</span>
+            <h3>자세동역학 (Torque-Free Rigid Body, 중간축 정리)</h3>
+            <p>01〜15번은 모두 위성을 점 질량으로 다뤘다 — 궤도상의 위치/속도(병진운동)만 계산했지, 위성 자체가 어느 방향을 향하는지(자세)는 다루지 않았다. 이 스크립트는 처음으로 궤도역학과 독립적인 새 물리 영역, 즉 강체의 회전운동을 연다. 외부 토크가 전혀 없는 강체의 오일러 회전방정식을 03/15번과 같은 RK4 구조로 직접 수치적분해, 관성모멘트가 가장 크거나 가장 작은 축 주위 회전은 작은 섭동에도 안정적이지만 중간 크기 축 주위 회전은 섭동이 기하급수적으로 커져 축 자체가 뒤집힌다는 "중간축 정리"(테니스 라켓 정리)를 재현한다. 자세제어(PID 피드백)는 이 프로젝트에서 계속 범위 밖으로 남겨두고, 순수한 동역학(외부 입력 없는 자유회전)만 다룬다.</p>
+            <div class="phase-scripts"><span class="chip">16</span></div>
+          </div>
+          <div class="phase">
+            <span class="phase-tag">16번의 경계를 의도적으로 뒤집는다</span>
+            <h3>PID 자세제어 (Quaternion Attitude Control)</h3>
+            <p>16번은 토크 없는 강체 자유회전(오일러 방정식)만 다뤘고, 그 스크립트 docstring이 명시적으로 "쿼터니언 자세 전파나 피드백 제어는 범위 밖으로 남겨둔다"고 선을 그었다. 이 스크립트는 그 경계를 의도적으로 뒤집어, 목표 자세로 수렴시키는 PD 피드백 제어 루프를 연다. 16번은 각속도만 적분했지 자세(방향) 자체는 추적하지 않았으므로, scalar-first 쿼터니언과 그 운동학(dq/dt)이 이 스크립트에서 처음 등장하는 새 인프라다. 현재 자세와 목표 자세의 오차는 q_err=conj(q_target)⊗q로 정의하는데, q와 -q가 같은 자세를 나타내는 이중성 때문에 q_err의 스칼라부가 음수면 전체 부호를 뒤집어야 한다 — 안 그러면 제어기가 먼 길로 돌아간다. PD 게인은 임의의 값이 아니라 원하는 정착시간과 감쇠비에서 2차 시스템 공식(ωn=4/(ζ·ts), Kp=2·I·ωn², Kd=2·ζ·ωn·I)으로 직접 역산한다. 가장 직접적인 증명은 16번과 정확히 같은 중간축 섭동 설정에 PD 제어기를 적용하는 것 — 제어 없이는 180도까지 반복적으로 텀블링하던 회전이, 제어가 있으면 몇 도 이내로 거의 완전히 정지한다.</p>
+            <div class="phase-scripts"><span class="chip">21</span></div>
+          </div>
+        </div>
       </div>
-      <div class="phase">
-        <span class="phase-tag">섭동</span>
-        <h3>J2 섭동 (RAAN/근점편각 세차)</h3>
-        <p>지구 편평도가 일으키는 궤도면 회전을 계산한다. 임계경사각에서 근점편각 세차가 0이 되는 것, 극궤도에서 RAAN 세차가 0이 되는 것을 직접 확인한다.</p>
-        <div class="phase-scripts"><span class="chip">07</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">시각화</span>
-        <h3>궤도, 접촉 창, 전이궤도 그리기</h3>
-        <p>시뮬레이션 없이 앞선 스크립트들의 CSV만 읽어 궤도 형상, 고도각 시계열, 접촉 창 간트차트, 전이궤도, J2 세차를 그래프로 그린다.</p>
-        <div class="phase-scripts"><span class="chip">08</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">역문제</span>
-        <h3>란베르트 문제</h3>
-        <p>궤도요소가 주어졌을 때 위치를 구하던 순문제를 뒤집어, 두 위치·비행시간으로 속도벡터를 구하는 역문제를 유니버설 변수·스텀프 함수로 푼다. 06번 호만 전이와 교차검증한다.</p>
-        <div class="phase-scripts"><span class="chip">09</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">다중 위성 응용</span>
-        <h3>성좌 커버리지</h3>
-        <p>워커 델타 패턴으로 여러 위성을 배치하고, 05번의 접촉 창 계산을 "하나 이상 보임" 조건으로 일반화해 커버리지 공백을 계산한다. "평면을 나누면 항상 좋다"는 직관이 지점 하나 기준에서는 성립하지 않는다는 것을 실측으로 확인한다.</p>
-        <div class="phase-scripts"><span class="chip">10</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">위성-위성 기하</span>
-        <h3>위성간 링크(ISL) 가시선</h3>
-        <p>지상국이 아니라 위성-위성 사이의 시선을, 선분과 구(지구) 사이의 최근접 거리라는 순수 기하 문제로 판정한다. 정반대편(반드시 가려짐), 같은 평면(대부분 보임) 경계 케이스로 검증한다.</p>
-        <div class="phase-scripts"><span class="chip">11</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">태양 중심 확장</span>
-        <h3>행성간 궤적 (Patched Conic)</h3>
-        <p>지구 하나의 중력장을 벗어나, 지구 탈출-태양 중심 전이-화성 포획을 세 개의 독립된 2체 문제로 이어붙인다. 06번의 호만 전이 공식을 태양 GM으로 그대로 재사용하고, 중력권(SOI) 반지름이 전이거리에 비해 실제로 작은지 스스로 검증한다.</p>
-        <div class="phase-scripts"><span class="chip">12</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">근접 상대운동</span>
-        <h3>도킹/랑데부 (Clohessy-Wiltshire)</h3>
-        <p>09번의 큰 스케일 전이 다음 단계 — 목표 위성을 원점으로 한 상대좌표계에서 근접 운용 궤적을 선형화된 닫힌 해(상태천이행렬)로 구한다. 제로 드리프트 조건 없이는 진행 방향으로 선형 발산한다는 것과, 이 근사가 상대거리가 커지면 실제 비선형 궤도에서 벗어난다는 것을 01/02번 재전파로 검증한다.</p>
-        <div class="phase-scripts"><span class="chip">13</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">역문제, 노이즈 하에서</span>
-        <h3>궤도 결정 (Orbit Determination)</h3>
-        <p>02번(궤도요소→상태벡터)과 정반대 방향 — 지상 레이더의 노이즈 낀 거리/방위각/고도각 관측값"만"으로 원궤도의 반장축·경사각·RAAN을 역산한다. 04번 관측 기하 변환을 정확히 뒤집어 순간 위치를 복원하고, 여러 시점의 위치에 SVD로 궤도면을 최소자승 피팅한다. 관측 노이즈가 커질수록, 관측 개수가 적을수록 추정이 불안정해지는 것을 직접 확인한다.</p>
-        <div class="phase-scripts"><span class="chip">14</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">연속 저추력, 06번과의 대비</span>
-        <h3>저추력 전기추진 궤도 전이 (Low-Thrust Transfer)</h3>
-        <p>06번 호만 전이가 "순간 임펄스 두 번"으로 궤도를 바꿨다면, 이 스크립트는 정반대 축 — 이온엔진 같은 전기추진으로 훨씬 작은 가속도를 몇 시간〜며칠에 걸쳐 연속으로 가하는 전이를 다룬다. 03번 RK4 적분기의 중심력 가속도에 접선방향(진행방향) 추력 가속도를 더해 원궤도가 나선형으로 상승하는 과정을 직접 적분하고, 닫힌 형태 근사(Edelbaum 근사, Δv=|v1-v2|)와 대조해 검증한다. 06번과 같은 반지름 쌍에 대해 호만 전이와 델타-V/시간을 나란히 비교하면, 델타-V는 비슷한 수준이어도 걸리는 시간은 자릿수가 다르다는 실제 임무 설계의 트레이드오프가 드러난다.</p>
-        <div class="phase-scripts"><span class="chip">15</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">새 물리 영역: 병진운동에서 회전운동으로</span>
-        <h3>자세동역학 (Torque-Free Rigid Body, 중간축 정리)</h3>
-        <p>01〜15번은 모두 위성을 점 질량으로 다뤘다 — 궤도상의 위치/속도(병진운동)만 계산했지, 위성 자체가 어느 방향을 향하는지(자세)는 다루지 않았다. 이 스크립트는 처음으로 궤도역학과 독립적인 새 물리 영역, 즉 강체의 회전운동을 연다. 외부 토크가 전혀 없는 강체의 오일러 회전방정식을 03/15번과 같은 RK4 구조로 직접 수치적분해, 관성모멘트가 가장 크거나 가장 작은 축 주위 회전은 작은 섭동에도 안정적이지만 중간 크기 축 주위 회전은 섭동이 기하급수적으로 커져 축 자체가 뒤집힌다는 "중간축 정리"(테니스 라켓 정리)를 재현한다. 자세제어(PID 피드백)는 이 프로젝트에서 계속 범위 밖으로 남겨두고, 순수한 동역학(외부 입력 없는 자유회전)만 다룬다.</p>
-        <div class="phase-scripts"><span class="chip">16</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">07번의 방치된 드리프트를 실제로 보정</span>
-        <h3>궤도 유지 비용 (Station-Keeping)</h3>
-        <p>07번(J2 섭동)은 궤도면(RAAN)이 서서히 흐트러진다는 것을 보여줬지만, 그 드리프트를 방치한 결과만 계산했다. 실제 위성은 이걸 방치하지 않고 주기적으로 작은 기동(임펄스)으로 되돌리는데, 07번의 예측 세차율 자체는(태양동기궤도라면) 오히려 의도된 값이라 보정 대상이 아니다 — 실제로 보정하는 것은 그 예측과 실측 사이의 작은 잔여 오차뿐이다. 이 스크립트는 RAAN을 되돌리는 데 필요한 평면 변경(plane-change) 델타-V 공식(Δv=2*v*sin(각도/2), 06번 호만 전이의 반지름 변경 공식과는 다른 종류)을 새로 정의하고, 허용 오차에 도달할 때마다 기동해 RAAN 오차가 톱니파 형태로 유계에 머무는 것을 확인한다. 허용 오차를 10배까지 바꿔도 임무 기간 총 델타-V 예산은 거의 그대로다 — 자주 보정하면 한 번에 쓰는 델타-V는 작지만 횟수가 늘고, 드물게 보정하면 그 반대라 서로 상쇄되기 때문이다.</p>
-        <div class="phase-scripts"><span class="chip">17</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">15번과 정확히 거울상</span>
-        <h3>궤도 재진입/대기항력 감쇠 (Orbital Decay)</h3>
-        <p>15번(저추력 전기추진)이 접선방향 연속 추력으로 원궤도를 서서히 밀어 올렸다면, 이 스크립트는 정반대다 — 저궤도 위성은 완전한 진공이 아니라 극도로 희박한 대기 속을 지나가므로, 속도 반대방향으로 작용하는 미세한 항력이 계속 에너지를 빼앗아 고도가 서서히 떨어지다 결국 재진입한다. 지수함수 대기밀도 근사(ρ(h)=ρ0·exp(-(h-h0)/H))와 탄도계수 기반 항력 감속(a=-0.5·ρ(h)·v²/BC)을 15번의 "접선 추력" 항을 부호만 반전한 구조로 재사용한다. 대기밀도가 지수함수이므로 재진입 직전으로 갈수록 하강이 급격히 가속화되는 비선형 패턴이 나타나고, 탄도계수가 클수록(무겁고 단면적이 작은 위성) 수명이 길어지며, 초기 고도가 조금만 높아져도 수명이 기하급수적으로 늘어난다 — "폐기위성을 낮은 고도로만 유도해도 자연스럽게 몇 년 안에 재진입한다"는 실제 우주 쓰레기 정책의 물리적 근거를 수치로 보여준다.</p>
-        <div class="phase-scripts"><span class="chip">18</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">12번이 피했던 진짜 3체 문제를 정면으로 연다</span>
-        <h3>3체 문제와 라그랑주점 (CR3BP)</h3>
-        <p>01~18번은 모두 "하나의 중심천체 + 작은 섭동/추력/항력"이라는 공통 골격이었고, 12번(Patched Conic)은 태양-지구-화성이라는 진짜 3체 문제를 세 개의 독립된 2체 문제로 이어붙여 피했다. 이 스크립트는 12번이 피했던 문제를 원형 제한 3체 문제(CR3BP)로 정면으로 연다 — 지구-달처럼 두 개의 큰 천체가 만드는 회전 중력장 안에서, 질량이 무시할 만한 세 번째 물체가 정지해 있을 수 있는 5개의 평형점(라그랑주점)을 찾는다. 회전좌표계 운동방정식에 이 프로젝트 최초로 원심력과 코리올리 힘이 등장하고, 무차원화(질량비 mu 하나로 계 전체가 결정됨)를 쓴다는 점에서 이전 스크립트들과 근본적으로 다르다. L1/L2/L3(콜린스)는 이분법으로 푼 5차 방정식의 근, L4/L5(삼각)는 두 주천체와 항상 정삼각형을 이루는 닫힌 공식으로 구하고, 각 점에서 선형화한 야코비 행렬의 고유값으로 안정성을 판정한다 — 지구-달 질량비에서 L4/L5는 안정(고유값이 순허수), L1/L2/L3는 불안정(고유값에 양의 실수부)임을 확인하고, 같은 크기의 섭동을 준 RK4 직접 적분 궤적으로도 L4는 유계, L1은 훨씬 크게 발산하는 것을 재확인한다.</p>
-        <div class="phase-scripts"><span class="chip">19</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">라그랑주점이 "점"이라면, 이건 그 주위를 도는 "궤도"</span>
-        <h3>평면 리아푸노프 궤도 (Lyapunov Orbits)</h3>
-        <p>19번은 라그랑주점의 위치와 선형 안정성까지만 다뤘다 — 그 스크립트 docstring이 명시적으로 "헤일로 궤도 같은 CR3BP의 실전 응용은 다루지 않는다"고 범위를 그었다. 이 스크립트는 그다음 단계로, 라그랑주점 자체가 아니라 그 주위를 도는 주기궤도 가족이 존재한다는 것을 보여준다 — 실제 L1/L2 임무(SOHO, JWST 등)가 정확히 라그랑주점에 위성을 두지 않고 그 주위의 작은 주기궤도에 두는 이유의 수학적 근거다. 3차원 헤일로 궤도는 Richardson 3차 근사 계수 전사 실수 위험이 커서, 범위를 평면(2차원) 리아푸노프 궤도로 좁혔다. 19번이 만든 4x4 평면 야코비안의 순허수 고유벡터(중심 방향) 섭동을 초기 추정치로 삼아, 상태천이행렬(STM)을 상태와 함께 20차원으로 결합 적분하고, x축 대칭(y=0에서 vx=0)을 이용한 단일 슈팅 미분수정으로 진짜 비선형 주기궤도를 완성한다. 진폭이 커질수록 실제 주기가 선형 예측(2π/ω)에서 점점 벗어나는 것을 직접 확인해, "선형 근사는 시작점일 뿐, 진짜 주기궤도는 미분수정으로 완성해야 한다"는 핵심 메시지를 수치로 보여준다.</p>
-        <div class="phase-scripts"><span class="chip">20</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">16번의 경계를 의도적으로 뒤집는다</span>
-        <h3>PID 자세제어 (Quaternion Attitude Control)</h3>
-        <p>16번은 토크 없는 강체 자유회전(오일러 방정식)만 다뤘고, 그 스크립트 docstring이 명시적으로 "쿼터니언 자세 전파나 피드백 제어는 범위 밖으로 남겨둔다"고 선을 그었다. 이 스크립트는 그 경계를 의도적으로 뒤집어, 목표 자세로 수렴시키는 PD 피드백 제어 루프를 연다. 16번은 각속도만 적분했지 자세(방향) 자체는 추적하지 않았으므로, scalar-first 쿼터니언과 그 운동학(dq/dt)이 이 스크립트에서 처음 등장하는 새 인프라다. 현재 자세와 목표 자세의 오차는 q_err=conj(q_target)⊗q로 정의하는데, q와 -q가 같은 자세를 나타내는 이중성 때문에 q_err의 스칼라부가 음수면 전체 부호를 뒤집어야 한다 — 안 그러면 제어기가 먼 길로 돌아간다. PD 게인은 임의의 값이 아니라 원하는 정착시간과 감쇠비에서 2차 시스템 공식(ωn=4/(ζ·ts), Kp=2·I·ωn², Kd=2·ζ·ωn·I)으로 직접 역산한다. 가장 직접적인 증명은 16번과 정확히 같은 중간축 섭동 설정에 PD 제어기를 적용하는 것 — 제어 없이는 180도까지 반복적으로 텀블링하던 회전이, 제어가 있으면 몇 도 이내로 거의 완전히 정지한다.</p>
-        <div class="phase-scripts"><span class="chip">21</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">06번과 21번을 하나의 임무 타임라인으로 잇는다</span>
-        <h3>궤도+자세 통합 임무 시나리오</h3>
-        <p>01~21번은 궤도역학(병진운동)과 자세동역학(회전운동)을 서로 독립된 두 영역으로 다뤘다. 이 스크립트는 새 물리를 전혀 추가하지 않고, 이미 완성된 두 스크립트(06번 호만 전이, 21번 PID 자세제어)를 하나의 임무 타임라인으로 이어붙인다 — 위성이 주차궤도에서 임의의 텀블링 자세로 시작해, 호만 전이로 목표 임무궤도에 오른 뒤("on station"), PD 제어기로 지구지향 자세로 재정렬한다. 궤도 전이(수십 분)와 자세 재정렬(수십 초)의 시간축 스케일이 1000배 가까이 달라, 자세 재정렬 단계는 궤도 전이 완료 시각을 오프셋으로 기록해 별도 시간축을 하나의 타임라인에 잇는다. 자세 재정렬 단계의 첫 쿼터니언이 궤도 전이 완료 시점에 선언한 바로 그 임의 자세와 정확히 같다는 것으로 상태가 단계 경계를 실제로 통과함을 확인하고, 이 스크립트의 순수 토크 제어 모델에서는 자세 재정렬이 델타-V를 전혀 소모하지 않음을 보여 두 단계가 물리적으로 독립된 자원(추진제 vs 제어 시간)을 소모한다는 것을 증명한다. 지상국 접촉창(05번) 단계는 처음엔 포함하려 했지만, 궤도면 전체 기하를 다시 복제해야 해서 이 스크립트의 핵심 주장과 무관한 범위 확장이라 판단해 뺐다.</p>
-        <div class="phase-scripts"><span class="chip">22</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">17번이 "모델링하지 않는 요인"이라 부른 것을 실제로 계산한다</span>
-        <h3>3체(태양/달) 섭동</h3>
-        <p>17번(station_keeping.py)의 docstring은 "세차율 계산 자체의 불확실성(더 높은 차수의 섭동, 대기항력, 태양/달의 중력 등 이 스크립트가 모델링하지 않는 요인들)"이라며 태양/달의 중력을 명시적으로 범위 밖으로 남겨뒀다. 이 스크립트는 그 요인을 실제로 계산 가능한 값으로 만든다 — 지구 중심 좌표계에서 위성이 받는 태양/달의 중력은 지구 자신도 같은 천체에 끌리므로 그 공통항을 뺀 상대(차분) 섭동이어야 한다(a_3rd = mu_body*[(r_body-r_sat)/|r_body-r_sat|^3 - r_body/|r_body|^3]) — 위성이 지구 중심에 있으면 두 항이 정확히 상쇄돼 0이 되는 항등식으로 공식 자체를 검증한다. 태양의 GM은 달의 2700만 배지만, 거리의 세제곱에 반비례하는 상대 섭동 공식 때문에 지구에 훨씬 가까운 달의 섭동이 실제로는 태양의 약 2.2배 크다는 교과서적 결과를 직접 재현한다. 07번(J2 섭동)과 같은 단위(가속도 크기)로 비교하면, LEO에서는 J2가 압도적이지만(비율 0.01% 수준) 고도가 높아질수록 격차가 줄어 GEO 부근에서는 3체 섭동이 J2를 능가한다 — 실제 GEO 위성 운용에서 태양/달 섭동이 J2보다 더 중요한 보정 대상인 이유를 수치로 보여준다. 태양과 달 모두 이심률 0인 원궤도, 지구 적도면과 같은 평면으로 단순화한다(황도 기울기와 달의 궤도경사는 무시) — 방향 정확도는 희생하지만 이 스크립트가 보여주려는 핵심(크기와 시간에 따른 변화)은 그대로 보존된다. 17번의 RAAN 세차율(rad/s)과 이 스크립트의 가속도(km/s²)는 단위가 달라 직접 변환하지 않는다 — 가우스 섭동방정식 기반 평균화가 필요한 별도 범위이기 때문이다.</p>
-        <div class="phase-scripts"><span class="chip">23</span></div>
-      </div>
-      <div class="phase">
-        <span class="phase-tag">9번(항력)과 거울상 — 고도가 높아지면 대기는 사라져도 태양빛은 남는다</span>
-        <h3>태양복사압(SRP) 섭동</h3>
-        <p>9번(orbital_decay.py)은 저궤도에서 지배적인 대기항력 감쇠를 다뤘다. 이 스크립트는 그 거울상이다 — 대기가 사실상 없는 고궤도에서는 태양복사압(SRP)이 남는 유일한 비중력 섭동이 된다. 단순화된 구형(cannonball) 모델에서 가속도는 a_srp = P_sr·Cr·(A/m)·unit(r_sat-r_sun)으로 주어진다 — 방향은 태양→위성 방향(태양 반대쪽)이며, 부호가 뒤집히면 태양 쪽으로 끌리는 물리적 오류가 되므로 이 부호 자체를 항등식 테스트로 검증했다. 처음엔 23번처럼 J2나 3체 섭동과 비교하려 했지만, 실제로 계산해보니 SRP는 태양까지의 거리(~1AU)에만 의존해 위성의 지구 중심 거리와 거의 무관하다는 것을 발견했다 — GEO에서도 J2 대비 비율이 1% 미만에 불과해 23번 같은 흥미로운 교차점이 나오지 않았다. 대신 9번의 지수함수 대기밀도 모델을 그대로 재사용해 항력과 비교하니, 200km에서는 항력이 압도적이지만 3000km에서는 SRP가 압도적이며 약 550~800km 사이에서 실제 교차점이 나온다는 것을 확인했다 — 실제 위성 궤도수명 연구가 약 600~800km 이하에서만 항력을 신경 쓰는 이유와 정확히 일치한다. 또한 태양-지구 축 기준 원통형 그림자 근사(두 조건 모두 필요: 태양 반대쪽 AND 축에서 수직거리가 지구 반지름 이내)를 도입해, 궤도면을 태양 방향과 일치시킨 특수 기하(베타각 0도)에서 궤도의 약 36%가 그림자에 들어가 SRP가 정확히 0이 되는 것을 직접 적분으로 확인했다 — 이 식 비율은 일반적인 궤도의 주장이 아니라 이 특수 기하에만 해당한다는 것을 명시한다.</p>
-        <div class="phase-scripts"><span class="chip">24</span></div>
-      </div>
-    </div>
+    </details>
   </section>
 
   <section id="gallery">
